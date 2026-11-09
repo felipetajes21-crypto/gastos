@@ -1044,11 +1044,12 @@ function renderInvest() {
     const subs = p.titulos && p.titulos.length ? `<ul class="tes-holds">${p.titulos.map(h => {
       const val = h.estimado != null ? h.estimado - h.aportado : null;
       const hoje = h.t && h.t.taxaVenda != null ? h.t.taxaVenda : null;
-      const linha1 = [h.taxa != null ? `comprou a ${taxaTexto(h.tipo, h.taxa)}` : '', hoje != null ? `hoje ${taxaTexto(h.tipo, hoje)}` : ''].filter(Boolean).join(' → ');
+      const tc = h.t && h.t.taxaCompra != null ? h.t.taxaCompra : null;
+      const linha1 = [h.taxa != null ? `você comprou a ${taxaTexto(h.tipo, h.taxa)}` : '', hoje != null ? `hoje: ${tc != null ? `${taxaTexto(h.tipo, tc)} para comprar · ` : ''}${taxaTexto(h.tipo, hoje)} para vender` : ''].filter(Boolean).join('<br>');
       const linha2 = [h.qtdOk && h.qtd > 1e-6 ? cotasFmt(h.qtd) : '', `${money(Math.max(0, h.aportado))} colocados`, val != null ? `<span class="${val >= 0 ? 'delta-down' : 'delta-up'}">${val >= 0 ? 'valorizou +' : 'desvalorizou −'}${money(Math.abs(val))}${h.aportado > 0 ? ` (${val >= 0 ? '+' : '−'}${pctFmt(Math.round(Math.abs(val / h.aportado) * 1000) / 10)}%)` : ''}</span>` : ''].filter(Boolean).join(' · ');
       const falta = h.semTaxa ? `<button type="button" class="link small-link" data-lot="${h.semTaxa}">informe a taxa da compra para ver a valorização</button>` : '';
       return `<li><span>${escapeHtml(h.nome.replace(/^Tesouro /, ''))}<small>${linha1}</small><small>${linha2}</small>${falta}</span><b class="num">${money(holdingValue(h))}</b></li>`;
-    }).join('')}</ul>${p.estimado && r != null && r < 0 && Math.abs(r) <= p.aportado * 0.03 ? '<p class="muted small" style="margin:6px 0 0">Logo depois de comprar o valor fica um pouco abaixo: o Tesouro paga um pouco menos na venda do que cobra na compra. Com o tempo, os juros cobrem essa diferença.</p>' : ''}${p.titulos.some(h => h.estimado != null && h.taxa != null) ? '<p class="muted small" style="margin:6px 0 0">Valor se vendesse hoje. Quando a taxa de hoje está <b>abaixo</b> da que você pegou, o título valoriza; <b>acima</b>, desvaloriza — mas no vencimento você recebe a taxa combinada.</p>' : ''}` : '';
+    }).join('')}</ul>${p.estimado && r != null && r < 0 && Math.abs(r) <= p.aportado * 0.03 ? '<p class="muted small" style="margin:6px 0 0">Logo depois de comprar o valor fica um pouco abaixo: o Tesouro paga um pouco menos na venda do que cobra na compra. Com o tempo, os juros cobrem essa diferença.</p>' : ''}${p.titulos.some(h => h.estimado != null && h.taxa != null) ? '<p class="muted small" style="margin:6px 0 0">Valor se vendesse hoje (usa a taxa <b>para vender</b>, que é um pouco maior que a de compra). Quando a taxa de hoje está <b>abaixo</b> da que você pegou, o título valoriza; <b>acima</b>, desvaloriza — mas no vencimento você recebe a taxa combinada.</p>' : ''}` : '';
     return `<div class="pos ${tem ? '' : 'zero'}" data-id="${p.c.id}">
       <div class="pos-top"><span class="em">${p.c.emoji}</span><span class="pos-name">${escapeHtml(p.c.nome)}<small>${det.join(' · ')}</small></span><span class="pos-val num">${tem ? money(tem) : 'zerado'}</span></div>${rendLine}${subs}
       <div class="pos-actions">
@@ -1093,8 +1094,8 @@ function renderTesouroHoje() {
     <details class="tes-group" ${tipo === 'selic' || tipo === 'prefixado' || tipo === 'ipca' ? 'open' : ''}>
       <summary><span>${escapeHtml(TES_TIPOS[tipo].nome)}</span><span class="muted small">${ts.length} título${ts.length > 1 ? 's' : ''}</span></summary>
       <p class="muted small">${escapeHtml(TES_TIPOS[tipo].sobre)}</p>
-      <ul class="tes-list">${ts.map(t => `<li data-nome="${escapeHtml(t.nome)}"><span>${escapeHtml(t.nome.replace(/^Tesouro /, ''))}<small>vence ${parseISO(t.vencimento).toLocaleDateString('pt-BR')}${t.minimo ? ` · mínimo ${money(t.minimo)}` : ''}</small></span><b>${taxaTexto(t.tipo, t.taxaCompra)}</b></li>`).join('')}</ul>
-    </details>`).join('') + `<p class="muted small tes-src">Taxas de compra · ${when} · ${escapeHtml(TESOURO.fonte || 'Tesouro')}. Toque num título para investir nele.</p>`;
+      <ul class="tes-list">${ts.map(t => `<li data-nome="${escapeHtml(t.nome)}"><span>${escapeHtml(t.nome.replace(/^Tesouro /, ''))}<small>vence ${parseISO(t.vencimento).toLocaleDateString('pt-BR')}${t.minimo ? ` · mínimo ${money(t.minimo)}` : ''}${t.taxaVenda != null ? ` · para vender: ${pctFmt(t.taxaVenda)}%` : ''}</small></span><b>${taxaTexto(t.tipo, t.taxaCompra)}</b></li>`).join('')}</ul>
+    </details>`).join('') + `<p class="muted small tes-src">Taxa para comprar (em destaque) e para vender antes do vencimento · dados oficiais do ${when}, por isso podem diferir um pouco do app do banco durante o dia · ${escapeHtml(TESOURO.fonte || 'Tesouro')}. Toque num título para investir nele.</p>`;
   $$('#tesHoje li[data-nome]').forEach(li => li.onclick = () => openMove('tesouro', false, li.dataset.nome));
 }
 

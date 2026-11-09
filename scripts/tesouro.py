@@ -184,7 +184,7 @@ def main(path):
         json.dump(out, f, ensure_ascii=False, indent=1)
     for t in titulos:
         if t["aVenda"]:
-            print(f"  {t['nome']:<45} {t['taxaCompra']}  PU {t['puCompra']}")
+            print(f"  {t['nome']:<45} compra {t['taxaCompra']}  venda {t['taxaVenda']}  PU {t['puCompra']}/{t['puVenda']}")
     return 0
 
 
