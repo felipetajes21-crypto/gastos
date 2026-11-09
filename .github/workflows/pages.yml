@@ -4,6 +4,9 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+  schedule:
+    # Atualiza as taxas do Tesouro Direto a cada 2h em dias úteis (08h–20h de Brasília)
+    - cron: '17 11-23/2 * * 1-5'
 
 permissions:
   contents: read
@@ -22,6 +25,9 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
+      - name: Buscar taxas do Tesouro Direto
+        timeout-minutes: 6
+        run: python3 scripts/tesouro.py rates.json || echo "::warning::Não consegui atualizar as taxas do Tesouro agora"
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
