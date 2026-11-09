@@ -20,11 +20,39 @@ const DEFAULT_CATEGORIES = [
   { id: 'viagem', nome: 'Viagem', emoji: '✈️', palavras: ['viagem', 'hotel', 'pousada', 'airbnb', 'booking', 'hostel', 'passagem aerea', 'aviao', 'voo', 'latam', 'gol', 'azul', 'decolar', '123milhas', 'hurb', 'aluguel de carro', 'localiza', 'movida', 'unidas', 'rodoviaria', 'buser', 'clickbus', 'mala', 'seguro viagem', 'cambio', 'dolar', 'euro', 'passaporte', 'visto', 'turismo', 'excursao'] },
   { id: 'presentes', nome: 'Presentes & Doações', emoji: '🎁', palavras: ['presente', 'presentes', 'lembrancinha', 'doacao', 'dizimo', 'oferta', 'vaquinha', 'caridade', 'flores', 'floricultura', 'cesta', 'amigo secreto', 'cha de bebe', 'cha de panela', 'casamento'] },
   { id: 'outros', nome: 'Outros', emoji: '📦', palavras: [] },
+  // ── Entradas (o que entra)
+  { id: 'salario', tipo: 'entrada', nome: 'Salário', emoji: '💼', palavras: ['salario', 'holerite', 'contracheque', 'decimo terceiro', '13o', 'ferias', 'plr', 'adiantamento', 'clt'] },
+  { id: 'mesada', tipo: 'entrada', nome: 'Mesada', emoji: '👛', palavras: ['mesada'] },
+  { id: 'bolsa', tipo: 'entrada', nome: 'Bolsa & Estágio', emoji: '🎓', palavras: ['bolsa', 'bolsa de estudos', 'bolsa auxilio', 'estagio', 'jovem aprendiz', 'aprendiz', 'monitoria', 'pibic', 'iniciacao cientifica', 'auxilio estudantil', 'auxilio', 'pe de meia', 'pe-de-meia'] },
+  { id: 'extra', tipo: 'entrada', nome: 'Extra & Freela', emoji: '🧰', palavras: ['freela', 'freelance', 'bico', 'job', 'trampo', 'renda extra', 'aula particular'] },
+  { id: 'vendas', tipo: 'entrada', nome: 'Vendas', emoji: '🏷️', palavras: ['venda', 'vendi', 'olx', 'enjoei', 'marketplace', 'brecho', 'revenda'] },
+  { id: 'reembolso', tipo: 'entrada', nome: 'Reembolsos', emoji: '↩️', palavras: ['reembolso', 'devolucao', 'estorno', 'cashback', 'me pagou', 'pagou de volta', 'me devolveu', 'racha', 'rachei'] },
+  { id: 'entrada-outros', tipo: 'entrada', nome: 'Outras entradas', emoji: '💵', palavras: [] },
+  // ── Investimentos (para onde vai o dinheiro guardado)
+  { id: 'reserva', tipo: 'invest', nome: 'Reserva / Poupança', emoji: '🐷', palavras: ['poupanca', 'reserva', 'reserva de emergencia', 'porquinho', 'cofrinho', 'cofre'] },
+  { id: 'caixinha', tipo: 'invest', nome: 'Caixinha / CDB', emoji: '🏦', palavras: ['caixinha', 'caixinhas', 'cdb', 'lci', 'lca', 'rdb', 'renda fixa', 'nubank', 'inter', 'picpay', 'mercado pago', 'c6'] },
+  { id: 'tesouro', tipo: 'invest', nome: 'Tesouro Direto', emoji: '🏛️', palavras: ['tesouro', 'tesouro direto', 'selic', 'tesouro selic', 'ipca', 'tesouro ipca', 'prefixado', 'tesouro educa', 'renda+'] },
+  { id: 'acoes', tipo: 'invest', nome: 'Ações & FIIs', emoji: '📈', palavras: ['acao', 'acoes', 'fii', 'fiis', 'etf', 'bolsa de valores', 'b3', 'dividendos', 'corretora', 'xp', 'rico', 'clear', 'btg', 'nuinvest', 'bova11', 'ivvb11', 'petr4', 'vale3', 'itsa4'] },
+  { id: 'cripto', tipo: 'invest', nome: 'Cripto', emoji: '🪙', palavras: ['cripto', 'crypto', 'bitcoin', 'btc', 'ethereum', 'eth', 'usdt', 'solana', 'binance'] },
+  { id: 'invest-outros', tipo: 'invest', nome: 'Outros investimentos', emoji: '💹', palavras: ['investimento', 'previdencia', 'consorcio'] },
 ];
+
+// Tipos de lançamento. O tipo vem da categoria.
+const TIPOS = {
+  gasto: { nome: 'Gasto', plural: 'Gastos', emoji: '💸', outros: 'outros' },
+  entrada: { nome: 'Entrada', plural: 'Entradas', emoji: '💰', outros: 'entrada-outros' },
+  invest: { nome: 'Investimento', plural: 'Investimentos', emoji: '📈', outros: 'invest-outros' },
+};
+// palavras que dizem o tipo ("recebi", "guardei"…) e saem da descrição
+const TRIGGERS = {
+  entrada: ['recebi', 'recebido', 'recebimento', 'ganhei', 'entrou', 'caiu', 'entrada', 'receita'],
+  invest: ['investi', 'investir', 'aporte', 'aportei', 'apliquei', 'aplicacao', 'guardei', 'guardar', 'poupei', 'separei', 'depositei'],
+  resgate: ['resgatei', 'resgate', 'resgatar', 'saquei', 'retirei'],
+};
 
 const METHODS = {
   pix: { nome: 'Pix', palavras: ['pix'] },
-  credito: { nome: 'Crédito', palavras: ['credito', 'cc', 'cartao', 'cartao de credito', 'nubank', 'c6'] },
+  credito: { nome: 'Crédito', palavras: ['credito', 'cc', 'cartao', 'cartao de credito'] },
   debito: { nome: 'Débito', palavras: ['debito', 'cd'] },
   dinheiro: { nome: 'Dinheiro', palavras: ['dinheiro', 'especie', 'cash', 'grana'] },
   vale: { nome: 'Vale (VR/VA)', palavras: ['vr', 'va', 'vale', 'alelo', 'sodexo', 'pluxee', 'vale refeicao', 'vale alimentacao', 'caju', 'swile', 'ifood beneficios'] },
@@ -39,10 +67,10 @@ const MONTHS_SHORT = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 's
 // ───────────────────────── Estado & armazenamento ─────────────────────────
 const KEY = 'gastos.v1';
 let state = load();
-let ui = { month: '', search: '', cat: '' };
+let ui = { month: '', search: '', cat: '', tipoForce: null, tipoFiltro: 'tudo' };
 
 function freshState() {
-  return { versao: 1, gastos: [], categorias: structuredClone(DEFAULT_CATEGORIES), aprendido: { frases: {}, palavras: {} }, fixos: [], fixosLancados: {} };
+  return { versao: 1, gastos: [], categorias: structuredClone(DEFAULT_CATEGORIES), aprendido: { frases: {}, palavras: {} }, fixos: [], fixosLancados: {}, saldos: {} };
 }
 function load() {
   try {
@@ -76,6 +104,10 @@ function monthName(key, short) { const [y, m] = key.split('-').map(Number); retu
 function daysInMonth(key) { const [y, m] = key.split('-').map(Number); return new Date(y, m, 0).getDate(); }
 function escapeHtml(s) { return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
 const catById = id => state.categorias.find(c => c.id === id) || state.categorias.find(c => c.id === 'outros') || { id: 'outros', nome: 'Outros', emoji: '📦' };
+const tipoCat = c => (c && c.tipo) || 'gasto';
+const tipoOf = g => tipoCat(catById(g.cat));
+const catsOf = t => state.categorias.filter(c => tipoCat(c) === t);
+const signed = g => g.resgate ? -g.valor : g.valor;
 function relDay(iso) {
   const today = isoDate(new Date());
   const y = isoDate(new Date(Date.now() - 864e5));
@@ -98,9 +130,11 @@ function parseAmount(tok) {
 }
 
 function parseText(text) {
-  const out = { valor: null, data: isoDate(new Date()), metodo: '', parcelas: 1, desc: '' };
+  const out = { valor: null, data: isoDate(new Date()), metodo: '', parcelas: 1, desc: '', tipo: null, resgate: false };
   let raw = text.trim().replace(/\s+/g, ' ');
   if (!raw) return out;
+  // "+50 pix do joão" = entrada
+  if (/^\+/.test(raw)) { out.tipo = 'entrada'; raw = raw.replace(/^\+\s*/, ''); }
   // "r$ 20" → "r$20"
   raw = raw.replace(/r\$\s+(?=\d)/gi, 'r$')
     .replace(/[()\[\]]/g, ' ')                       // "(01/07)" → " 01/07 "
@@ -108,6 +142,18 @@ function parseText(text) {
   let tokens = raw.split(' ');
   const keep = new Array(tokens.length).fill(true);
   const n = tokens.map(norm);
+
+  // Tipo: "recebi", "guardei", "resgatei"…
+  const filler = ['na', 'no', 'nas', 'nos', 'em', 'da', 'do', 'de', 'pra', 'para', 'pro', 'o', 'a', 'meu', 'minha', 'meus', 'minhas'];
+  n.forEach((t, i) => {
+    let found = null;
+    if (TRIGGERS.entrada.includes(t)) found = 'entrada';
+    else if (TRIGGERS.invest.includes(t)) found = 'invest';
+    else if (TRIGGERS.resgate.includes(t)) { found = 'invest'; out.resgate = true; }
+    if (!found) return;
+    out.tipo = found; keep[i] = false;
+    for (let k = i + 1; k < n.length && filler.includes(n[k]); k++) keep[k] = false;
+  });
 
   // Formas de pagamento (inclui expressões de 2-3 palavras)
   const notMethodBefore = ['fatura', 'pagar', 'pagamento', 'o', 'do', 'da', 'para', 'pro', 'meu', 'novo', 'anuidade'];
@@ -172,7 +218,7 @@ function parseText(text) {
   });
   if (best >= 0) { out.valor = parseAmount(tokens[best]); keep[best] = false; if (/^(reais|real|rs)$/.test(n[best + 1] || '')) keep[best + 1] = false; }
 
-  let desc = tokens.filter((_, i) => keep[i]).join(' ').replace(/^(no|na|em|de|com)\s+/i, '').trim();
+  let desc = tokens.filter((_, i) => keep[i]).join(' ').replace(/^(no|na|em|de|da|do|com)\s+/i, '').trim();
   // "R$275 cartão" sozinho = pagamento da fatura, não forma de pagamento
   if (!desc && out.metodo === 'credito') { desc = tokens.filter((_, i) => !keep[i] && /^cart/i.test(n[i])).join(' ') || 'Cartão'; out.metodo = ''; }
   out.desc = desc ? desc[0].toUpperCase() + desc.slice(1) : '';
@@ -182,11 +228,16 @@ function parseText(text) {
 // ───────────────────────── Categorização automática ─────────────────────────
 function wordsOf(s) { return norm(s).replace(/[^a-z0-9+&\s]/g, ' ').split(/\s+/).filter(w => w.length >= 2 && !STOPWORDS.has(w)); }
 
-function categorize(desc) {
+// tipo: 'gasto' | 'entrada' | 'invest' restringe as categorias; sem tipo, procura em todas
+// (com leve preferência por gastos, que são a maioria dos lançamentos).
+function categorize(desc, tipo) {
   const text = norm(desc);
-  if (!text) return { cat: 'outros', certeza: 0 };
+  const fallback = tipo ? TIPOS[tipo].outros : 'outros';
+  const allowed = c => !tipo || tipoCat(c) === tipo;
+  if (!text) return { cat: fallback, certeza: 0 };
   const learnedPhrase = state.aprendido.frases[text];
-  if (learnedPhrase && state.categorias.some(c => c.id === learnedPhrase)) return { cat: learnedPhrase, certeza: 1, porque: 'você já usou' };
+  const lc = state.categorias.find(c => c.id === learnedPhrase);
+  if (lc && allowed(lc)) return { cat: learnedPhrase, certeza: 1, porque: 'você já usou' };
 
   const scores = {};
   const add = (id, v) => { scores[id] = (scores[id] || 0) + v; };
@@ -195,9 +246,11 @@ function categorize(desc) {
   const singular = clean.split(' ').map(w => w.length > 3 ? w.replace(/[oa]es$/, 'ao').replace(/(?<=[aeiou])s$/, '') : w).join(' ');
   const padded = ' ' + clean + ' | ' + singular + ' ';
   for (const c of state.categorias) {
+    if (!allowed(c)) continue;
+    const w = !tipo && tipoCat(c) !== 'gasto' ? 0.85 : 1;
     for (const p of c.palavras || []) {
       const kw = norm(p);
-      if (kw && padded.includes(' ' + kw + ' ')) add(c.id, 2 + kw.length / 8);
+      if (kw && padded.includes(' ' + kw + ' ')) add(c.id, (2 + kw.length / 8) * w);
     }
   }
   for (const w of wordsOf(desc)) {
@@ -206,8 +259,8 @@ function categorize(desc) {
     const total = Object.values(counts).reduce((a, b) => a + b, 0);
     for (const [id, cnt] of Object.entries(counts)) add(id, 3 * cnt / total + Math.min(cnt, 5) * 0.2);
   }
-  let best = 'outros', bs = 0;
-  for (const [id, s] of Object.entries(scores)) if (s > bs && state.categorias.some(c => c.id === id)) { bs = s; best = id; }
+  let best = fallback, bs = 0;
+  for (const [id, s] of Object.entries(scores)) { const c = state.categorias.find(x => x.id === id); if (s > bs && c && allowed(c)) { bs = s; best = id; } }
   return { cat: best, certeza: bs ? Math.min(1, bs / 4) : 0 };
 }
 
@@ -220,13 +273,13 @@ function learn(desc, cat, oldCat) {
     const m = state.aprendido.palavras[w] || (state.aprendido.palavras[w] = {});
     // ao corrigir, esquece a associação antiga
     if (oldCat && oldCat !== cat && m[oldCat]) { m[oldCat]--; if (!m[oldCat]) delete m[oldCat]; }
-    if (cat !== 'outros') m[cat] = (m[cat] || 0) + 1;
+    if (!Object.values(TIPOS).some(t => t.outros === cat)) m[cat] = (m[cat] || 0) + 1;
     if (!Object.keys(m).length) delete state.aprendido.palavras[w];
   }
 }
 
 // ───────────────────────── Operações ─────────────────────────
-function addExpense({ desc, valor, data, cat, metodo, parcelas = 1, nota = '' }) {
+function addExpense({ desc, valor, data, cat, metodo, parcelas = 1, nota = '', resgate = false }) {
   const created = [];
   const group = parcelas > 1 ? uid() : undefined;
   const base = parseISO(data);
@@ -237,6 +290,7 @@ function addExpense({ desc, valor, data, cat, metodo, parcelas = 1, nota = '' })
     const v = k === parcelas - 1 ? Math.round((valor - each * (parcelas - 1)) * 100) / 100 : each;
     const g = { id: uid(), desc: parcelas > 1 ? `${desc} (${k + 1}/${parcelas})` : desc, valor: v, data: isoDate(d), cat, metodo, nota, criado: Date.now() };
     if (group) g.grupo = group;
+    if (resgate) g.resgate = true;
     state.gastos.push(g);
     created.push(g);
   }
@@ -264,10 +318,14 @@ function runRecurring() {
       added++;
     }
   }
-  if (added) { save(); toast(`${added} gasto${added > 1 ? 's' : ''} fixo${added > 1 ? 's' : ''} lançado${added > 1 ? 's' : ''} automaticamente`); }
+  if (added) { save(); toast(`${added} lançamento${added > 1 ? 's' : ''} fixo${added > 1 ? 's' : ''} feito${added > 1 ? 's' : ''} automaticamente`); }
 }
 
-const inMonth = (key) => state.gastos.filter(g => g.data.startsWith(key));
+// inMonth = só gastos (orçamento, análise, previsão); ofType/allMonth para o resto
+const inMonth = (key) => state.gastos.filter(g => g.data.startsWith(key) && tipoOf(g) === 'gasto');
+const ofType = (key, t) => state.gastos.filter(g => g.data.startsWith(key) && tipoOf(g) === t);
+const allMonth = (key) => state.gastos.filter(g => g.data.startsWith(key));
+const sumSigned = arr => Math.round(arr.reduce((a, g) => a + signed(g), 0) * 100) / 100;
 const sum = arr => Math.round(arr.reduce((a, g) => a + g.valor, 0) * 100) / 100;
 
 // ───────────────────────── Entrada rápida ─────────────────────────
@@ -278,13 +336,21 @@ function updatePreview() {
   const box = $('#preview');
   if (!text.trim()) { box.hidden = true; $('#quickHint').hidden = false; pending = null; return; }
   const p = parseText(text);
-  const auto = categorize(p.desc);
+  const hint = ui.tipoForce || p.tipo;
+  const auto = categorize(p.desc, hint || undefined);
+  if (pending && pending.catManual && hint && tipoCat(catById(pending.cat)) !== hint) pending.catManual = false;
   if (!pending || !pending.catManual) pending = { parsed: p, cat: auto.cat, catManual: false };
   else pending.parsed = p;
   const c = catById(pending.cat);
+  const tipo = tipoCat(c);
+  pending.tipo = tipo;
+  pending.resgate = tipo === 'invest' && p.resgate;
+  updateSeg(tipo);
   const parts = [];
-  parts.push(`<span class="chip value">${p.valor ? money(p.valor) : 'sem valor'}</span>`);
-  if (p.parcelas > 1 && p.valor) parts.push(`<span class="chip">${p.parcelas}× de ${money(p.valor / p.parcelas)}</span>`);
+  const sign = tipo === 'entrada' ? '+' : '';
+  parts.push(`<span class="chip value ${tipo}">${p.valor ? sign + money(p.valor) : 'sem valor'}</span>`);
+  if (tipo !== 'gasto') parts.push(`<span class="chip">${pending.resgate ? '↩️ Resgate' : TIPOS[tipo].emoji + ' ' + TIPOS[tipo].nome}</span>`);
+  if (p.parcelas > 1 && p.valor && tipo === 'gasto') parts.push(`<span class="chip">${p.parcelas}× de ${money(p.valor / p.parcelas)}</span>`);
   parts.push(`<button type="button" class="chip" id="previewCat" title="Trocar categoria">${c.emoji} ${escapeHtml(c.nome)} ▾</button>`);
   parts.push(`<span class="chip">📅 ${relDay(p.data)}</span>`);
   if (p.metodo) parts.push(`<span class="chip">💳 ${METHODS[p.metodo].nome}</span>`);
@@ -295,13 +361,21 @@ function updatePreview() {
   $('#previewCat').onclick = () => toggleCatPicker();
 }
 
+// Seletor Gasto / Entrada / Investir: mostra o tipo detectado; tocar força o tipo.
+function updateSeg(tipo) {
+  $$('#tipoSeg button').forEach(b => {
+    b.classList.toggle('sel', b.dataset.tipo === tipo);
+    b.setAttribute('aria-pressed', b.dataset.tipo === tipo);
+  });
+}
+
 function toggleCatPicker() {
   const box = $('#preview');
   const ex = $('.cat-picker', box);
   if (ex) { ex.remove(); return; }
   const picker = document.createElement('div');
   picker.className = 'cat-picker';
-  for (const c of state.categorias) {
+  for (const c of catsOf(pending.tipo || 'gasto')) {
     const b = document.createElement('button');
     b.type = 'button';
     b.className = 'chip' + (c.id === pending.cat ? ' sel' : '');
@@ -320,12 +394,19 @@ function submitQuick(e) {
   const p = pending.parsed;
   if (!p.valor) { toast('Faltou o valor — ex.: “almoço 32,90”'); input.focus(); return; }
   const desc = p.desc || catById(pending.cat).nome;
-  const created = addExpense({ desc, valor: p.valor, data: p.data, cat: pending.cat, metodo: p.metodo, parcelas: p.parcelas });
+  const tipo = pending.tipo || 'gasto';
+  const resgate = !!pending.resgate;
+  const created = addExpense({ desc, valor: p.valor, data: p.data, cat: pending.cat, metodo: p.metodo, parcelas: tipo === 'gasto' ? p.parcelas : 1, resgate });
   input.value = '';
   pending = null;
+  ui.tipoForce = null;
   updatePreview();
+  updateSeg(null);
   const c = catById(created[0].cat);
-  toast(`${c.emoji} ${money(p.valor)} em ${c.nome}`, 'desfazer', () => {
+  const msg = tipo === 'entrada' ? `💰 +${money(p.valor)} em ${c.nome}`
+    : tipo === 'invest' ? (resgate ? `↩️ ${money(p.valor)} resgatado de ${c.nome}` : `📈 ${money(p.valor)} investido em ${c.nome}`)
+    : `${c.emoji} ${money(p.valor)} em ${c.nome}`;
+  toast(msg, 'desfazer', () => {
     const ids = new Set(created.map(g => g.id));
     state.gastos = state.gastos.filter(g => !ids.has(g.id));
     save(); render();
@@ -344,6 +425,7 @@ function render() {
   if (v === 'view-list') renderList();
   if (v === 'view-analysis') renderAnalysis();
   if (v === 'view-settings') renderSettings();
+  if (v === 'view-invest') renderInvest();
 }
 
 function monthStats(key) {
@@ -363,7 +445,7 @@ function monthStats(key) {
   const bigLimit = Math.max(150, median * 4);
   const oneOff = sum(items.filter(g => g.fixo || g.grupo || g.valor >= bigLimit));
   const daily = total - oneOff;
-  const pendingFixed = state.fixos.filter(f => !state.fixosLancados[`${f.id}@${key}`]).reduce((a, f) => a + f.valor, 0);
+  const pendingFixed = state.fixos.filter(f => tipoCat(catById(f.cat)) === 'gasto' && !state.fixosLancados[`${f.id}@${key}`]).reduce((a, f) => a + f.valor, 0);
   const projection = isCurrent && elapsed > 0 ? Math.round(oneOff + pendingFixed + daily / elapsed * dim) : total;
   const budget = state.categorias.reduce((a, c) => a + (+c.orcamento || 0), 0);
   return { items, total, isCurrent, dim, elapsed, prevSame, prevTotal: sum(prevItems), projection, budget, avg: elapsed ? total / elapsed : 0 };
@@ -409,9 +491,40 @@ function renderHome() {
   $('#homeCats').innerHTML = cats.length ? catBars(cats, s.total, false) : '<div class="empty">Seus gastos por categoria aparecem aqui.</div>';
   bindCatBars($('#homeCats'));
 
-  const recent = [...s.items].sort((a, b) => b.data.localeCompare(a.data) || b.criado - a.criado).slice(0, 6);
+  renderBalance(ui.month, $('#balance'));
+
+  const recent = [...allMonth(ui.month)].sort((a, b) => b.data.localeCompare(a.data) || b.criado - a.criado).slice(0, 6);
   $('#recentList').innerHTML = recent.length ? recent.map(txRow).join('') : '<li class="empty">Digite seu primeiro gasto lá em cima ☝️</li>';
   bindTx($('#recentList'));
+}
+
+function balanceOf(key) {
+  const entrou = sum(ofType(key, 'entrada'));
+  const gastou = sum(inMonth(key));
+  const investiu = sumSigned(ofType(key, 'invest'));
+  return { entrou, gastou, investiu, sobrou: Math.round((entrou - gastou - investiu) * 100) / 100 };
+}
+
+// Balanço do mês: quanto entrou, para onde foi (gasto / investido) e o que sobrou.
+function renderBalance(key, el) {
+  const b = balanceOf(key);
+  if (!b.entrou && !b.investiu) {
+    el.innerHTML = `<h2>Balanço do mês</h2><p class="muted small">Anote também o que <b>entra</b> e o que você <b>investe</b> para ver quanto sobra. Ex.: <b>recebi mesada 300</b>, <b>salário 1500</b>, <b>guardei 100 na caixinha</b>.</p>`;
+    return;
+  }
+  const base = Math.max(b.entrou, b.gastou + Math.max(0, b.investiu), 1);
+  const pctG = b.gastou / base * 100, pctI = Math.max(0, b.investiu) / base * 100;
+  const rate = b.entrou > 0 ? Math.round(Math.max(0, b.investiu) / b.entrou * 100) : null;
+  const row = (sw, label, val, cls = '') => `<div class="bal-row"><span>${sw ? `<i class="sw ${sw}"></i>` : ''}${label}</span><span class="num ${cls}">${val}</span></div>`;
+  el.innerHTML = `<h2>Balanço do mês</h2>
+    <div class="bal-bar" role="img" aria-label="Gastos ${Math.round(pctG)}% e investimentos ${Math.round(pctI)}% do que entrou">
+      ${pctG ? `<span class="seg-g" style="width:${pctG}%"></span>` : ''}${pctI ? `<span class="seg-i" style="width:${pctI}%"></span>` : ''}
+    </div>
+    ${row('', 'Entrou', '+' + money(b.entrou), 'in')}
+    ${row('g', 'Gastou', '−' + money(b.gastou))}
+    ${row('i', b.investiu < 0 ? 'Resgatou' : 'Investiu', (b.investiu < 0 ? '+' : '−') + money(Math.abs(b.investiu)))}
+    <div class="bal-total">${row('', b.sobrou >= 0 ? 'Sobrou' : 'Faltou', money(Math.abs(b.sobrou)), b.sobrou >= 0 ? 'in' : 'out')}</div>
+    ${rate !== null ? `<p class="muted small" style="margin:8px 0 0">${b.sobrou < 0 ? '⚠️ Saiu mais do que entrou neste mês.' : rate > 0 ? `Você investiu <b>${rate}%</b> do que entrou.` : 'Nada investido ainda neste mês.'}</p>` : ''}`;
 }
 
 function catBars(cats, total, withBudget) {
@@ -431,35 +544,54 @@ function catBars(cats, total, withBudget) {
   }).join('') + '</div>';
 }
 function bindCatBars(el) {
-  $$('.cat-bar', el).forEach(b => b.onclick = () => { ui.cat = b.dataset.cat; ui.search = ''; go('list'); });
+  $$('.cat-bar', el).forEach(b => b.onclick = () => { ui.cat = b.dataset.cat; ui.search = ''; ui.tipoFiltro = 'tudo'; go('list'); });
 }
 
+function amountHtml(g) {
+  const t = tipoOf(g);
+  if (t === 'entrada') return `<div class="amt in">+${money(g.valor)}</div>`;
+  if (t === 'invest') return `<div class="amt inv">${g.resgate ? '↙ ' : '↗ '}${money(g.valor)}</div>`;
+  return `<div class="amt">${money(g.valor)}</div>`;
+}
 function txRow(g) {
   const c = catById(g.cat);
-  const meta = [relDay(g.data), c.nome, g.metodo && METHODS[g.metodo] ? METHODS[g.metodo].nome : '', g.fixo ? 'fixo' : ''].filter(Boolean).join(' · ');
-  return `<li class="tx" data-id="${g.id}"><div class="em">${c.emoji}</div><div class="info"><div class="d">${escapeHtml(g.desc)}</div><div class="meta">${escapeHtml(meta)}</div></div><div class="amt">${money(g.valor)}</div></li>`;
+  const t = tipoOf(g);
+  const kind = t === 'entrada' ? 'entrada' : t === 'invest' ? (g.resgate ? 'resgate' : 'investimento') : '';
+  const meta = [relDay(g.data), c.nome, kind, g.metodo && METHODS[g.metodo] ? METHODS[g.metodo].nome : '', g.fixo ? 'fixo' : ''].filter(Boolean).join(' · ');
+  return `<li class="tx" data-id="${g.id}"><div class="em">${c.emoji}</div><div class="info"><div class="d">${escapeHtml(g.desc)}</div><div class="meta">${escapeHtml(meta)}</div></div>${amountHtml(g)}</li>`;
 }
 function bindTx(el) { $$('.tx', el).forEach(li => li.onclick = () => openExpense(li.dataset.id)); }
 
 function renderList() {
   const sel = $('#catFilter');
-  sel.innerHTML = '<option value="">Todas categorias</option>' + state.categorias.map(c => `<option value="${c.id}">${c.emoji} ${escapeHtml(c.nome)}</option>`).join('');
+  const tf = ui.tipoFiltro;
+  $$('#listSeg button').forEach(b => b.classList.toggle('sel', b.dataset.tipo === tf));
+  sel.innerHTML = '<option value="">Todas categorias</option>' + (tf === 'tudo' ? catOptgroups() : catsOf(tf).map(c => `<option value="${c.id}">${c.emoji} ${escapeHtml(c.nome)}</option>`).join(''));
   sel.value = ui.cat;
+  if (sel.value !== ui.cat) ui.cat = '';
   $('#searchInput').value = ui.search;
   const q = norm(ui.search);
   // Com busca, procura em todos os meses
-  let items = q ? state.gastos : inMonth(ui.month);
+  let items = q ? state.gastos : allMonth(ui.month);
+  if (tf !== 'tudo') items = items.filter(g => tipoOf(g) === tf);
   if (ui.cat) items = items.filter(g => g.cat === ui.cat);
   if (q) items = items.filter(g => norm(g.desc).includes(q) || norm(catById(g.cat).nome).includes(q) || norm(g.nota).includes(q) || String(g.valor).includes(q.replace(',', '.')));
   items = [...items].sort((a, b) => b.data.localeCompare(a.data) || b.criado - a.criado);
-  $('#listTotal').textContent = items.length ? `${items.length} gasto${items.length > 1 ? 's' : ''} · ${money(sum(items))}${q ? ' (todos os meses)' : ''}` : '';
+  const byT = t => items.filter(g => tipoOf(g) === t);
+  const parts = [];
+  if (byT('gasto').length) parts.push(`gastos ${money(sum(byT('gasto')))}`);
+  if (byT('entrada').length) parts.push(`entradas +${money(sum(byT('entrada')))}`);
+  if (byT('invest').length) parts.push(`investido ${money(sumSigned(byT('invest')))}`);
+  $('#listTotal').textContent = items.length ? `${items.length} lançamento${items.length > 1 ? 's' : ''} · ${parts.join(' · ')}${q ? ' (todos os meses)' : ''}` : '';
   const groups = {};
   for (const g of items) (groups[g.data] || (groups[g.data] = [])).push(g);
   $('#fullList').innerHTML = items.length ? Object.entries(groups).map(([d, gs]) => {
     const dt = parseISO(d);
     const label = `${relDay(d)}${relDay(d).length < 6 ? ', ' + dt.toLocaleDateString('pt-BR', { day: 'numeric', month: 'short' }).replace('.', '') : ''}`;
-    return `<div class="day-group"><div class="day-head"><span>${label}</span><span class="num">${money(sum(gs))}</span></div><ul class="tx-list">${gs.map(txRow).join('')}</ul></div>`;
-  }).join('') : `<div class="empty">${q || ui.cat ? 'Nada encontrado.' : 'Nenhum gasto neste mês.'}</div>`;
+    const g1 = gs.filter(g => tipoOf(g) === 'gasto'), e1 = gs.filter(g => tipoOf(g) === 'entrada');
+    const head = [g1.length ? money(sum(g1)) : '', e1.length ? '+' + money(sum(e1)) : ''].filter(Boolean).join(' · ');
+    return `<div class="day-group"><div class="day-head"><span>${label}</span><span class="num">${head}</span></div><ul class="tx-list">${gs.map(txRow).join('')}</ul></div>`;
+  }).join('') : `<div class="empty">${q || ui.cat ? 'Nada encontrado.' : 'Nenhum lançamento neste mês.'}</div>`;
   bindTx($('#fullList'));
 }
 
@@ -485,6 +617,21 @@ function renderAnalysis() {
   $('#trendChart').innerHTML = vals.some(v => v) ? columnChart(vals, keys.map(k => monthName(k, true)), keys.map((k, i) => [monthName(k), vals[i]]), { width: $('#trendChart').clientWidth, highlight: 5, valueLabels: true }) : '<div class="empty">Sem dados.</div>';
   bindTips();
 
+  // Entradas × saídas (6 meses)
+  const bal = keys.map(balanceOf);
+  const hasFlow = bal.some(b => b.entrou || b.investiu);
+  $('#flowCard').hidden = !hasFlow;
+  if (hasFlow) {
+    const series = [
+      { name: 'Entrou', cls: 's1', values: bal.map(b => b.entrou) },
+      { name: 'Gastou', cls: 's2', values: bal.map(b => b.gastou) },
+      { name: 'Investiu', cls: 's3', values: bal.map(b => Math.max(0, b.investiu)) },
+    ];
+    $('#flowChart').innerHTML = legendHtml(series) + groupedChart(series, keys.map(k => monthName(k, true)), keys.map(k => monthName(k)), { width: $('#flowChart').clientWidth || 320 });
+    $('#flowTable').innerHTML = `<table class="simple"><tr class="th"><td>Mês</td><td class="r">Entrou</td><td class="r">Gastou</td><td class="r">Investiu</td><td class="r">Sobrou</td></tr>${keys.map((k, i) => [k, bal[i]]).filter(([, b]) => b.entrou || b.gastou || b.investiu).map(([k, b]) => `<tr><td>${monthName(k, true)}</td><td class="r">${b.entrou ? Math.round(b.entrou).toLocaleString('pt-BR') : '—'}</td><td class="r">${Math.round(b.gastou).toLocaleString('pt-BR')}</td><td class="r">${b.investiu ? Math.round(b.investiu).toLocaleString('pt-BR') : '—'}</td><td class="r ${b.entrou && b.sobrou < 0 ? 'out' : ''}">${b.entrou ? (b.sobrou < 0 ? '−' : '') + Math.round(Math.abs(b.sobrou)).toLocaleString('pt-BR') : '—'}</td></tr>`).join('')}</table><p class="muted small" style="margin:6px 0 0">Valores em R$. “—” = nada anotado.</p>`;
+  }
+  bindTips();
+
   // Métodos
   const mm = {};
   for (const g of s.items) { const k = g.metodo || ''; mm[k] = (mm[k] || 0) + g.valor; }
@@ -500,6 +647,12 @@ function renderAnalysis() {
 
 function insights(s, cats) {
   const out = [];
+  const b = balanceOf(ui.month);
+  if (b.entrou > 0) {
+    if (b.sobrou < 0) out.push(['🚨', `Saiu <b>${money(-b.sobrou)}</b> a mais do que entrou neste mês.`]);
+    else if (b.investiu > 0) out.push(['💪', `Você investiu <b>${Math.round(b.investiu / b.entrou * 100)}%</b> do que entrou (${money(b.investiu)}).`]);
+    else if (b.sobrou > 0) out.push(['💡', `Sobraram <b>${money(b.sobrou)}</b> — que tal guardar uma parte? Digite “guardei ${Math.max(10, Math.round(b.sobrou / 2 / 10) * 10)} na caixinha”.`]);
+  }
   if (!s.items.length) return out;
   const prevCats = Object.fromEntries(byCategory(inMonth(shiftMonth(ui.month, -1))).map(c => [c.id, c.valor]));
   if (cats[0] && cats[0].valor) out.push(['🏆', `<b>${escapeHtml(cats[0].cat.nome)}</b> é onde mais vai seu dinheiro: ${money(cats[0].valor)} (${Math.round(cats[0].valor / s.total * 100)}% do mês).`]);
@@ -520,7 +673,7 @@ function insights(s, cats) {
     const share = sum(weekend) / s.total;
     if (share > 0.4) out.push(['🎈', `${Math.round(share * 100)}% dos gastos foram em fins de semana.`]);
   }
-  const uncategorized = s.items.filter(g => g.cat === 'outros');
+  const uncategorized = s.items.filter(g => isOutros(g.cat));
   if (uncategorized.length >= 3) out.push(['🏷️', `${uncategorized.length} gastos estão em “Outros”. Toque neles e escolha a categoria — eu aprendo para as próximas vezes.`]);
   return out;
 }
@@ -553,38 +706,144 @@ function columnChart(values, labels, tips, opt = {}) {
   svg += `<line class="base" x1="${padL}" x2="${W - padR}" y1="${H - padB}" y2="${H - padB}"/></svg>`;
   return svg;
 }
+function legendHtml(series) {
+  return `<div class="legend">${series.map(s => `<span><i class="sw ${s.cls}"></i>${escapeHtml(s.name)}</span>`).join('')}</div>`;
+}
+// Colunas agrupadas (até 3 séries, cores fixas por série), tooltip mostra todas as séries do mês.
+function groupedChart(series, labels, fullLabels, opt = {}) {
+  const W = Math.max(260, opt.width || 600), H = 170, padL = 4, padR = 4, padT = 10, padB = 22;
+  const n = labels.length, k = series.length;
+  const max = Math.max(1, ...series.flatMap(s => s.values));
+  const step = (W - padL - padR) / n;
+  const gap = 2;
+  const bw = Math.max(3, Math.min(18, (step - 12) / k - gap));
+  const y = v => padT + (H - padT - padB) * (1 - v / max);
+  let svg = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Entradas, gastos e investimentos por mês">`;
+  for (const f of [0.5, 1]) svg += `<line class="grid" x1="${padL}" x2="${W - padR}" y1="${y(max * f)}" y2="${y(max * f)}"/>`;
+  for (let i = 0; i < n; i++) {
+    const cx = padL + step * i + step / 2;
+    const x0 = cx - (k * bw + (k - 1) * gap) / 2;
+    series.forEach((s, j) => {
+      const v = s.values[i];
+      if (v <= 0) return;
+      const x = x0 + j * (bw + gap), yt = y(v), yb = H - padB, r = Math.min(3, bw / 2, yb - yt);
+      svg += `<path class="bar ${s.cls}" d="M${x},${yb} V${yt + r} Q${x},${yt} ${x + r},${yt} H${x + bw - r} Q${x + bw},${yt} ${x + bw},${yt + r} V${yb} Z"/>`;
+    });
+    const rows = JSON.stringify(series.map(s => [s.name, s.values[i], s.cls]));
+    svg += `<rect class="hit" x="${padL + step * i}" y="${padT}" width="${step}" height="${H - padT}" data-tip="${escapeHtml(fullLabels[i])}" data-rows="${escapeHtml(rows)}"/>`;
+    svg += `<text x="${cx}" y="${H - 6}" text-anchor="middle">${escapeHtml(labels[i])}</text>`;
+  }
+  svg += `<line class="base" x1="${padL}" x2="${W - padR}" y1="${H - padB}" y2="${H - padB}"/></svg>`;
+  return svg;
+}
 function bindTips() {
   const tip = $('#tooltip');
   $$('.chart .hit').forEach(r => {
     const show = e => {
-      tip.innerHTML = `<b>${money(+r.dataset.val)}</b>${escapeHtml(r.dataset.tip)}`;
+      if (r.dataset.rows) {
+        tip.innerHTML = `<span class="tt-h">${escapeHtml(r.dataset.tip)}</span>` + JSON.parse(r.dataset.rows).map(([name, v, cls]) => `<span class="tt-row"><i class="key ${cls}"></i><b>${money(v)}</b> ${escapeHtml(name)}</span>`).join('');
+      } else tip.innerHTML = `<b>${money(+r.dataset.val)}</b>${escapeHtml(r.dataset.tip)}`;
       const box = r.getBoundingClientRect();
-      tip.style.left = Math.max(60, Math.min(innerWidth - 60, box.left + box.width / 2)) + 'px';
-      tip.style.top = (r.closest('svg').getBoundingClientRect().top + 8) + 'px';
       tip.hidden = false;
+      const half = tip.offsetWidth / 2 + 8;
+      tip.style.left = Math.max(half, Math.min(innerWidth - half, box.left + box.width / 2)) + 'px';
+      tip.style.top = (r.closest('svg').getBoundingClientRect().top + 8) + 'px';
     };
     r.addEventListener('pointerenter', show);
     r.addEventListener('pointerdown', show);
     r.addEventListener('pointerleave', () => tip.hidden = true);
   });
 }
-let resizeT; addEventListener('resize', () => { clearTimeout(resizeT); resizeT = setTimeout(() => { if ($('#view-analysis').classList.contains('active')) renderAnalysis(); }, 150); });
+let resizeT; addEventListener('resize', () => { clearTimeout(resizeT); resizeT = setTimeout(() => { if ($('#view-analysis').classList.contains('active')) renderAnalysis(); if ($('#view-invest').classList.contains('active')) renderInvest(); }, 150); });
 document.addEventListener('scroll', () => { $('#tooltip').hidden = true; }, { passive: true });
+
+// ── Investimentos
+// Patrimônio por destino: aportado (aportes − resgates) e, se você informou, o saldo atual
+// (saldo informado + movimentações depois dele) → rendimento.
+function investPositions() {
+  const all = state.gastos.filter(g => tipoOf(g) === 'invest');
+  const out = [];
+  for (const c of sortedCats('invest')) {
+    const items = all.filter(g => g.cat === c.id);
+    const saldo = state.saldos && state.saldos[c.id];
+    if (!items.length && !saldo) continue;
+    const aportado = sumSigned(items);
+    const atual = saldo ? Math.round((saldo.valor + sumSigned(items.filter(g => g.criado > saldo.ts))) * 100) / 100 : null;
+    out.push({ c, aportado, atual, saldo, n: items.length });
+  }
+  return out;
+}
+function renderInvest() {
+  const pos = investPositions();
+  const total = pos.reduce((a, p) => a + (p.atual ?? p.aportado), 0);
+  const aportado = pos.reduce((a, p) => a + p.aportado, 0);
+  const comSaldo = pos.filter(p => p.atual != null);
+  const rend = comSaldo.reduce((a, p) => a + p.atual - p.aportado, 0);
+  const baseRend = comSaldo.reduce((a, p) => a + p.aportado, 0);
+  $('#invTotal').textContent = money(total);
+  $('#invSub').innerHTML = !pos.length ? 'Nenhum investimento ainda.' : comSaldo.length
+    ? `${money(aportado)} aplicados · rendimento <span class="${rend >= 0 ? 'delta-down' : 'delta-up'}">${rend >= 0 ? '+' : '−'}${money(Math.abs(rend))}${baseRend > 0 ? ` (${rend >= 0 ? '+' : '−'}${Math.abs(rend / baseRend * 100).toLocaleString('pt-BR', { maximumFractionDigits: 1 })}%)` : ''}</span>`
+    : `${money(aportado)} aplicados · toque num destino para informar o saldo atual e ver o rendimento`;
+
+  const mes = ofType(ui.month, 'invest');
+  const keys = [...Array(6)].map((_, i) => shiftMonth(ui.month, i - 5));
+  const aportes = keys.map(k => sum(ofType(k, 'invest').filter(g => !g.resgate)));
+  const mediaAporte = aportes.reduce((a, b) => a + b, 0) / 6;
+  $('#invStats').innerHTML = [
+    ['Aportes no mês', moneyShort(sum(mes.filter(g => !g.resgate)))],
+    ['Resgates no mês', moneyShort(sum(mes.filter(g => g.resgate)))],
+    ['Média 6 meses', moneyShort(mediaAporte)],
+  ].map(([k, v]) => `<div class="stat"><div class="k">${k}</div><div class="v num">${v}</div></div>`).join('');
+
+  $('#invPos').innerHTML = pos.length ? `<ul class="cat-list">${pos.map(p => {
+    const r = p.atual != null ? p.atual - p.aportado : null;
+    return `<li data-id="${p.c.id}"><span class="em">${p.c.emoji}</span><span class="n">${escapeHtml(p.c.nome)}<small>${money(p.aportado)} aplicados${p.saldo ? ` · saldo informado em ${parseISO(p.saldo.data).toLocaleDateString('pt-BR')}` : ' · toque para informar o saldo'}</small></span><span class="b"><b class="num">${money(p.atual ?? p.aportado)}</b>${r != null ? `<br><span class="${r >= 0 ? 'delta-down' : 'delta-up'}">${r >= 0 ? '+' : '−'}${money(Math.abs(r))}</span>` : ''}</span></li>`;
+  }).join('')}</ul>` : '<div class="empty">Quando investir, digite na tela inicial:<br><b>guardei 100 na caixinha</b> · <b>investi 200 no tesouro</b><br>Para tirar: <b>resgatei 50 da poupança</b></div>';
+  $$('#invPos li[data-id]').forEach(li => li.onclick = () => openSaldo(li.dataset.id));
+
+  $('#invChart').innerHTML = aportes.some(v => v) ? columnChart(aportes, keys.map(k => monthName(k, true)), keys.map((k, i) => [`aportes em ${monthName(k)}`, aportes[i]]), { width: $('#invChart').clientWidth, highlight: 5, valueLabels: true }) : '<div class="empty">Sem aportes nos últimos 6 meses.</div>';
+  bindTips();
+
+  const recent = state.gastos.filter(g => tipoOf(g) === 'invest').sort((a, b) => b.data.localeCompare(a.data) || b.criado - a.criado).slice(0, 10);
+  $('#invList').innerHTML = recent.length ? recent.map(txRow).join('') : '<li class="empty">Nenhuma movimentação.</li>';
+  bindTx($('#invList'));
+}
+function openSaldo(catId) {
+  const c = catById(catId);
+  const p = investPositions().find(x => x.c.id === catId) || { aportado: 0, atual: null };
+  openSheet(`<h3>${c.emoji} ${escapeHtml(c.nome)}</h3>
+    <p class="muted small">Você aplicou <b>${money(p.aportado)}</b> aqui (aportes − resgates). Abra o app do banco/corretora e informe quanto tem hoje — eu calculo o rendimento. Novos aportes e resgates são somados a partir daqui.</p>
+    <div class="field"><label>Quanto tem hoje (R$)</label><input name="valor" inputmode="decimal" value="${p.atual != null ? String(p.atual).replace('.', ',') : ''}" placeholder="ex.: ${String(Math.round(p.aportado * 1.01)).replace('.', ',')}"></div>
+    <div class="sheet-actions">${p.saldo ? '<button class="btn danger" value="delete">Limpar saldo</button>' : '<span></span>'}<div class="right"><button class="btn" value="cancel" formnovalidate>Cancelar</button><button class="btn solid" value="save">Salvar</button></div></div>`,
+    (action, fd) => {
+      state.saldos = state.saldos || {};
+      if (action === 'delete') { delete state.saldos[catId]; save(); render(); return; }
+      const v = parseAmount(String(fd.get('valor')).trim());
+      if (v == null) { toast('Valor inválido'); return false; }
+      state.saldos[catId] = { valor: v, data: isoDate(new Date()), ts: Date.now() };
+      save(); render(); toast('Saldo atualizado');
+    });
+}
 
 // ── Ajustes
 function renderSettings() {
   const counts = {};
   for (const g of state.gastos) counts[g.cat] = (counts[g.cat] || 0) + 1;
-  $('#catList').innerHTML = state.categorias.map(c => `<li data-id="${c.id}"><span class="em">${c.emoji}</span><span class="n">${escapeHtml(c.nome)}<small>${counts[c.id] || 0} gastos · ${(c.palavras || []).slice(0, 6).map(escapeHtml).join(', ')}${(c.palavras || []).length > 6 ? '…' : ''}</small></span><span class="b">${+c.orcamento ? money(c.orcamento) + '/mês' : ''}</span></li>`).join('');
-  $$('#catList li').forEach(li => li.onclick = () => openCategory(li.dataset.id));
-  $('#recList').innerHTML = state.fixos.length ? state.fixos.map(f => `<li data-id="${f.id}"><span class="em">${catById(f.cat).emoji}</span><span class="n">${escapeHtml(f.desc)}<small>todo dia ${f.dia}</small></span><span class="b">${money(f.valor)}</span></li>`).join('') : '<li class="muted small" style="cursor:default">Nenhum gasto fixo cadastrado.</li>';
+  $('#catList').innerHTML = Object.entries(TIPOS).map(([t, T]) => `<li class="group-head">${T.emoji} ${T.plural}</li>` + sortedCats(t).map(c => `<li data-id="${c.id}"><span class="em">${c.emoji}</span><span class="n">${escapeHtml(c.nome)}<small>${counts[c.id] || 0} lançamentos · ${(c.palavras || []).slice(0, 6).map(escapeHtml).join(', ')}${(c.palavras || []).length > 6 ? '…' : ''}</small></span><span class="b">${+c.orcamento ? money(c.orcamento) + '/mês' : ''}</span></li>`).join('')).join('');
+  $$('#catList li[data-id]').forEach(li => li.onclick = () => openCategory(li.dataset.id));
+  $('#recList').innerHTML = state.fixos.length ? state.fixos.map(f => `<li data-id="${f.id}"><span class="em">${catById(f.cat).emoji}</span><span class="n">${escapeHtml(f.desc)}<small>todo dia ${f.dia} · ${TIPOS[tipoCat(catById(f.cat))].nome.toLowerCase()}</small></span><span class="b">${tipoCat(catById(f.cat)) === 'entrada' ? '+' : ''}${money(f.valor)}</span></li>`).join('') : '<li class="muted small" style="cursor:default">Nenhum lançamento fixo cadastrado.</li>';
   $$('#recList li[data-id]').forEach(li => li.onclick = () => openRecurring(li.dataset.id));
   const bytes = new Blob([localStorage.getItem(KEY) || '']).size;
-  $('#storageInfo').textContent = `${state.gastos.length} gastos salvos neste aparelho · ${(bytes / 1024).toFixed(0)} KB`;
+  $('#storageInfo').textContent = `${state.gastos.length} lançamentos salvos neste aparelho · ${(bytes / 1024).toFixed(0)} KB`;
 }
 
 // ───────────────────────── Folhas de edição ─────────────────────────
-function catOptions(sel) { return state.categorias.map(c => `<option value="${c.id}" ${c.id === sel ? 'selected' : ''}>${c.emoji} ${escapeHtml(c.nome)}</option>`).join(''); }
+const isOutros = id => Object.values(TIPOS).some(t => t.outros === id);
+const sortedCats = t => catsOf(t).sort((a, b) => isOutros(a.id) - isOutros(b.id));
+function catOptgroups(sel) {
+  return Object.entries(TIPOS).map(([t, T]) => `<optgroup label="${T.emoji} ${T.plural}">${sortedCats(t).map(c => `<option value="${c.id}" ${c.id === sel ? 'selected' : ''}>${c.emoji} ${escapeHtml(c.nome)}</option>`).join('')}</optgroup>`).join('');
+}
+const catOptions = catOptgroups;
 function methodOptions(sel) { return '<option value="">—</option>' + Object.entries(METHODS).map(([k, m]) => `<option value="${k}" ${k === sel ? 'selected' : ''}>${m.nome}</option>`).join(''); }
 function openSheet(html, onSubmit) {
   const dlg = $('#sheet'), form = $('#sheetForm');
@@ -602,7 +861,8 @@ function openSheet(html, onSubmit) {
 function openExpense(id) {
   const g = state.gastos.find(x => x.id === id);
   if (!g) return;
-  openSheet(`<h3>Editar gasto</h3>
+  const t0 = tipoOf(g);
+  openSheet(`<h3>Editar ${TIPOS[t0].nome.toLowerCase()}</h3>
     <div class="field"><label>Descrição</label><input name="desc" value="${escapeHtml(g.desc)}" required></div>
     <div class="field-row">
       <div class="field"><label>Valor (R$)</label><input name="valor" inputmode="decimal" value="${String(g.valor).replace('.', ',')}" required></div>
@@ -612,6 +872,7 @@ function openExpense(id) {
       <div class="field"><label>Categoria</label><select name="cat">${catOptions(g.cat)}</select></div>
       <div class="field"><label>Pagamento</label><select name="metodo">${methodOptions(g.metodo)}</select></div>
     </div>
+    <label class="check" id="resgateRow" ${t0 === 'invest' ? '' : 'hidden'}><input type="checkbox" name="resgate" ${g.resgate ? 'checked' : ''}> É um resgate (tirei dinheiro do investimento)</label>
     <div class="field"><label>Observação</label><textarea name="nota">${escapeHtml(g.nota || '')}</textarea></div>
     <div class="sheet-actions"><button class="btn danger" value="delete">Excluir${g.grupo ? ' parcelas' : ''}</button><div class="right"><button class="btn" value="cancel" formnovalidate>Cancelar</button><button class="btn solid" value="save">Salvar</button></div></div>`,
     (action, fd) => {
@@ -620,54 +881,66 @@ function openExpense(id) {
         const ids = new Set(removed.map(x => x.id));
         state.gastos = state.gastos.filter(x => !ids.has(x.id));
         save(); render();
-        toast(removed.length > 1 ? `${removed.length} parcelas excluídas` : 'Gasto excluído', 'desfazer', () => { state.gastos.push(...removed); save(); render(); });
+        toast(removed.length > 1 ? `${removed.length} parcelas excluídas` : 'Excluído', 'desfazer', () => { state.gastos.push(...removed); save(); render(); });
         return;
       }
       const valor = parseAmount(fd.get('valor').trim());
       if (!valor) { toast('Valor inválido'); return false; }
       const newCat = fd.get('cat'), oldCat = g.cat;
       Object.assign(g, { desc: fd.get('desc').trim(), valor, data: fd.get('data'), cat: newCat, metodo: fd.get('metodo'), nota: fd.get('nota').trim() });
+      if (tipoCat(catById(newCat)) === 'invest' && fd.get('resgate')) g.resgate = true; else delete g.resgate;
       learn(g.desc.replace(/\s*\(\d+\/\d+\)$/, ''), newCat, oldCat);
       save(); render();
       toast('Salvo');
     });
+  const sel = $('#sheetForm select[name=cat]');
+  sel.onchange = () => { $('#resgateRow').hidden = tipoCat(catById(sel.value)) !== 'invest'; };
 }
 
 function openCategory(id) {
   const isNew = !id;
   const c = isNew ? { id: '', nome: '', emoji: '🏷️', palavras: [], orcamento: '' } : state.categorias.find(x => x.id === id);
+  const tc = tipoCat(c);
   openSheet(`<h3>${isNew ? 'Nova categoria' : 'Editar categoria'}</h3>
     <div class="field-row" style="grid-template-columns: 80px 1fr">
       <div class="field"><label>Emoji</label><input name="emoji" value="${escapeHtml(c.emoji)}" maxlength="4" style="text-align:center;font-size:20px"></div>
       <div class="field"><label>Nome</label><input name="nome" value="${escapeHtml(c.nome)}" required></div>
     </div>
-    <div class="field"><label>Orçamento mensal (R$, opcional)</label><input name="orcamento" inputmode="decimal" value="${c.orcamento ? String(c.orcamento).replace('.', ',') : ''}" placeholder="ex.: 800"></div>
+    <div class="field"><label>Tipo</label><select name="tipo" ${isOutros(c.id) ? 'disabled' : ''}>${Object.entries(TIPOS).map(([t, T]) => `<option value="${t}" ${t === tc ? 'selected' : ''}>${T.emoji} ${T.nome}</option>`).join('')}</select></div>
+    <div class="field" id="orcField" ${tc === 'gasto' ? '' : 'hidden'}><label>Orçamento mensal (R$, opcional)</label><input name="orcamento" inputmode="decimal" value="${c.orcamento ? String(c.orcamento).replace('.', ',') : ''}" placeholder="ex.: 800"></div>
     <div class="field"><label>Palavras-chave (separadas por vírgula)</label><textarea name="palavras" placeholder="ex.: academia, smartfit">${escapeHtml((c.palavras || []).join(', '))}</textarea></div>
-    <div class="sheet-actions">${!isNew && c.id !== 'outros' ? '<button class="btn danger" value="delete">Excluir</button>' : '<span></span>'}<div class="right"><button class="btn" value="cancel" formnovalidate>Cancelar</button><button class="btn solid" value="save">Salvar</button></div></div>`,
+    <div class="sheet-actions">${!isNew && !isOutros(c.id) ? '<button class="btn danger" value="delete">Excluir</button>' : '<span></span>'}<div class="right"><button class="btn" value="cancel" formnovalidate>Cancelar</button><button class="btn solid" value="save">Salvar</button></div></div>`,
     (action, fd) => {
       if (action === 'delete') {
-        if (!confirm(`Excluir “${c.nome}”? Os gastos dela vão para “Outros”.`)) return false;
-        state.gastos.forEach(g => { if (g.cat === c.id) g.cat = 'outros'; });
+        const dest = TIPOS[tc].outros;
+        if (!confirm(`Excluir “${c.nome}”? Os lançamentos dela vão para “${catById(dest).nome}”.`)) return false;
+        state.gastos.forEach(g => { if (g.cat === c.id) g.cat = dest; });
+        state.fixos.forEach(f => { if (f.cat === c.id) f.cat = dest; });
         state.categorias = state.categorias.filter(x => x.id !== c.id);
         (state.removidas || (state.removidas = [])).push(c.id);
         save(); render(); return;
       }
       const data = {
         nome: fd.get('nome').trim(), emoji: fd.get('emoji').trim() || '🏷️',
-        orcamento: parseAmount(fd.get('orcamento').trim()) || 0,
+        orcamento: parseAmount((fd.get('orcamento') || '').trim()) || 0,
         palavras: fd.get('palavras').split(',').map(s => norm(s)).filter(Boolean),
       };
-      if (isNew) state.categorias.splice(state.categorias.length - 1, 0, { id: uid(), ...data });
-      else Object.assign(c, data);
+      const tipo = isOutros(c.id) ? tc : fd.get('tipo');
+      if (tipo !== 'gasto') data.orcamento = 0;
+      if (isNew) addCategory(data.nome, tipo, data);
+      else { Object.assign(c, data); if (tipo === 'gasto') delete c.tipo; else c.tipo = tipo; }
       save(); render();
     });
+  const ts = $('#sheetForm select[name=tipo]');
+  ts.onchange = () => { $('#orcField').hidden = ts.value !== 'gasto'; };
 }
 
 function openRecurring(id) {
   const isNew = !id;
   const f = isNew ? { desc: '', valor: '', dia: new Date().getDate(), cat: '', metodo: '' } : state.fixos.find(x => x.id === id);
-  openSheet(`<h3>${isNew ? 'Novo gasto fixo' : 'Editar gasto fixo'}</h3>
-    <div class="field"><label>Descrição</label><input name="desc" value="${escapeHtml(f.desc)}" placeholder="ex.: Aluguel" required></div>
+  openSheet(`<h3>${isNew ? 'Novo lançamento fixo' : 'Editar lançamento fixo'}</h3>
+    <p class="muted small">Pode ser gasto (aluguel), entrada (salário, mesada) ou investimento (aporte todo mês) — depende da categoria.</p>
+    <div class="field"><label>Descrição</label><input name="desc" value="${escapeHtml(f.desc)}" placeholder="ex.: Aluguel, Salário, Caixinha" required></div>
     <div class="field-row">
       <div class="field"><label>Valor (R$)</label><input name="valor" inputmode="decimal" value="${f.valor ? String(f.valor).replace('.', ',') : ''}" required></div>
       <div class="field"><label>Dia do mês</label><input name="dia" type="number" min="1" max="31" value="${f.dia}" required></div>
@@ -739,19 +1012,27 @@ function parseMoneyCell(s) {
   return isFinite(v) ? Math.abs(v) : null;
 }
 
-function matchCategory(name) {
+function matchCategory(name, tipo) {
   const n = norm(name);
   if (!n) return null;
+  const pool = tipo ? catsOf(tipo) : state.categorias;
   // "IF e Senai" = "Senai ou IF" = "IF / Senai"
   const key = s => norm(s).replace(/[^a-z0-9]+/g, ' ').split(' ').filter(w => w && !['e', 'ou', 'and', 'or'].includes(w)).sort().join(' ');
-  let c = state.categorias.find(x => norm(x.nome) === n) || state.categorias.find(x => key(x.nome) === key(name)) || state.categorias.find(x => norm(x.nome).includes(n) || n.includes(norm(x.nome)));
+  let c = pool.find(x => norm(x.nome) === n) || pool.find(x => key(x.nome) === key(name)) || pool.find(x => norm(x.nome).includes(n) || n.includes(norm(x.nome)));
   if (!c) {
-    const guess = categorize(name);
-    if (guess.cat !== 'outros' && guess.certeza > 0.5) c = catById(guess.cat);
+    const guess = categorize(name, tipo);
+    if (!isOutros(guess.cat) && guess.certeza > 0.5) c = catById(guess.cat);
   }
   return c ? c.id : null;
 }
 
+function addCategory(nome, tipo = 'gasto', extra = {}) {
+  const c = { id: uid(), nome, emoji: guessEmoji(nome), palavras: [], ...extra };
+  c.nome = c.nome[0].toUpperCase() + c.nome.slice(1);
+  if (tipo !== 'gasto') c.tipo = tipo;
+  state.categorias.push(c);
+  return c;
+}
 function guessEmoji(name) {
   const n = norm(name);
   if (/\b(if|senai|escola|facul|faculdade|colegio|ifsp|ifrs|ifsc|campus|universidade|cantina)\b/.test(n)) return '🏫';
@@ -768,7 +1049,8 @@ function importCSV(text) {
   let iDesc = find('nome', 'name', 'descricao', 'description', 'gasto', 'item', 'titulo', 'title', 'o que');
   let iVal = find('valor', 'value', 'preco', 'price', 'amount', 'quantia', 'total', 'custo');
   let iDate = find('data', 'date', 'quando', 'created');
-  const iCat = find('categoria', 'category', 'tipo', 'tag', 'tags');
+  const iTipo = head.findIndex(h => ['tipo', 'type', 'movimento', 'natureza'].includes(h));
+  const iCat = head.findIndex((h, i) => i !== iTipo && ['categoria', 'category', 'tipo', 'tag', 'tags'].some(n => h === n || h.includes(n)));
   const iMet = find('pagamento', 'forma', 'metodo', 'method', 'cartao', 'conta');
   const iNote = find('obs', 'nota', 'notes', 'comentario');
   // heurísticas se não achar pelo nome
@@ -786,27 +1068,28 @@ function importCSV(text) {
     const desc = (r[iDesc] || '').trim() || 'Sem descrição';
     const data = (iDate >= 0 && parseAnyDate(r[iDate] || '')) || isoDate(new Date());
     let cat = null;
+    const tv = iTipo >= 0 ? norm(r[iTipo]) : '';
+    const tipoRow = /^(entrada|receita|renda|ganho|income)/.test(tv) ? 'entrada' : /^(invest|aporte|aplica|resgate)/.test(tv) ? 'invest' : iTipo >= 0 && tv ? 'gasto' : undefined;
+    const resgate = /^resgate/.test(tv);
     if (iCat >= 0 && r[iCat] && r[iCat].trim()) {
       const name = r[iCat].split(',')[0].trim();
-      cat = matchCategory(name);
-      if (!cat) { // cria a categoria que existe no Notion
-        const nc = { id: uid(), nome: name[0].toUpperCase() + name.slice(1), emoji: guessEmoji(name), palavras: [] };
-        state.categorias.splice(state.categorias.length - 1, 0, nc);
-        cat = nc.id; newCats++;
-      }
+      cat = matchCategory(name, tipoRow);
+      if (!cat) { cat = addCategory(name, tipoRow || 'gasto').id; newCats++; } // cria a categoria que existe no Notion
     }
-    if (!cat) cat = categorize(desc).cat;
+    if (!cat) cat = categorize(desc, tipoRow).cat;
     let metodo = '';
     if (iMet >= 0 && r[iMet]) { const pm = parseText('x ' + r[iMet]).metodo; metodo = pm || ''; }
     const key = `${data}|${norm(desc)}|${valor}`;
     if (known.has(key)) { skipped++; continue; }
     known.add(key);
-    state.gastos.push({ id: uid(), desc, valor, data, cat, metodo, nota: iNote >= 0 ? (r[iNote] || '').trim() : '', criado: Date.now() + added });
+    const g = { id: uid(), desc, valor, data, cat, metodo, nota: iNote >= 0 ? (r[iNote] || '').trim() : '', criado: Date.now() + added };
+    if (resgate && tipoCat(catById(cat)) === 'invest') g.resgate = true;
+    state.gastos.push(g);
     if (iCat >= 0) learn(desc, cat);
     added++;
   }
   save(); render();
-  toast(`${added} gastos importados${skipped ? `, ${skipped} ignorados (vazios ou repetidos)` : ''}${newCats ? `, ${newCats} categorias novas` : ''}`);
+  toast(`${added} lançamentos importados${skipped ? `, ${skipped} ignorados (vazios ou repetidos)` : ''}${newCats ? `, ${newCats} categorias novas` : ''}`);
 }
 
 // Cola o texto de uma página do Notion (ou do bloco de notas):
@@ -814,21 +1097,30 @@ function importCSV(text) {
 // Se a linha não tem descrição, usa o título da seção como descrição e categoria.
 function parsePasted(text) {
   const out = [];
-  let header = '';
+  let header = '', secTipo;
   for (let line of text.split(/\r?\n/)) {
     line = line.replace(/^[-*•☐☑✓\d]+[.)]\s+/, '').replace(/^#+\s*/, '').trim();
     if (!line) continue;
     const p = parseText(line);
-    if (!p.valor) { header = line.replace(/[:：]$/, '').trim(); continue; }
-    const generic = /^(geral|gastos?|outros|diversos|total)$/i.test(norm(header));
+    if (!p.valor) {
+      header = line.replace(/[:：]$/, '').trim();
+      const h = norm(header);
+      secTipo = /^(entradas?|receitas?|recebidos?|ganhos?|rendas?)\b/.test(h) ? 'entrada' : /^(investimentos?|aportes?|aplicacoes|guardado)\b/.test(h) ? 'invest' : /^(gastos?|saidas?|despesas?)\b/.test(h) ? 'gasto' : /^(geral|diversos|outros)$/.test(h) ? undefined : secTipo;
+      continue;
+    }
+    const tipo = p.tipo || secTipo;
+    const generic = /^(geral|gastos?|outros|diversos|total|entradas?|receitas?|recebidos?|ganhos?|investimentos?|aportes?|saidas?|despesas?)$/i.test(norm(header));
     let desc = p.desc, cat;
     if (!desc && header && !generic) {
       desc = header;
-      cat = matchCategory(header);
-      if (!cat) { const nc = { id: uid(), nome: header[0].toUpperCase() + header.slice(1), emoji: guessEmoji(header), palavras: [] }; state.categorias.splice(state.categorias.length - 1, 0, nc); cat = nc.id; }
+      cat = matchCategory(header, tipo);
+      if (!cat) cat = addCategory(header, tipo || 'gasto').id;
     }
     desc = desc || 'Sem descrição';
-    out.push({ desc, valor: p.valor, data: p.data, metodo: p.metodo, cat: cat || categorize(desc).cat });
+    cat = cat || categorize(desc, tipo).cat;
+    const item = { desc, valor: p.valor, data: p.data, metodo: p.metodo, cat };
+    if (p.resgate && tipoCat(catById(cat)) === 'invest') item.resgate = true;
+    out.push(item);
   }
   return out;
 }
@@ -843,10 +1135,10 @@ function openPaste() {
       if (!items.length) { state.categorias = JSON.parse(before); toast('Não achei nenhum valor no texto'); return false; }
       const known = new Set(state.gastos.map(g => `${g.data}|${norm(g.desc)}|${g.valor}`));
       const fresh = items.filter(g => !known.has(`${g.data}|${norm(g.desc)}|${g.valor}`));
-      if (!confirm(`Encontrei ${items.length} gastos (${money(sum(items))}).${fresh.length < items.length ? ` ${items.length - fresh.length} já estavam no app e serão pulados.` : ''} Importar?`)) { state.categorias = JSON.parse(before); return false; }
+      if (!confirm(`Encontrei ${items.length} lançamentos (${money(sum(items))}).${fresh.length < items.length ? ` ${items.length - fresh.length} já estavam no app e serão pulados.` : ''} Importar?`)) { state.categorias = JSON.parse(before); return false; }
       fresh.forEach((g, i) => { state.gastos.push({ id: uid(), ...g, nota: '', criado: Date.now() + i }); learn(g.desc, g.cat); });
       save(); render();
-      toast(`${fresh.length} gastos importados`);
+      toast(`${fresh.length} lançamentos importados`);
     });
 }
 
@@ -859,9 +1151,10 @@ function download(name, content, type) {
 }
 function exportCSV() {
   const q = v => `"${String(v ?? '').replace(/"/g, '""')}"`;
-  const lines = [['Nome', 'Valor', 'Data', 'Categoria', 'Pagamento', 'Observação'].join(',')];
+  const lines = [['Nome', 'Valor', 'Data', 'Tipo', 'Categoria', 'Pagamento', 'Observação'].join(',')];
   for (const g of [...state.gastos].sort((a, b) => a.data.localeCompare(b.data))) {
-    lines.push([q(g.desc), g.valor.toFixed(2), g.data, q(catById(g.cat).nome), q(g.metodo ? METHODS[g.metodo].nome : ''), q(g.nota || '')].join(','));
+    const t = tipoOf(g) === 'invest' && g.resgate ? 'Resgate' : TIPOS[tipoOf(g)].nome;
+    lines.push([q(g.desc), g.valor.toFixed(2), g.data, q(t), q(catById(g.cat).nome), q(g.metodo ? METHODS[g.metodo].nome : ''), q(g.nota || '')].join(','));
   }
   download(`gastos-${isoDate(new Date())}.csv`, '﻿' + lines.join('\n'), 'text/csv;charset=utf-8');
 }
@@ -896,11 +1189,18 @@ function init() {
   $('#quickInput').addEventListener('input', () => { if (pending) pending.catManual = pending.catManual && $('#quickInput').value.trim() !== ''; updatePreview(); });
   $('#prevMonth').onclick = () => { ui.month = shiftMonth(ui.month, -1); render(); };
   $('#nextMonth').onclick = () => { ui.month = shiftMonth(ui.month, 1); render(); };
-  $$('.tab').forEach(t => t.onclick = () => { if (t.dataset.view === 'list') { ui.cat = ''; } go(t.dataset.view); });
+  $$('.tab').forEach(t => t.onclick = () => { if (t.dataset.view === 'list') { ui.cat = ''; ui.tipoFiltro = 'tudo'; } go(t.dataset.view); });
   $$('[data-goto]').forEach(b => b.onclick = () => { ui.cat = ''; go(b.dataset.goto); });
   $('#searchInput').addEventListener('input', e => { ui.search = e.target.value; renderList(); $('#searchInput').focus(); });
   $('#catFilter').addEventListener('change', e => { ui.cat = e.target.value; renderList(); });
   $('#addCat').onclick = () => openCategory(null);
+  $$('#tipoSeg button').forEach(b => b.onclick = () => {
+    ui.tipoForce = ui.tipoForce === b.dataset.tipo ? null : b.dataset.tipo;
+    if (pending) pending.catManual = false;
+    if ($('#quickInput').value.trim()) updatePreview(); else updateSeg(ui.tipoForce);
+    $('#quickInput').focus();
+  });
+  $$('#listSeg button').forEach(b => b.onclick = () => { ui.tipoFiltro = b.dataset.tipo; ui.cat = ''; renderList(); });
   $('#addRec').onclick = () => openRecurring(null);
   $('#exportCsv').onclick = exportCSV;
   $('#pasteBtn').onclick = openPaste;

@@ -16,6 +16,22 @@ Digite do jeito que você falaria e aperte Enter:
 | `barbearia 50 sábado` | R$ 50 · 💇 Cuidados pessoais · último sábado |
 | `r$ 1.250 aluguel` | R$ 1.250,00 · 🏠 Moradia |
 
+### Entradas e investimentos
+
+O app também registra o que **entra** e o que você **investe**. O tipo é detectado pelo texto (ou escolha em 💸 Gasto · 💰 Entrada · 📈 Investir, logo abaixo da caixa):
+
+| Você digita | O app entende |
+|---|---|
+| `recebi mesada 300` · `salário 1500` · `+50 pix do joão` | 💰 entrada (Mesada, Salário, Outras entradas) |
+| `pé de meia 200` · `recebi bolsa 400` · `vendi bicicleta 250` | 💰 Bolsa & Estágio, Vendas |
+| `guardei 100 na caixinha` · `investi 200 no tesouro` | 📈 investimento (Caixinha/CDB, Tesouro Direto) |
+| `resgatei 50 da poupança` | ↩️ resgate (tira do investimento) |
+
+- **Início → Balanço do mês:** entrou, gastou, investiu e quanto sobrou.
+- **Aba Investir:** total investido, onde está cada parte, aportes por mês. Toque num destino e informe o saldo que aparece no banco para ver o **rendimento**.
+- **Análise → Entradas × saídas:** os últimos 6 meses lado a lado.
+- **Lançamentos fixos** aceitam entradas também (ex.: mesada todo dia 1).
+
 Antes de salvar aparece uma prévia; se a categoria estiver errada, toque nela e troque.
 **O app aprende:** depois que você corrige uma vez (“padoca” → Mercado), ele acerta sozinho nas próximas.
 

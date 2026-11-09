@@ -30,11 +30,16 @@
     <section class="view active" id="view-home" aria-label="Início">
       <form class="quick" id="quickForm" autocomplete="off">
         <label for="quickInput" class="sr-only">Novo gasto</label>
-        <input id="quickInput" enterkeyhint="done" placeholder="ex.: mercado 87,90 · uber 23 ontem pix" autocomplete="off">
+        <input id="quickInput" enterkeyhint="done" placeholder="ex.: mercado 87,90 · recebi mesada 300" autocomplete="off">
         <button type="submit" class="primary" aria-label="Adicionar">＋</button>
       </form>
+      <div class="seg" id="tipoSeg" role="group" aria-label="Tipo de lançamento">
+        <button type="button" data-tipo="gasto" aria-pressed="false">💸 Gasto</button>
+        <button type="button" data-tipo="entrada" aria-pressed="false">💰 Entrada</button>
+        <button type="button" data-tipo="invest" aria-pressed="false">📈 Investir</button>
+      </div>
       <div class="preview" id="preview" hidden></div>
-      <div class="hint" id="quickHint">Escreva do jeito que falaria. Entendo valor, <b>ontem</b>, <b>12/10</b>, <b>pix</b>, <b>crédito</b>, <b>3x</b>…</div>
+      <div class="hint" id="quickHint">Escreva do jeito que falaria: <b>uber 23 ontem pix</b>, <b>tênis 300 3x</b>, <b>recebi salário 1500</b>, <b>guardei 100 na caixinha</b>, <b>resgatei 50 da poupança</b>. O tipo é detectado sozinho — ou toque acima para escolher.</div>
 
       <div class="card hero">
         <div class="hero-label">Gasto no mês</div>
@@ -42,6 +47,8 @@
         <div class="hero-sub" id="heroSub"></div>
         <div class="budget" id="heroBudget"></div>
       </div>
+
+      <div class="card" id="balance"></div>
 
       <div class="stats" id="stats"></div>
 
@@ -51,13 +58,19 @@
       </div>
 
       <div class="card">
-        <div class="card-head"><h2>Últimos gastos</h2><button class="link" data-goto="list">ver todos</button></div>
+        <div class="card-head"><h2>Últimos lançamentos</h2><button class="link" data-goto="list">ver todos</button></div>
         <ul class="tx-list" id="recentList"></ul>
       </div>
     </section>
 
-    <!-- GASTOS -->
-    <section class="view" id="view-list" aria-label="Gastos">
+    <!-- EXTRATO -->
+    <section class="view" id="view-list" aria-label="Extrato">
+      <div class="seg small-seg" id="listSeg" role="group" aria-label="Filtrar tipo">
+        <button type="button" data-tipo="tudo" class="sel">Tudo</button>
+        <button type="button" data-tipo="gasto">Gastos</button>
+        <button type="button" data-tipo="entrada">Entradas</button>
+        <button type="button" data-tipo="invest">Investido</button>
+      </div>
       <div class="filters">
         <input type="search" id="searchInput" placeholder="Buscar…">
         <select id="catFilter" aria-label="Filtrar categoria"></select>
@@ -71,6 +84,11 @@
       <div class="card" id="insightsCard">
         <h2>O que chama atenção</h2>
         <ul class="insights" id="insights"></ul>
+      </div>
+      <div class="card" id="flowCard" hidden>
+        <h2>Entradas × saídas</h2>
+        <div id="flowChart" class="chart"></div>
+        <div id="flowTable" class="flow-table"></div>
       </div>
       <div class="card">
         <div class="card-head"><h2>Categorias</h2><span class="muted small">barra = gasto · traço = orçamento</span></div>
@@ -94,6 +112,28 @@
       </div>
     </section>
 
+    <!-- INVESTIMENTOS -->
+    <section class="view" id="view-invest" aria-label="Investimentos">
+      <div class="card hero">
+        <div class="hero-label">Total investido</div>
+        <div class="hero-value" id="invTotal">R$ 0,00</div>
+        <div class="hero-sub" id="invSub"></div>
+      </div>
+      <div class="stats" id="invStats"></div>
+      <div class="card">
+        <h2>Onde está</h2>
+        <div id="invPos"></div>
+      </div>
+      <div class="card">
+        <h2>Aportes por mês</h2>
+        <div id="invChart" class="chart"></div>
+      </div>
+      <div class="card">
+        <h2>Movimentações</h2>
+        <ul class="tx-list" id="invList"></ul>
+      </div>
+    </section>
+
     <!-- AJUSTES -->
     <section class="view" id="view-settings" aria-label="Ajustes">
       <div class="card">
@@ -103,8 +143,8 @@
       </div>
 
       <div class="card">
-        <div class="card-head"><h2>Gastos fixos</h2><button class="link" id="addRec">+ novo</button></div>
-        <p class="muted small">Aluguel, academia, streaming… lançados automaticamente todo mês no dia escolhido.</p>
+        <div class="card-head"><h2>Lançamentos fixos</h2><button class="link" id="addRec">+ novo</button></div>
+        <p class="muted small">Aluguel, academia, salário, mesada, aporte mensal… lançados automaticamente todo mês no dia escolhido.</p>
         <ul class="cat-list" id="recList"></ul>
       </div>
 
@@ -133,8 +173,9 @@
 
   <nav class="tabbar" aria-label="Navegação">
     <button class="tab active" data-view="home"><span>🏠</span>Início</button>
-    <button class="tab" data-view="list"><span>📋</span>Gastos</button>
+    <button class="tab" data-view="list"><span>📋</span>Extrato</button>
     <button class="tab" data-view="analysis"><span>📊</span>Análise</button>
+    <button class="tab" data-view="invest"><span>📈</span>Investir</button>
     <button class="tab" data-view="settings"><span>⚙️</span>Ajustes</button>
   </nav>
 
