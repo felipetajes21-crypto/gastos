@@ -387,3 +387,6 @@ table.simple td.p { text-align: right; color: var(--muted); width: 56px; font-va
 .rend-line b { color: var(--ink); }
 .pos .liq { margin: 6px 0 0; }
 [data-pct][hidden] { display: none !important; }
+
+.tes-holds small + small { margin-top: 1px; }
+.small-link { font-size: 12px; padding: 2px 0 0; text-align: left; }

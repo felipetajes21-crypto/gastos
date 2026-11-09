@@ -142,6 +142,13 @@ function parseText(text) {
   else if ((rm = raw.match(/ipca\s*\+\s*(\d{1,2}(?:[.,]\d+)?)%/i))) out.rend = { ind: 'ipca', pct: parseFloat(rm[1].replace(',', '.')) };
   else if ((rm = raw.match(/(?:pre(?:fixado)?\s*)?(\d{1,2}(?:[.,]\d+)?)%\s*(?:a\.?\s*a\.?|ao ano)/i))) out.rend = { ind: 'pre', pct: parseFloat(rm[1].replace(',', '.')) };
   if (rm && out.rend) raw = raw.replace(rm[0], ' ').replace(/\s+/g, ' ').trim();
+  // cotas: "2,5 cotas" / "3 títulos"
+  if ((rm = raw.match(/(\d+(?:[.,]\d+)?)\s*(?:cotas?|t[ií]tulos?)\b/i))) { out.cotas = parseFloat(rm[1].replace(',', '.')); raw = raw.replace(rm[0], ' ').replace(/\s+/g, ' ').trim(); }
+  // taxa solta de Tesouro: "tesouro prefixado 2031 a 13,2%"
+  if (!out.rend && /tesouro|prefixado|ipca|selic|renda\+|educa/i.test(raw) && (rm = raw.match(/(?:\b(?:a|taxa(?: de)?)\s+)?(\d{1,2}(?:[.,]\d+)?)%/i))) {
+    out.taxaTes = parseFloat(rm[1].replace(',', '.'));
+    raw = raw.replace(rm[0], ' ').replace(/\s+/g, ' ').trim();
+  }
   // "r$ 20" → "r$20"
   raw = raw.replace(/r\$\s+(?=\d)/gi, 'r$')
     .replace(/[()\[\]]/g, ' ')                       // "(01/07)" → " 01/07 "
@@ -368,7 +375,9 @@ function updatePreview() {
   }
   if (tipo === 'invest' && isTesouroCat(pending.cat)) {
     const t = matchTitulo(text);
-    parts.push(t ? `<span class="chip">🏛️ ${escapeHtml(t.nome.replace(/^Tesouro /, ''))}${t.taxaCompra && !p.resgate ? ' · ' + taxaTexto(t.tipo, t.taxaCompra) : ''}</span>` : `<span class="chip">🏛️ qual título? ex.: “ipca 2035”</span>`);
+    const txInf = p.taxaTes ?? (p.rend && p.rend.pct < 30 ? p.rend.pct : null);
+    const txShow = txInf ?? (p.data === isoDate(new Date()) ? t && t.taxaCompra : null);
+    parts.push(t ? `<span class="chip">🏛️ ${escapeHtml(t.nome.replace(/^Tesouro /, ''))}${txShow != null && !p.resgate ? ' · comprou a ' + taxaTexto(t.tipo, txShow) : ''}${p.cotas ? ' · ' + cotasFmt(p.cotas) : ''}</span>` : `<span class="chip">🏛️ qual título? ex.: “ipca 2035”</span>`);
   }
   if (p.desc) parts.push(`<span class="chip">“${escapeHtml(p.desc)}”</span>`);
   box.innerHTML = parts.join('');
@@ -423,9 +432,12 @@ function submitQuick(e) {
   if (tTes) {
     const g = created[0];
     g.titulo = tTes.nome;
-    if (!resgate && tTes.taxaCompra != null) g.taxa = tTes.taxaCompra;
-    const pu = resgate ? tTes.puVenda : tTes.puCompra;
-    if (pu && g.data === isoDate(new Date())) g.qtd = Math.round(p.valor / pu * 1e6) / 1e6;
+    const txInf = p.taxaTes ?? (p.rend && ['ipca', 'pre', 'selic'].includes(p.rend.ind) && p.rend.pct < 30 ? p.rend.pct : null);
+    const hoje = g.data === isoDate(new Date());
+    if (!resgate && p.cotas > 0) g.cotas = p.cotas;
+    if (!resgate) { if (txInf != null) g.taxa = txInf; else if (hoje && tTes.taxaCompra != null) g.taxa = tTes.taxaCompra; }
+    const pu = resgate ? tTes.puVenda : (txInf != null && txInf !== tTes.taxaCompra ? null : tTes.puCompra);
+    if (pu && !g.cotas && g.data === isoDate(new Date())) g.qtd = Math.round(p.valor / pu * 1e6) / 1e6;
     save();
   }
   input.value = '';
@@ -846,20 +858,69 @@ function matchTitulo(text) {
   if (year) return pool.find(t => t.nome.includes(year)) || null;
   return venda[0] || pool[0] || null;
 }
+// Preço de um título = pagamentos futuros descontados pela taxa: (1 + taxa)^(−dias úteis/252).
+// Com a taxa e a data da compra, reconstruímos o preço pago (e a quantidade de títulos);
+// o valor de hoje é quantidade × preço oficial de venda de hoje (marcação a mercado).
+const duEntre = (a, b) => Math.max(0, (b - a) / 864e5) * 252 / 365;   // dias úteis (aprox.)
+function tesFlows(t) {
+  const v = parseISO(t.vencimento), out = [], tp = t.tipo;
+  if (tp === 'prefixado-semestral' || tp === 'ipca-semestral' || tp === 'igpm') {
+    const c = tp === 'prefixado-semestral' ? Math.sqrt(1.10) - 1 : Math.sqrt(1.06) - 1;   // 10% a.a. ou 6% a.a., pagos a cada 6 meses
+    for (let k = 0; k < 120; k++) out.push({ d: new Date(v.getFullYear(), v.getMonth() - 6 * k, v.getDate()), a: c + (k === 0 ? 1 : 0), cupom: c });
+  } else if (tp === 'renda' || tp === 'educa') {
+    const n = tp === 'renda' ? 240 : 60, y0 = v.getFullYear() - (tp === 'renda' ? 19 : 4);   // renda mensal por 20 / 5 anos
+    for (let k = 0; k < n; k++) out.push({ d: new Date(y0, k, 15), a: 1 / n, cupom: 1 / n });
+  } else out.push({ d: v, a: 1 });
+  return out;
+}
+const priceFactor = (fl, taxa, from) => fl.reduce((s, f) => f.d > from ? s + f.a * Math.pow(1 + taxa / 100, -duEntre(from, f.d) / 252) : s, 0);
+function indexGrowth(tipo, from, to) {          // quanto o valor nominal corrigiu entre as datas
+  const m = mercado(), anos = Math.max(0, (to - from) / 864e5) / 365;
+  if (tipo.startsWith('prefixado')) return 1;
+  if (tipo === 'selic') return m.selicOver != null ? Math.pow(1 + m.selicOver / 100, anos) : null;
+  return m.ipca != null ? Math.pow(1 + m.ipca / 100, anos) : null;   // IPCA+, Renda+, Educa+, IGP-M (aprox. pelo IPCA)
+}
+function puNaData(t, data, taxa) {
+  if (!t || !t.puVenda || t.taxaVenda == null || taxa == null || isNaN(taxa)) return null;
+  const now = new Date(), d = parseISO(data), fl = tesFlows(t);
+  const g = indexGrowth(t.tipo, d, now), ph = priceFactor(fl, t.taxaVenda, now), pc = priceFactor(fl, taxa, d);
+  return g && ph && pc ? t.puVenda / g * pc / ph : null;
+}
+function cuponsDesde(t, data) {                 // juros/renda já pagos entre a compra e hoje, por título
+  if (!t || !t.puVenda || t.taxaVenda == null) return 0;
+  const now = new Date(), d = parseISO(data), fl = tesFlows(t), ph = priceFactor(fl, t.taxaVenda, now);
+  if (!ph) return 0;
+  const nominalHoje = t.puVenda / ph;
+  return fl.filter(f => f.cupom && f.d > d && f.d <= now).reduce((s, f) => s + f.cupom, 0) * nominalHoje;
+}
+// quantos títulos um lançamento representa
+const cotasFmt = q => `${q.toLocaleString('pt-BR', { maximumFractionDigits: q < 10 ? 2 : 1 })} ${Math.abs(q - 1) < 0.005 ? 'cota' : 'cotas'}`;
+function qtdOf(g, t) {
+  if (g.cotas) return g.cotas;                                      // cotas informadas
+  if (g.pu) return g.valor / g.pu;                                  // preço pago informado
+  if (g.qtd) return g.qtd;                                          // comprado hoje, preço oficial do dia
+  const taxa = g.resgate ? (t && t.taxaVenda) : g.taxa;
+  const pu = puNaData(t, g.data, taxa);
+  return pu ? g.valor / pu : null;
+}
+
 // Posição por título dentro do Tesouro. Se toda compra/venda guardou a quantidade
 // (valor ÷ preço do dia), o valor de hoje é estimado pelo preço de venda atual.
 function tesouroHoldings(items) {
   const m = {};
   for (const g of items) {
     const k = g.titulo || 'Título não informado';
-    const h = m[k] || (m[k] = { nome: k, aportado: 0, qtd: 0, qtdOk: true, tw: 0, w: 0 });
+    const h = m[k] || (m[k] = { nome: k, aportado: 0, qtd: 0, qtdOk: true, tw: 0, w: 0, cupons: 0, semTaxa: null });
+    const t = tesouroByName(g.titulo);
     h.aportado += signed(g);
-    if (g.qtd) h.qtd += g.resgate ? -g.qtd : g.qtd; else h.qtdOk = false;
+    const q = qtdOf(g, t);
+    if (q == null) { h.qtdOk = false; if (!g.resgate && g.taxa == null && !g.pu && !h.semTaxa) h.semTaxa = g.id; }
+    else { h.qtd += g.resgate ? -q : q; if (!g.resgate) h.cupons += q * cuponsDesde(t, g.data); }
     if (!g.resgate && g.taxa != null) { h.tw += g.taxa * g.valor; h.w += g.valor; }
   }
   return Object.values(m).map(h => {
     const t = tesouroByName(h.nome);
-    const estimado = h.qtdOk && t && t.puVenda ? Math.round(Math.max(0, h.qtd) * t.puVenda * 100) / 100 : null;
+    const estimado = h.qtdOk && t && t.puVenda ? Math.round((Math.max(0, h.qtd) * t.puVenda + h.cupons) * 100) / 100 : null;
     return { ...h, aportado: Math.round(h.aportado * 100) / 100, taxa: h.w ? h.tw / h.w : null, tipo: (t && t.tipo) || tipoTitulo(h.nome), t, estimado };
   }).filter(h => h.qtdOk ? (h.estimado != null ? h.estimado >= 0.01 : h.qtd > 1e-6) : h.aportado > 0.004);
 }
@@ -980,7 +1041,14 @@ function renderInvest() {
     if (r != null) det.push(`<span class="${r >= 0 ? 'delta-down' : 'delta-up'}">${r >= 0 ? 'rendeu +' : (p.estimado ? 'por enquanto −' : 'perdeu −')}${money(Math.abs(r))}</span>`);
     if (p.estimado) det.push(p.titulos ? 'valor se vendesse hoje' : 'estimado');
     const rendLine = p.rend ? `<button type="button" class="rend-line" data-act="rend"><span>${p.rend.ind === 'nenhum' ? '📊 Renda variável — toque para dizer quanto rende, ou use 🔄 Saldo' : `📈 Rende <b>${escapeHtml(rendTexto(p.rend))}</b>${isentoIR(p.rend, p.c) ? ' · isento de IR' : ''}`}</span><span>✏️</span></button>${p.liquido != null && p.atual > p.aportado ? `<p class="muted small liq">≈ ${money(p.liquido)} se tirar hoje, já descontado o imposto de renda</p>` : ''}` : '';
-    const subs = p.titulos && p.titulos.length ? `<ul class="tes-holds">${p.titulos.map(h => `<li><span>${escapeHtml(h.nome.replace(/^Tesouro /, ''))}<small>${[h.taxa != null ? taxaTexto(h.tipo, h.taxa) : '', `${money(Math.max(0, h.aportado))} colocados`].filter(Boolean).join(' · ')}</small></span><b class="num">${money(holdingValue(h))}</b></li>`).join('')}</ul>${p.estimado && r != null && r < 0 && Math.abs(r) <= p.aportado * 0.03 ? '<p class="muted small" style="margin:6px 0 0">Logo depois de comprar o valor fica um pouco abaixo: o Tesouro paga um pouco menos na venda do que cobra na compra. Com o tempo, os juros cobrem essa diferença.</p>' : ''}` : '';
+    const subs = p.titulos && p.titulos.length ? `<ul class="tes-holds">${p.titulos.map(h => {
+      const val = h.estimado != null ? h.estimado - h.aportado : null;
+      const hoje = h.t && h.t.taxaVenda != null ? h.t.taxaVenda : null;
+      const linha1 = [h.taxa != null ? `comprou a ${taxaTexto(h.tipo, h.taxa)}` : '', hoje != null ? `hoje ${taxaTexto(h.tipo, hoje)}` : ''].filter(Boolean).join(' → ');
+      const linha2 = [h.qtdOk && h.qtd > 1e-6 ? cotasFmt(h.qtd) : '', `${money(Math.max(0, h.aportado))} colocados`, val != null ? `<span class="${val >= 0 ? 'delta-down' : 'delta-up'}">${val >= 0 ? 'valorizou +' : 'desvalorizou −'}${money(Math.abs(val))}${h.aportado > 0 ? ` (${val >= 0 ? '+' : '−'}${pctFmt(Math.round(Math.abs(val / h.aportado) * 1000) / 10)}%)` : ''}</span>` : ''].filter(Boolean).join(' · ');
+      const falta = h.semTaxa ? `<button type="button" class="link small-link" data-lot="${h.semTaxa}">informe a taxa da compra para ver a valorização</button>` : '';
+      return `<li><span>${escapeHtml(h.nome.replace(/^Tesouro /, ''))}<small>${linha1}</small><small>${linha2}</small>${falta}</span><b class="num">${money(holdingValue(h))}</b></li>`;
+    }).join('')}</ul>${p.estimado && r != null && r < 0 && Math.abs(r) <= p.aportado * 0.03 ? '<p class="muted small" style="margin:6px 0 0">Logo depois de comprar o valor fica um pouco abaixo: o Tesouro paga um pouco menos na venda do que cobra na compra. Com o tempo, os juros cobrem essa diferença.</p>' : ''}${p.titulos.some(h => h.estimado != null && h.taxa != null) ? '<p class="muted small" style="margin:6px 0 0">Valor se vendesse hoje. Quando a taxa de hoje está <b>abaixo</b> da que você pegou, o título valoriza; <b>acima</b>, desvaloriza — mas no vencimento você recebe a taxa combinada.</p>' : ''}` : '';
     return `<div class="pos ${tem ? '' : 'zero'}" data-id="${p.c.id}">
       <div class="pos-top"><span class="em">${p.c.emoji}</span><span class="pos-name">${escapeHtml(p.c.nome)}<small>${det.join(' · ')}</small></span><span class="pos-val num">${tem ? money(tem) : 'zerado'}</span></div>${rendLine}${subs}
       <div class="pos-actions">
@@ -996,6 +1064,7 @@ function renderInvest() {
     $('[data-act=take]', el).onclick = () => openMove(id, true);
     $('[data-act=saldo]', el).onclick = () => openSaldo(id);
     const rl = $('[data-act=rend]', el); if (rl) rl.onclick = () => openRend(id);
+    $$('[data-lot]', el).forEach(b => b.onclick = () => openExpense(b.dataset.lot));
   });
 
   renderTesouroHoje();
@@ -1040,7 +1109,9 @@ function openMove(catId, resgate, tituloSel) {
     const vend = titulosAVenda();
     const byTipo = {};
     for (const t of vend) (byTipo[t.tipo] || (byTipo[t.tipo] = [])).push(t);
-    return Object.entries(byTipo).map(([tp, ts]) => `<optgroup label="${escapeHtml(TES_TIPOS[tp].nome)}">${ts.map(t => `<option value="${escapeHtml(t.nome)}" ${t.nome === tituloSel ? 'selected' : ''}>${escapeHtml(t.nome.replace(/^Tesouro /, ''))} · ${taxaTexto(t.tipo, t.taxaCompra)}</option>`).join('')}</optgroup>`).join('')
+    const antigos = TESOURO ? TESOURO.titulos.filter(t => !t.aVenda && t.puVenda) : [];
+    return Object.entries(byTipo).map(([tp, ts]) => `<optgroup label="${escapeHtml(TES_TIPOS[tp].nome)}">${ts.map(t => `<option value="${escapeHtml(t.nome)}" ${t.nome === tituloSel ? 'selected' : ''}>${escapeHtml(t.nome.replace(/^Tesouro /, ''))} · hoje ${taxaTexto(t.tipo, t.taxaCompra)}</option>`).join('')}</optgroup>`).join('')
+      + (antigos.length ? `<optgroup label="Não estão mais à venda (compras antigas)">${antigos.map(t => `<option value="${escapeHtml(t.nome)}" ${t.nome === tituloSel ? 'selected' : ''}>${escapeHtml(t.nome.replace(/^Tesouro /, ''))}</option>`).join('')}</optgroup>` : '')
       + `<option value="__outro">Outro título (digitar)</option>`;
   };
   const options = resgate ? sortedCats('invest').filter(c => has(c.id) > 0) : sortedCats('invest');
@@ -1048,16 +1119,18 @@ function openMove(catId, resgate, tituloSel) {
   const sel = catId && options.some(c => c.id === catId) ? catId : options[0].id;
   openSheet(`<h3>${resgate ? '➖ Tirar do investimento' : '➕ Colocar no investimento'}</h3>
     <div class="field"><label>${resgate ? 'De onde' : 'Para onde'}</label><select name="cat">${options.map(c => `<option value="${c.id}" ${c.id === sel ? 'selected' : ''}>${c.emoji} ${escapeHtml(c.nome)}${resgate ? ` — tem ${money(has(c.id))}` : ''}</option>`).join('')}</select></div>
+    <div class="field-row">
+      <div class="field"><label>Valor (R$)</label><input name="valor" inputmode="decimal" required placeholder="ex.: 100" autofocus></div>
+      <div class="field"><label>Data</label><input name="data" type="date" value="${isoDate(new Date())}" required></div>
+    </div>
     ${resgate ? '' : `<div id="rendBox" hidden>${rendFields({ ind: 'cdi', pct: 100 }, 'r_')}</div>`}
     <div id="tesBox" hidden>
       <div class="field"><label>Título do Tesouro</label><select name="titulo">${tituloOpts()}</select></div>
       <div class="field" id="tesOutro" hidden><label>Nome do título</label><input name="tituloNome" placeholder="ex.: Tesouro IPCA+ 2035"></div>
-      ${resgate ? '' : `<div class="field"><label>Taxa que você conseguiu (% — já vem a de hoje)</label><input name="taxa" inputmode="decimal" placeholder="ex.: 13,45"></div>`}
+      ${resgate ? '' : `<div class="field"><label id="taxaLbl">Taxa da compra (%)</label><input name="taxa" inputmode="decimal" placeholder="ex.: 13,45"></div>
+      <div class="field-row"><div class="field"><label>Cotas compradas (opcional)</label><input name="cotas" inputmode="decimal" placeholder="ex.: 0,27"></div><div class="field" id="puField"><label>Preço por cota (opcional)</label><input name="pu" inputmode="decimal" placeholder="ex.: 512,30"></div></div>
+      <p class="muted small" id="cotasInfo"></p>`}
       <p class="muted small" id="tesInfo"></p>
-    </div>
-    <div class="field-row">
-      <div class="field"><label>Valor (R$)</label><input name="valor" inputmode="decimal" required placeholder="ex.: 100" autofocus></div>
-      <div class="field"><label>Data</label><input name="data" type="date" value="${isoDate(new Date())}" required></div>
     </div>
     ${resgate ? `<div class="move-info"><span id="moveHas"></span><button type="button" class="link" id="moveAll">tirar tudo</button></div>` : ''}
     <p class="muted small">${resgate ? 'O valor tirado volta para o seu dinheiro do mês (aparece no Balanço como “Resgatou”).' : 'Sai do seu dinheiro do mês e entra no total investido.'}</p>
@@ -1086,12 +1159,16 @@ function openMove(catId, resgate, tituloSel) {
         g.titulo = titulo;
         const tx = resgate ? null : parseFloat(String(fd.get('taxa') || '').replace(',', '.'));
         if (tx != null && !isNaN(tx)) g.taxa = tx;
+        const puPago = resgate ? null : parseAmount(String(fd.get('pu') || '').trim());
+        const cotas = resgate ? null : parseFloat(String(fd.get('cotas') || '').replace(/\./g, '').replace(',', '.'));
+        if (cotas > 0) g.cotas = cotas;
+        if (puPago) g.pu = puPago;
         const pu = t && (resgate ? t.puVenda : t.puCompra);
-        // quantidade de títulos (só quando a operação é de hoje, com o preço de hoje)
-        if (pu && g.data === isoDate(new Date())) g.qtd = Math.round(valor / pu * 1e6) / 1e6;
+        // quantidade de títulos: operação de hoje usa o preço oficial do dia; datas passadas usam a taxa informada
+        if (!puPago && !g.cotas && pu && g.data === isoDate(new Date())) g.qtd = Math.round(valor / pu * 1e6) / 1e6;
         save();
+        if (!resgate && g.data !== isoDate(new Date()) && g.taxa == null && !g.pu && !g.cotas) setTimeout(() => toast('Sem a taxa da compra não dá para calcular a valorização — dá para completar depois no Extrato'), 3200);
       }
-      if (created[0].data.slice(0, 7) !== ui.month) ui.month = created[0].data.slice(0, 7);
       render();
       toast(resgate ? `↩️ ${money(valor)} tirado de ${c.nome}` : `📈 ${money(valor)} colocado em ${c.nome}`, 'desfazer', () => {
         state.gastos = state.gastos.filter(g => g.id !== created[0].id); save(); render();
@@ -1120,7 +1197,15 @@ function openMove(catId, resgate, tituloSel) {
     if (tes) {
       $('#tesOutro').hidden = ts.value !== '__outro';
       const t = tesouroByName(ts.value);
-      if (tx && t && t.taxaCompra != null) tx.value = String(t.taxaCompra).replace('.', ',');
+      const passado = $('#sheetForm input[name=data]').value < isoDate(new Date());
+      if (tx) {
+        // compra de hoje: já vem a taxa de hoje; compra antiga: a pessoa informa a taxa que pegou
+        const hojeTx = t && t.taxaCompra != null ? String(t.taxaCompra).replace('.', ',') : '';
+        if (!passado) tx.value = hojeTx; else if (tx.value === hojeTx || tx.dataset.auto === '1') tx.value = '';
+        tx.dataset.auto = passado ? '' : '1';
+        $('#taxaLbl').textContent = passado ? 'Taxa que você pegou na compra (%)' : 'Taxa da compra (% — já vem a de hoje)';
+        tx.placeholder = passado ? 'veja no extrato da corretora' : 'ex.: 13,45';
+      }
       if (tx && ts.value === '__outro') tx.value = '';
       $('#tesInfo').innerHTML = t ? [escapeHtml(TES_TIPOS[t.tipo].sobre), `Vence em ${parseISO(t.vencimento).toLocaleDateString('pt-BR')}.`, !resgate && t.minimo ? `Mínimo hoje: ${money(t.minimo)}.` : '', resgate && t.taxaVenda != null ? `Se vender hoje: ${taxaTexto(t.tipo, t.taxaVenda)} (o valor pode variar até o vencimento).` : ''].filter(Boolean).join(' ')
         : (!TESOURO ? 'Sem internet para buscar as taxas agora — digite o nome e a taxa.' : '');
@@ -1129,6 +1214,22 @@ function openMove(catId, resgate, tituloSel) {
   };
   s.addEventListener('change', upd);
   if (ts) ts.addEventListener('change', upd);
+  $('#sheetForm input[name=data]').addEventListener('change', upd);
+  const ci = $('#cotasInfo');
+  if (ci) {
+    const updC = () => {
+      const t = tesouroByName(ts.value), val = parseAmount(String(v.value).trim());
+      const ct = parseFloat(String($('#sheetForm input[name=cotas]').value).replace(/\./g, '').replace(',', '.'));
+      const puIn = parseAmount(String($('#sheetForm input[name=pu]').value).trim());
+      const hoje = $('#sheetForm input[name=data]').value === isoDate(new Date());
+      if (val && ct > 0) ci.textContent = `= ${money(val / ct)} por cota.`;
+      else if (val && puIn) ci.textContent = `= ${cotasFmt(val / puIn)}.`;
+      else if (val && hoje && t && t.puCompra) ci.textContent = `Com ${money(val)} você compra ≈ ${cotasFmt(val / t.puCompra)} (1 cota hoje custa ${money(t.puCompra)}).`;
+      else ci.textContent = hoje ? '' : 'Com a quantidade de cotas ou o preço por cota (estão no extrato da corretora), o cálculo fica exato. Sem eles, uso a taxa.';
+    };
+    ['input', 'change'].forEach(ev => $$('#sheetForm input').forEach(i => i.addEventListener(ev, updC)));
+    ts.addEventListener('change', updC); updC();
+  }
   upd();
   if (resgate) $('#moveAll').onclick = () => { v.value = String(avail()).replace('.', ','); };
 }
@@ -1237,7 +1338,7 @@ function openExpense(id) {
       <div class="field"><label>Categoria</label><select name="cat">${catOptions(g.cat)}</select></div>
       <div class="field"><label>Pagamento</label><select name="metodo">${methodOptions(g.metodo)}</select></div>
     </div>
-    ${g.titulo || isTesouroCat(g.cat) ? `<div class="field-row"><div class="field"><label>Título do Tesouro</label><input name="titulo" list="tesNomes" value="${escapeHtml(g.titulo || '')}" placeholder="ex.: Tesouro IPCA+ 2035"><datalist id="tesNomes">${(TESOURO ? TESOURO.titulos : []).map(t => `<option value="${escapeHtml(t.nome)}">`).join('')}</datalist></div><div class="field"><label>Taxa (%)</label><input name="taxa" inputmode="decimal" value="${g.taxa != null ? String(g.taxa).replace('.', ',') : ''}"></div></div>` : ''}
+    ${g.titulo || isTesouroCat(g.cat) ? `<div class="field-row"><div class="field"><label>Título do Tesouro</label><input name="titulo" list="tesNomes" value="${escapeHtml(g.titulo || '')}" placeholder="ex.: Tesouro IPCA+ 2035"><datalist id="tesNomes">${(TESOURO ? TESOURO.titulos : []).map(t => `<option value="${escapeHtml(t.nome)}">`).join('')}</datalist></div><div class="field"><label>Taxa da compra (%)</label><input name="taxa" inputmode="decimal" value="${g.taxa != null ? String(g.taxa).replace('.', ',') : ''}" placeholder="ex.: 13,45"></div></div><div class="field-row"><div class="field"><label>Cotas</label><input name="cotas" inputmode="decimal" value="${g.cotas ? String(g.cotas).replace('.', ',') : ''}" placeholder="opcional"></div><div class="field"><label>Preço por cota</label><input name="pu" inputmode="decimal" value="${g.pu ? String(g.pu).replace('.', ',') : ''}" placeholder="opcional"></div></div>` : ''}
     <label class="check" id="resgateRow" ${t0 === 'invest' ? '' : 'hidden'}><input type="checkbox" name="resgate" ${g.resgate ? 'checked' : ''}> É um resgate (tirei dinheiro do investimento)</label>
     <div class="field"><label>Observação</label><textarea name="nota">${escapeHtml(g.nota || '')}</textarea></div>
     <div class="sheet-actions"><button class="btn danger" value="delete">Excluir${g.grupo ? ' parcelas' : ''}</button><div class="right"><button class="btn" value="cancel" formnovalidate>Cancelar</button><button class="btn solid" value="save">Salvar</button></div></div>`,
@@ -1252,14 +1353,18 @@ function openExpense(id) {
       }
       const valor = parseAmount(fd.get('valor').trim());
       if (!valor) { toast('Valor inválido'); return false; }
-      const newCat = fd.get('cat'), oldCat = g.cat, oldValor = g.valor;
+      const newCat = fd.get('cat'), oldCat = g.cat, oldValor = g.valor, oldData = g.data;
       Object.assign(g, { desc: fd.get('desc').trim(), valor, data: fd.get('data'), cat: newCat, metodo: fd.get('metodo'), nota: fd.get('nota').trim() });
       if (tipoCat(catById(newCat)) === 'invest' && fd.get('resgate')) g.resgate = true; else delete g.resgate;
       if (fd.has('titulo')) {
         const nt = String(fd.get('titulo')).trim(), tx = parseFloat(String(fd.get('taxa') || '').replace(',', '.'));
-        if (nt !== (g.titulo || '') || valor !== oldValor) delete g.qtd;
+        const puPago = parseAmount(String(fd.get('pu') || '').trim());
+        const cotas = parseFloat(String(fd.get('cotas') || '').replace(/\./g, '').replace(',', '.'));
+        if (cotas > 0) g.cotas = cotas; else delete g.cotas;
+        if (nt !== (g.titulo || '') || valor !== oldValor || g.data !== oldData || (isNaN(tx) ? null : tx) !== (g.taxa ?? null) || (puPago || null) !== (g.pu || null)) delete g.qtd;
         if (nt) g.titulo = nt; else delete g.titulo;
         if (!isNaN(tx)) g.taxa = tx; else delete g.taxa;
+        if (puPago) g.pu = puPago; else delete g.pu;
       }
       learn(g.desc.replace(/\s*\(\d+\/\d+\)$/, ''), newCat, oldCat);
       save(); render();
