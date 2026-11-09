@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Gastos</title>
+  <meta name="description" content="Controle de gastos rápido: digite o gasto e ele já cai na categoria certa.">
+  <meta name="theme-color" content="#f6f6f3" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#121211" media="(prefers-color-scheme: dark)">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Gastos">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icons/icon-180.png">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="month-nav">
+      <button class="icon-btn" id="prevMonth" aria-label="Mês anterior">‹</button>
+      <h1 id="monthLabel">—</h1>
+      <button class="icon-btn" id="nextMonth" aria-label="Próximo mês">›</button>
+    </div>
+  </header>
+
+  <main>
+    <!-- INÍCIO -->
+    <section class="view active" id="view-home" aria-label="Início">
+      <form class="quick" id="quickForm" autocomplete="off">
+        <label for="quickInput" class="sr-only">Novo gasto</label>
+        <input id="quickInput" enterkeyhint="done" placeholder="ex.: mercado 87,90 · uber 23 ontem pix" autocomplete="off">
+        <button type="submit" class="primary" aria-label="Adicionar">＋</button>
+      </form>
+      <div class="preview" id="preview" hidden></div>
+      <div class="hint" id="quickHint">Escreva do jeito que falaria. Entendo valor, <b>ontem</b>, <b>12/10</b>, <b>pix</b>, <b>crédito</b>, <b>3x</b>…</div>
+
+      <div class="card hero">
+        <div class="hero-label">Gasto no mês</div>
+        <div class="hero-value" id="heroTotal">R$ 0,00</div>
+        <div class="hero-sub" id="heroSub"></div>
+        <div class="budget" id="heroBudget"></div>
+      </div>
+
+      <div class="stats" id="stats"></div>
+
+      <div class="card">
+        <div class="card-head"><h2>Por categoria</h2><button class="link" data-goto="analysis">ver análise</button></div>
+        <div id="homeCats"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><h2>Últimos gastos</h2><button class="link" data-goto="list">ver todos</button></div>
+        <ul class="tx-list" id="recentList"></ul>
+      </div>
+    </section>
+
+    <!-- GASTOS -->
+    <section class="view" id="view-list" aria-label="Gastos">
+      <div class="filters">
+        <input type="search" id="searchInput" placeholder="Buscar…">
+        <select id="catFilter" aria-label="Filtrar categoria"></select>
+      </div>
+      <div class="list-total" id="listTotal"></div>
+      <div id="fullList"></div>
+    </section>
+
+    <!-- ANÁLISE -->
+    <section class="view" id="view-analysis" aria-label="Análise">
+      <div class="card" id="insightsCard">
+        <h2>O que chama atenção</h2>
+        <ul class="insights" id="insights"></ul>
+      </div>
+      <div class="card">
+        <div class="card-head"><h2>Categorias</h2><span class="muted small">barra = gasto · traço = orçamento</span></div>
+        <div id="catChart"></div>
+      </div>
+      <div class="card">
+        <h2>Gasto por dia</h2>
+        <div id="dailyChart" class="chart"></div>
+      </div>
+      <div class="card">
+        <h2>Últimos 6 meses</h2>
+        <div id="trendChart" class="chart"></div>
+      </div>
+      <div class="card">
+        <h2>Forma de pagamento</h2>
+        <div id="methodTable"></div>
+      </div>
+      <div class="card">
+        <h2>Maiores gastos do mês</h2>
+        <ul class="tx-list" id="topList"></ul>
+      </div>
+    </section>
+
+    <!-- AJUSTES -->
+    <section class="view" id="view-settings" aria-label="Ajustes">
+      <div class="card">
+        <div class="card-head"><h2>Categorias e orçamentos</h2><button class="link" id="addCat">+ nova</button></div>
+        <p class="muted small">Toque numa categoria para mudar nome, emoji, orçamento mensal e palavras-chave.</p>
+        <ul class="cat-list" id="catList"></ul>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><h2>Gastos fixos</h2><button class="link" id="addRec">+ novo</button></div>
+        <p class="muted small">Aluguel, academia, streaming… lançados automaticamente todo mês no dia escolhido.</p>
+        <ul class="cat-list" id="recList"></ul>
+      </div>
+
+      <div class="card">
+        <h2>Notion</h2>
+        <p class="muted small"><b>Trazer do Notion:</b> no seu banco “Gastos”, clique em <b>⋯ → Exportar → Markdown &amp; CSV</b>, descompacte e escolha o arquivo .csv aqui. Eu reconheço as colunas sozinho e categorizo o que vier sem categoria.</p>
+        <label class="btn file-btn">Importar CSV do Notion<input type="file" id="csvInput" accept=".csv,text/csv" hidden></label>
+        <p class="muted small"><b>Mandar pro Notion:</b> exporte o CSV e, no Notion, use <b>⋯ → Mesclar com CSV</b> no seu banco (ou importe como nova página).</p>
+        <button class="btn" id="exportCsv">Exportar CSV</button>
+      </div>
+
+      <div class="card">
+        <h2>Backup</h2>
+        <p class="muted small">Seus dados ficam só neste aparelho. Faça backup de vez em quando — ou para passar pra outro celular/computador.</p>
+        <div class="row">
+          <button class="btn" id="exportJson">Salvar backup</button>
+          <label class="btn file-btn">Restaurar backup<input type="file" id="jsonInput" accept=".json,application/json" hidden></label>
+        </div>
+        <button class="btn danger" id="wipe">Apagar tudo</button>
+      </div>
+
+      <p class="muted small center" id="storageInfo"></p>
+    </section>
+  </main>
+
+  <nav class="tabbar" aria-label="Navegação">
+    <button class="tab active" data-view="home"><span>🏠</span>Início</button>
+    <button class="tab" data-view="list"><span>📋</span>Gastos</button>
+    <button class="tab" data-view="analysis"><span>📊</span>Análise</button>
+    <button class="tab" data-view="settings"><span>⚙️</span>Ajustes</button>
+  </nav>
+
+  <!-- Folha de edição -->
+  <dialog id="sheet" class="sheet">
+    <form method="dialog" id="sheetForm"></form>
+  </dialog>
+
+  <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+  <div class="tooltip" id="tooltip" hidden></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
