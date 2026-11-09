@@ -1,5 +1,5 @@
 // Service worker: deixa o app abrir offline. Troque a versão ao publicar mudanças.
-const CACHE = 'gastos-v1';
+const CACHE = 'gastos-v2';
 const ASSETS = ['./', 'index.html', 'styles.css', 'app.js', 'manifest.webmanifest', 'icons/icon.svg', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/icon-180.png'];
 
 self.addEventListener('install', e => {

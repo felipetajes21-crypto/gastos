@@ -110,8 +110,9 @@
 
       <div class="card">
         <h2>Notion</h2>
-        <p class="muted small"><b>Trazer do Notion:</b> no seu banco “Gastos”, clique em <b>⋯ → Exportar → Markdown &amp; CSV</b>, descompacte e escolha o arquivo .csv aqui. Eu reconheço as colunas sozinho e categorizo o que vier sem categoria.</p>
-        <label class="btn file-btn">Importar CSV do Notion<input type="file" id="csvInput" accept=".csv,text/csv" hidden></label>
+        <p class="muted small"><b>Trazer do Notion:</b> o jeito mais fácil é <b>colar</b> — abra a página do mês no Notion, copie tudo e cole aqui. Também aceito o arquivo .csv exportado. Eu categorizo sozinho e não duplico o que já existe.</p>
+        <div class="row"><button class="btn" id="pasteBtn">Colar texto do Notion</button>
+        <label class="btn file-btn">Importar CSV do Notion<input type="file" id="csvInput" accept=".csv,text/csv" hidden></label></div>
         <p class="muted small"><b>Mandar pro Notion:</b> exporte o CSV e, no Notion, use <b>⋯ → Mesclar com CSV</b> no seu banco (ou importe como nova página).</p>
         <button class="btn" id="exportCsv">Exportar CSV</button>
       </div>

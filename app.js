@@ -6,14 +6,14 @@
 // As palavras-chave são comparadas sem acento e em minúsculas.
 const DEFAULT_CATEGORIES = [
   { id: 'mercado', nome: 'Mercado', emoji: '🛒', palavras: ['mercado', 'supermercado', 'feira', 'hortifruti', 'sacolao', 'acougue', 'padaria', 'pao', 'carrefour', 'assai', 'atacadao', 'pao de acucar', 'guanabara', 'mundial', 'prezunic', 'zona sul', 'st marche', 'oba', 'hirota', 'sams club', 'makro', 'leite', 'ovos', 'frutas', 'verdura', 'compras do mes', 'mercearia', 'emporio', 'quitanda', 'bistek', 'savegnago', 'angeloni', 'condor', 'muffato', 'sonda', 'tenda', 'comper', 'bretas', 'mateus'] },
-  { id: 'comida', nome: 'Restaurante & Delivery', emoji: '🍔', palavras: ['ifood', 'rappi', 'delivery', 'restaurante', 'lanche', 'lanchonete', 'almoco', 'jantar', 'janta', 'cafe da manha', 'pizza', 'pizzaria', 'hamburguer', 'burger', 'mcdonalds', 'mc donalds', 'mcdonald', 'bk', 'burger king', 'subway', 'habibs', 'outback', 'madero', 'sushi', 'japones', 'temaki', 'acai', 'sorvete', 'sorveteria', 'cafe', 'cafeteria', 'starbucks', 'coxinha', 'pastel', 'salgado', 'marmita', 'quentinha', 'self service', 'rodizio', 'churrascaria', 'bar', 'boteco', 'cerveja', 'chopp', 'drink', 'bebida', 'refri', 'coca', 'doce', 'brigadeiro', 'bolo', 'kebab', 'esfiha', 'giraffas', 'spoleto', 'bobs', 'kfc', 'popeyes', 'ze delivery', 'aiqfome', '99food', 'keeta', 'food', 'comida', 'lanchinho', 'cantina', 'bandejao', 'tapioca', 'crepe', 'hot dog', 'cachorro quente', 'churros', 'petisco'] },
-  { id: 'transporte', nome: 'Transporte', emoji: '🚗', palavras: ['uber', '99', '99pop', 'taxi', 'indrive', 'cabify', 'onibus', 'metro', 'trem', 'brt', 'vlt', 'bilhete unico', 'riocard', 'passagem', 'gasolina', 'combustivel', 'etanol', 'alcool', 'diesel', 'posto', 'shell', 'ipiranga', 'petrobras', 'br mania', 'estacionamento', 'zona azul', 'pedagio', 'sem parar', 'conectcar', 'veloe', 'oficina', 'mecanico', 'pneu', 'troca de oleo', 'lavagem', 'lava jato', 'ipva', 'licenciamento', 'multa', 'seguro carro', 'patinete', 'bike', 'moto', 'detran', 'bilhete'] },
-  { id: 'moradia', nome: 'Moradia', emoji: '🏠', palavras: ['aluguel', 'condominio', 'iptu', 'reforma', 'pedreiro', 'eletricista', 'encanador', 'diarista', 'faxina', 'faxineira', 'empregada', 'moveis', 'movel', 'sofa', 'colchao', 'decoracao', 'leroy', 'telhanorte', 'tok stok', 'tokstok', 'etna', 'camicado', 'material de construcao', 'utensilios', 'produto de limpeza', 'limpeza', 'lavanderia', 'gas', 'botijao', 'mudanca', 'chaveiro', 'dedetizacao', 'financiamento', 'prestacao casa'] },
-  { id: 'contas', nome: 'Contas', emoji: '💡', palavras: ['luz', 'energia', 'enel', 'light', 'cemig', 'copel', 'celesc', 'coelba', 'cpfl', 'equatorial', 'neoenergia', 'agua', 'sabesp', 'cedae', 'copasa', 'sanepar', 'embasa', 'internet', 'wifi', 'vivo', 'claro', 'tim', 'celular', 'telefone', 'plano celular', 'recarga', 'fibra', 'conta de luz', 'conta de agua', 'boleto', 'fatura', 'tarifa', 'anuidade', 'juros', 'iof', 'imposto', 'irpf', 'darf', 'mei', 'taxa', 'cartorio'] },
+  { id: 'comida', nome: 'Restaurante & Delivery', emoji: '🍔', palavras: ['ifood', 'rappi', 'delivery', 'restaurante', 'lanche', 'lanchonete', 'almoco', 'jantar', 'janta', 'cafe da manha', 'pizza', 'pizzaria', 'hamburguer', 'burger', 'mcdonalds', 'mc donalds', 'mcdonald', 'bk', 'burger king', 'subway', 'habibs', 'outback', 'madero', 'sushi', 'japones', 'temaki', 'acai', 'sorvete', 'sorveteria', 'cafe', 'cafeteria', 'starbucks', 'coxinha', 'pastel', 'salgado', 'marmita', 'quentinha', 'self service', 'rodizio', 'churrascaria', 'bar', 'boteco', 'cerveja', 'chopp', 'drink', 'bebida', 'refri', 'coca', 'doce', 'brigadeiro', 'bolo', 'kebab', 'esfiha', 'giraffas', 'spoleto', 'bobs', 'kfc', 'popeyes', 'ze delivery', 'aiqfome', '99food', 'keeta', 'food', 'comida', 'lanchinho', 'cantina', 'bandejao', 'tapioca', 'crepe', 'hot dog', 'cachorro quente', 'churros', 'petisco', 'milk shake', 'milkshake', 'milk moo', 'calzone', 'kalzone', 'energetico', 'chiclete', 'bala', 'salgadinho', 'cantina', 'churrasco', 'refrigerante', 'suco'] },
+  { id: 'transporte', nome: 'Transporte', emoji: '🚗', palavras: ['uber', '99', '99pop', 'taxi', 'indrive', 'cabify', 'onibus', 'passagens', 'metro', 'trem', 'brt', 'vlt', 'bilhete unico', 'riocard', 'passagem', 'gasolina', 'combustivel', 'etanol', 'alcool', 'diesel', 'posto', 'shell', 'ipiranga', 'petrobras', 'br mania', 'estacionamento', 'zona azul', 'pedagio', 'sem parar', 'conectcar', 'veloe', 'oficina', 'mecanico', 'pneu', 'troca de oleo', 'lavagem', 'lava jato', 'ipva', 'licenciamento', 'multa', 'seguro carro', 'patinete', 'bike', 'moto', 'detran', 'bilhete'] },
+  { id: 'moradia', nome: 'Moradia', emoji: '🏠', palavras: ['aluguel', 'condominio', 'iptu', 'reforma', 'pedreiro', 'eletricista', 'encanador', 'diarista', 'faxina', 'faxineira', 'empregada', 'moveis', 'movel', 'sofa', 'colchao', 'decoracao', 'leroy', 'telhanorte', 'tok stok', 'tokstok', 'etna', 'camicado', 'material de construcao', 'utensilios', 'produto de limpeza', 'limpeza', 'lavanderia', 'gas', 'botijao', 'mudanca', 'chaveiro', 'chave', 'copia chave', 'dedetizacao', 'financiamento', 'prestacao casa'] },
+  { id: 'contas', nome: 'Contas', emoji: '💡', palavras: ['luz', 'energia', 'enel', 'light', 'cemig', 'copel', 'celesc', 'coelba', 'cpfl', 'equatorial', 'neoenergia', 'agua', 'sabesp', 'cedae', 'copasa', 'sanepar', 'embasa', 'internet', 'wifi', 'vivo', 'claro', 'tim', 'celular', 'telefone', 'plano celular', 'recarga', 'fibra', 'conta de luz', 'conta de agua', 'boleto', 'fatura', 'cartao', 'fatura cartao', 'pagar o cartao', 'cartao de credito', 'tarifa', 'anuidade', 'juros', 'iof', 'imposto', 'irpf', 'darf', 'mei', 'taxa', 'cartorio'] },
   { id: 'saude', nome: 'Saúde', emoji: '💊', palavras: ['farmacia', 'remedio', 'medicamento', 'drogasil', 'raia', 'drogaria', 'pague menos', 'pacheco', 'panvel', 'medico', 'consulta', 'dentista', 'odonto', 'exame', 'laboratorio', 'hospital', 'clinica', 'plano de saude', 'unimed', 'amil', 'sulamerica', 'bradesco saude', 'hapvida', 'notredame', 'psicologo', 'psicologa', 'terapia', 'terapeuta', 'fisioterapia', 'fisio', 'nutricionista', 'vacina', 'oculos', 'lente', 'otica', 'vitamina', 'suplemento', 'whey', 'creatina', 'academia', 'smartfit', 'smart fit', 'bluefit', 'crossfit', 'pilates', 'yoga', 'personal', 'natacao', 'gympass', 'wellhub', 'totalpass'] },
-  { id: 'lazer', nome: 'Lazer', emoji: '🎉', palavras: ['cinema', 'filme', 'teatro', 'show', 'ingresso', 'sympla', 'eventim', 'ticketmaster', 'festa', 'balada', 'role', 'parque', 'museu', 'jogo', 'game', 'steam', 'playstation', 'psn', 'xbox', 'nintendo', 'futebol', 'pelada', 'quadra', 'boliche', 'karaoke', 'praia', 'clube', 'passeio', 'happy hour', 'aniversario', 'cinemark', 'kinoplex', 'livro', 'livraria', 'amazon kindle', 'hobby', 'tabacaria', 'narguile'] },
-  { id: 'assinaturas', nome: 'Assinaturas', emoji: '📺', palavras: ['netflix', 'spotify', 'deezer', 'youtube premium', 'youtube', 'prime video', 'amazon prime', 'prime', 'disney', 'disney+', 'hbo', 'globoplay', 'paramount', 'apple tv', 'apple music', 'icloud', 'google one', 'google drive', 'dropbox', 'chatgpt', 'openai', 'claude', 'anthropic', 'notion', 'canva', 'adobe', 'microsoft 365', 'office', 'assinatura', 'mensalidade app', 'twitch', 'crunchyroll', 'duolingo', 'tinder', 'bumble', 'linkedin premium', 'xbox game pass', 'game pass', 'ps plus', 'mubi', 'telecine', 'premiere', 'sky', 'kindle unlimited', 'audible', 'patreon'] },
-  { id: 'compras', nome: 'Compras', emoji: '🛍️', palavras: ['roupa', 'roupas', 'camisa', 'camiseta', 'calca', 'bermuda', 'vestido', 'blusa', 'casaco', 'jaqueta', 'tenis', 'sapato', 'sandalia', 'chinelo', 'meia', 'cueca', 'calcinha', 'sutia', 'bolsa', 'mochila', 'relogio', 'acessorio', 'shein', 'shopee', 'aliexpress', 'temu', 'mercado livre', 'mercadolivre', 'amazon', 'magalu', 'magazine luiza', 'americanas', 'casas bahia', 'renner', 'riachuelo', 'cea', 'c&a', 'zara', 'hering', 'centauro', 'netshoes', 'decathlon', 'nike', 'adidas', 'shopping', 'loja', 'eletronico', 'celular novo', 'fone', 'carregador', 'cabo', 'notebook', 'computador', 'teclado', 'mouse', 'monitor', 'tv', 'kabum', 'fast shop', 'apple', 'iphone', 'samsung', 'xiaomi', 'papelaria', 'kalunga'] },
+  { id: 'lazer', nome: 'Lazer', emoji: '🎉', palavras: ['cinema', 'filme', 'teatro', 'show', 'ingresso', 'sympla', 'eventim', 'ticketmaster', 'festa', 'balada', 'role', 'parque', 'museu', 'jogo', 'game', 'steam', 'playstation', 'psn', 'xbox', 'nintendo', 'futebol', 'pelada', 'quadra', 'boliche', 'karaoke', 'praia', 'clube', 'passeio', 'happy hour', 'aniversario', 'cinemark', 'kinoplex', 'livro', 'livraria', 'amazon kindle', 'hobby', 'tabacaria', 'narguile', 'sinuca', 'volei', 'xadrez', 'esquenta', 'copao', 'ctg', 'festa junina', 'festas juninas', 'resenha', 'dia com', 'meu amor', 'namorada', 'namorado', 'date', 'encontro'] },
+  { id: 'assinaturas', nome: 'Assinaturas', emoji: '📺', palavras: ['netflix', 'spotify', 'deezer', 'youtube premium', 'youtube', 'prime video', 'amazon prime', 'prime', 'disney', 'disney+', 'hbo', 'globoplay', 'paramount', 'apple tv', 'apple music', 'icloud', 'google one', 'google drive', 'dropbox', 'chatgpt', 'openai', 'claude', 'plano plus', 'anthropic', 'notion', 'canva', 'adobe', 'microsoft 365', 'office', 'assinatura', 'mensalidade app', 'twitch', 'crunchyroll', 'duolingo', 'tinder', 'bumble', 'linkedin premium', 'xbox game pass', 'game pass', 'ps plus', 'mubi', 'telecine', 'premiere', 'sky', 'kindle unlimited', 'audible', 'patreon'] },
+  { id: 'compras', nome: 'Compras', emoji: '🛍️', palavras: ['roupa', 'roupas', 'camisa', 'camiseta', 'calca', 'bermuda', 'vestido', 'blusa', 'casaco', 'jaqueta', 'tenis', 'sapato', 'sandalia', 'chinelo', 'meia', 'cueca', 'calcinha', 'sutia', 'bolsa', 'mochila', 'relogio', 'acessorio', 'shein', 'shopee', 'aliexpress', 'temu', 'mercado livre', 'mercadolivre', 'amazon', 'magalu', 'magazine luiza', 'americanas', 'casas bahia', 'renner', 'riachuelo', 'cea', 'c&a', 'zara', 'hering', 'centauro', 'netshoes', 'decathlon', 'nike', 'adidas', 'shopping', 'loja', 'eletronico', 'celular novo', 'fone', 'carregador', 'cabo', 'notebook', 'computador', 'teclado', 'mouse', 'monitor', 'tv', 'kabum', 'fast shop', 'apple', 'iphone', 'samsung', 'xiaomi', 'papelaria', 'kalunga', 'havan', 'parcela tenis'] },
   { id: 'beleza', nome: 'Cuidados pessoais', emoji: '💇', palavras: ['cabelo', 'cabeleireiro', 'cabeleireira', 'barbeiro', 'barbearia', 'corte', 'salao', 'manicure', 'unha', 'sobrancelha', 'depilacao', 'estetica', 'maquiagem', 'make', 'perfume', 'boticario', 'natura', 'avon', 'sephora', 'eudora', 'oboticario', 'creme', 'shampoo', 'condicionador', 'sabonete', 'desodorante', 'skincare', 'protetor solar', 'higiene', 'escova de dente', 'pasta de dente', 'massagem', 'spa'] },
   { id: 'educacao', nome: 'Educação', emoji: '📚', palavras: ['faculdade', 'universidade', 'mensalidade', 'escola', 'colegio', 'curso', 'cursinho', 'aula', 'professor', 'ingles', 'idioma', 'udemy', 'alura', 'coursera', 'rocketseat', 'hotmart', 'material escolar', 'apostila', 'xerox', 'impressao', 'matricula', 'mba', 'certificacao', 'prova', 'vestibular', 'enem', 'concurso'] },
   { id: 'pets', nome: 'Pets', emoji: '🐶', palavras: ['pet', 'petshop', 'pet shop', 'petz', 'cobasi', 'racao', 'veterinario', 'vet', 'banho e tosa', 'tosa', 'areia gato', 'gato', 'cachorro', 'cao', 'petisco pet', 'vacina pet', 'antipulgas', 'bravecto', 'nexgard'] },
@@ -102,20 +102,25 @@ function parseText(text) {
   let raw = text.trim().replace(/\s+/g, ' ');
   if (!raw) return out;
   // "r$ 20" → "r$20"
-  raw = raw.replace(/r\$\s+(?=\d)/gi, 'r$');
+  raw = raw.replace(/r\$\s+(?=\d)/gi, 'r$')
+    .replace(/[()\[\]]/g, ' ')                       // "(01/07)" → " 01/07 "
+    .replace(/\s+/g, ' ').trim();
   let tokens = raw.split(' ');
   const keep = new Array(tokens.length).fill(true);
   const n = tokens.map(norm);
 
   // Formas de pagamento (inclui expressões de 2-3 palavras)
+  const notMethodBefore = ['fatura', 'pagar', 'pagamento', 'o', 'do', 'da', 'para', 'pro', 'meu', 'novo', 'anuidade'];
+  const skipped = new Set();
   for (let i = 0; i < n.length; i++) {
     for (const [mid, m] of Object.entries(METHODS)) {
       for (const p of m.palavras) {
         const parts = p.split(' ');
         if (parts.every((w, k) => n[i + k] === w)) {
+          if (skipped.has(i) || (i > 0 && notMethodBefore.includes(n[i - 1]))) { for (let k = 0; k < parts.length; k++) skipped.add(i + k); continue; }
           // "no crédito" / "via pix" / "cartao de credito"
           if (!out.metodo || parts.length > 1) out.metodo = mid;
-          for (let k = 0; k < parts.length; k++) keep[i + k] = false;
+          for (let k = 0; k < parts.length; k++) if (!skipped.has(i + k)) keep[i + k] = false;
           if (i > 0 && ['no', 'na', 'via', 'pelo', 'pela', 'com', 'em', 'de'].includes(n[i - 1])) keep[i - 1] = false;
         }
       }
@@ -167,7 +172,9 @@ function parseText(text) {
   });
   if (best >= 0) { out.valor = parseAmount(tokens[best]); keep[best] = false; if (/^(reais|real|rs)$/.test(n[best + 1] || '')) keep[best + 1] = false; }
 
-  const desc = tokens.filter((_, i) => keep[i]).join(' ').replace(/^(no|na|em|de|com)\s+/i, '').trim();
+  let desc = tokens.filter((_, i) => keep[i]).join(' ').replace(/^(no|na|em|de|com)\s+/i, '').trim();
+  // "R$275 cartão" sozinho = pagamento da fatura, não forma de pagamento
+  if (!desc && out.metodo === 'credito') { desc = tokens.filter((_, i) => !keep[i] && /^cart/i.test(n[i])).join(' ') || 'Cartão'; out.metodo = ''; }
   out.desc = desc ? desc[0].toUpperCase() + desc.slice(1) : '';
   return out;
 }
@@ -540,7 +547,7 @@ function columnChart(values, labels, tips, opt = {}) {
     }
     svg += `<rect class="hit" x="${padL + step * i}" y="${padT}" width="${step}" height="${H - padT}" data-tip="${escapeHtml(tips[i][0])}" data-val="${tips[i][1]}" tabindex="-1"/>`;
     if (!opt.labelEvery || i === 0 || (i + 1) % opt.labelEvery === 0) svg += `<text x="${cx}" y="${H - 6}" text-anchor="middle">${escapeHtml(labels[i])}</text>`;
-    if (opt.valueLabels && v > 0) svg += `<text class="lbl" x="${cx}" y="${y(v) - 6}" text-anchor="middle">${escapeHtml(moneyShort(v).replace('R$ ', ''))}</text>`;
+    if (opt.valueLabels && v > 0) svg += `<text class="lbl" x="${cx}" y="${y(v) - 6}" text-anchor="middle">${Math.round(v).toLocaleString('pt-BR')}</text>`;
   });
   if (opt.avg) svg += `<line class="avg" x1="${padL}" x2="${W - padR}" y1="${y(opt.avg)}" y2="${y(opt.avg)}"/><text x="${W - padR}" y="${Math.max(10, y(opt.avg) - 4)}" text-anchor="end">média/dia ${escapeHtml(money(opt.avg))}</text>`;
   svg += `<line class="base" x1="${padL}" x2="${W - padR}" y1="${H - padB}" y2="${H - padB}"/></svg>`;
@@ -735,12 +742,22 @@ function parseMoneyCell(s) {
 function matchCategory(name) {
   const n = norm(name);
   if (!n) return null;
-  let c = state.categorias.find(x => norm(x.nome) === n) || state.categorias.find(x => norm(x.nome).includes(n) || n.includes(norm(x.nome)));
+  // "IF e Senai" = "Senai ou IF" = "IF / Senai"
+  const key = s => norm(s).replace(/[^a-z0-9]+/g, ' ').split(' ').filter(w => w && !['e', 'ou', 'and', 'or'].includes(w)).sort().join(' ');
+  let c = state.categorias.find(x => norm(x.nome) === n) || state.categorias.find(x => key(x.nome) === key(name)) || state.categorias.find(x => norm(x.nome).includes(n) || n.includes(norm(x.nome)));
   if (!c) {
     const guess = categorize(name);
     if (guess.cat !== 'outros' && guess.certeza > 0.5) c = catById(guess.cat);
   }
   return c ? c.id : null;
+}
+
+function guessEmoji(name) {
+  const n = norm(name);
+  if (/\b(if|senai|escola|facul|faculdade|colegio|ifsp|ifrs|ifsc|campus|universidade|cantina)\b/.test(n)) return '🏫';
+  if (/cartao|fatura/.test(n)) return '💳';
+  if (/amor|namor|mulher|date/.test(n)) return '❤️';
+  return '🏷️';
 }
 
 function importCSV(text) {
@@ -773,7 +790,7 @@ function importCSV(text) {
       const name = r[iCat].split(',')[0].trim();
       cat = matchCategory(name);
       if (!cat) { // cria a categoria que existe no Notion
-        const nc = { id: uid(), nome: name[0].toUpperCase() + name.slice(1), emoji: '🏷️', palavras: [] };
+        const nc = { id: uid(), nome: name[0].toUpperCase() + name.slice(1), emoji: guessEmoji(name), palavras: [] };
         state.categorias.splice(state.categorias.length - 1, 0, nc);
         cat = nc.id; newCats++;
       }
@@ -790,6 +807,47 @@ function importCSV(text) {
   }
   save(); render();
   toast(`${added} gastos importados${skipped ? `, ${skipped} ignorados (vazios ou repetidos)` : ''}${newCats ? `, ${newCats} categorias novas` : ''}`);
+}
+
+// Cola o texto de uma página do Notion (ou do bloco de notas):
+// cada linha com valor vira um gasto; linhas sem valor são títulos de seção.
+// Se a linha não tem descrição, usa o título da seção como descrição e categoria.
+function parsePasted(text) {
+  const out = [];
+  let header = '';
+  for (let line of text.split(/\r?\n/)) {
+    line = line.replace(/^[-*•☐☑✓\d]+[.)]\s+/, '').replace(/^#+\s*/, '').trim();
+    if (!line) continue;
+    const p = parseText(line);
+    if (!p.valor) { header = line.replace(/[:：]$/, '').trim(); continue; }
+    const generic = /^(geral|gastos?|outros|diversos|total)$/i.test(norm(header));
+    let desc = p.desc, cat;
+    if (!desc && header && !generic) {
+      desc = header;
+      cat = matchCategory(header);
+      if (!cat) { const nc = { id: uid(), nome: header[0].toUpperCase() + header.slice(1), emoji: guessEmoji(header), palavras: [] }; state.categorias.splice(state.categorias.length - 1, 0, nc); cat = nc.id; }
+    }
+    desc = desc || 'Sem descrição';
+    out.push({ desc, valor: p.valor, data: p.data, metodo: p.metodo, cat: cat || categorize(desc).cat });
+  }
+  return out;
+}
+function openPaste() {
+  openSheet(`<h3>Colar do Notion</h3>
+    <p class="muted small">No Notion (até no celular): abra a página do mês → selecione tudo → copiar. Cole aqui. Entendo linhas como <b>R$8,00 mercado (01/07)</b>; títulos como “IF e Senai” viram categoria das linhas sem descrição.</p>
+    <div class="field"><textarea name="txt" style="height:220px" placeholder="R$27,07 mercado (01/07)\nR$3,21 uber (02/07)"></textarea></div>
+    <div class="sheet-actions"><span></span><div class="right"><button class="btn" value="cancel" formnovalidate>Cancelar</button><button class="btn solid" value="save">Importar</button></div></div>`,
+    (action, fd) => {
+      const before = JSON.stringify(state.categorias);
+      const items = parsePasted(fd.get('txt') || '');
+      if (!items.length) { state.categorias = JSON.parse(before); toast('Não achei nenhum valor no texto'); return false; }
+      const known = new Set(state.gastos.map(g => `${g.data}|${norm(g.desc)}|${g.valor}`));
+      const fresh = items.filter(g => !known.has(`${g.data}|${norm(g.desc)}|${g.valor}`));
+      if (!confirm(`Encontrei ${items.length} gastos (${money(sum(items))}).${fresh.length < items.length ? ` ${items.length - fresh.length} já estavam no app e serão pulados.` : ''} Importar?`)) { state.categorias = JSON.parse(before); return false; }
+      fresh.forEach((g, i) => { state.gastos.push({ id: uid(), ...g, nota: '', criado: Date.now() + i }); learn(g.desc, g.cat); });
+      save(); render();
+      toast(`${fresh.length} gastos importados`);
+    });
 }
 
 function download(name, content, type) {
@@ -845,6 +903,7 @@ function init() {
   $('#addCat').onclick = () => openCategory(null);
   $('#addRec').onclick = () => openRecurring(null);
   $('#exportCsv').onclick = exportCSV;
+  $('#pasteBtn').onclick = openPaste;
   $('#exportJson').onclick = () => download(`gastos-backup-${isoDate(new Date())}.json`, JSON.stringify(state, null, 1), 'application/json');
   $('#csvInput').onchange = async e => { const f = e.target.files[0]; if (f) importCSV(await f.text()); e.target.value = ''; };
   $('#jsonInput').onchange = async e => {

@@ -32,6 +32,10 @@ Antes de salvar aparece uma prévia; se a categoria estiver errada, toque nela e
 
 ## Trazendo seus gastos do Notion
 
+**Jeito mais fácil (funciona no celular):** abra a página do mês no Notion, selecione tudo, copie e use **Ajustes → Colar texto do Notion**. Linhas como `R$8,00 mercado (01/07)` viram gastos; títulos como “IF e Senai” viram a categoria das linhas sem descrição.
+
+**Ou pelo arquivo:**
+
 1. No Notion, abra o banco **Gastos** → `⋯` → **Exportar** → formato **Markdown & CSV**.
 2. Descompacte o .zip e, no app, vá em **Ajustes → Importar CSV do Notion**.
 
