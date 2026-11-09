@@ -363,3 +363,21 @@ table.simple td.p { text-align: right; color: var(--muted); width: 56px; font-va
 .move-info { display: flex; justify-content: space-between; align-items: baseline; font-size: 14px; color: var(--ink-2); margin: -4px 0 8px; }
 .inv-link { display: flex; justify-content: space-between; width: 100%; margin-top: 12px; padding: 10px 12px; border: 0; border-radius: 10px; background: var(--surface-2); font-size: 14px; color: var(--ink-2); text-align: left; }
 .inv-link b { color: var(--ink); }
+
+/* Tesouro Direto */
+.tes-holds { list-style: none; margin: 10px 0 0; padding: 8px 12px; background: var(--surface-2); border-radius: 10px; }
+.tes-holds li { display: flex; justify-content: space-between; gap: 10px; padding: 6px 0; font-size: 14px; }
+.tes-holds li + li { border-top: 1px solid var(--line); }
+.tes-holds small, .tes-list small { display: block; font-size: 12px; color: var(--muted); }
+.tes-ref { color: var(--ink-2); margin: 0 0 8px; }
+.tes-group { border-top: 1px solid var(--line); padding: 4px 0; }
+.tes-group:first-of-type { border-top: 0; }
+.tes-group summary { display: flex; justify-content: space-between; align-items: baseline; padding: 10px 0; cursor: pointer; font-weight: 600; font-size: 15px; list-style: none; }
+.tes-group summary::-webkit-details-marker { display: none; }
+.tes-group summary span:first-child::before { content: '▸ '; color: var(--muted); }
+.tes-group[open] summary span:first-child::before { content: '▾ '; }
+.tes-group > p { margin: -4px 0 6px; }
+.tes-list { list-style: none; margin: 0; padding: 0; }
+.tes-list li { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 9px 0; border-top: 1px solid var(--line); cursor: pointer; font-size: 14px; }
+.tes-list li b { white-space: nowrap; font-variant-numeric: tabular-nums; }
+.tes-src { margin: 10px 0 0; }
