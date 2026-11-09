@@ -506,10 +506,13 @@ function balanceOf(key) {
 }
 
 // Balanço do mês: quanto entrou, para onde foi (gasto / investido) e o que sobrou.
+function investedTotal() { return Math.max(0, investPositions().reduce((a, p) => a + (p.atual ?? p.aportado), 0)); }
 function renderBalance(key, el) {
   const b = balanceOf(key);
+  const inv = investedTotal();
+  const invLine = inv > 0 ? `<button type="button" class="inv-link" onclick="go('invest')"><span>📈 Você tem <b>${money(inv)}</b> investido</span><span>ver ›</span></button>` : '';
   if (!b.entrou && !b.investiu) {
-    el.innerHTML = `<h2>Balanço do mês</h2><p class="muted small">Anote também o que <b>entra</b> e o que você <b>investe</b> para ver quanto sobra. Ex.: <b>recebi mesada 300</b>, <b>salário 1500</b>, <b>guardei 100 na caixinha</b>.</p>`;
+    el.innerHTML = `<h2>Balanço do mês</h2><p class="muted small">Anote também o que <b>entra</b> e o que você <b>investe</b> para ver quanto sobra. Ex.: <b>recebi mesada 300</b>, <b>salário 1500</b>, <b>guardei 100 na caixinha</b>.</p>${invLine}`;
     return;
   }
   const base = Math.max(b.entrou, b.gastou + Math.max(0, b.investiu), 1);
@@ -523,8 +526,8 @@ function renderBalance(key, el) {
     ${row('', 'Entrou', '+' + money(b.entrou), 'in')}
     ${row('g', 'Gastou', '−' + money(b.gastou))}
     ${row('i', b.investiu < 0 ? 'Resgatou' : 'Investiu', (b.investiu < 0 ? '+' : '−') + money(Math.abs(b.investiu)))}
-    <div class="bal-total">${row('', b.sobrou >= 0 ? 'Sobrou' : 'Faltou', money(Math.abs(b.sobrou)), b.sobrou >= 0 ? 'in' : 'out')}</div>
-    ${rate !== null ? `<p class="muted small" style="margin:8px 0 0">${b.sobrou < 0 ? '⚠️ Saiu mais do que entrou neste mês.' : rate > 0 ? `Você investiu <b>${rate}%</b> do que entrou.` : 'Nada investido ainda neste mês.'}</p>` : ''}`;
+    ${b.entrou ? `<div class="bal-total">${row('', b.sobrou >= 0 ? 'Sobrou' : 'Faltou', money(Math.abs(b.sobrou)), b.sobrou >= 0 ? 'in' : 'out')}</div>` : `<p class="muted small" style="margin:8px 0 0">Anote o que entra (ex.: <b>recebi mesada 300</b>) para ver quanto sobra.</p>`}
+    ${rate !== null ? `<p class="muted small" style="margin:8px 0 0">${b.sobrou < 0 ? '⚠️ Saiu mais do que entrou neste mês.' : rate > 0 ? `Você investiu <b>${rate}%</b> do que entrou.` : 'Nada investido ainda neste mês.'}</p>` : ''}${invLine}`;
 }
 
 function catBars(cats, total, withBudget) {
@@ -780,7 +783,7 @@ function renderInvest() {
   const comSaldo = pos.filter(p => p.atual != null);
   const rend = comSaldo.reduce((a, p) => a + p.atual - p.aportado, 0);
   const baseRend = comSaldo.reduce((a, p) => a + p.aportado, 0);
-  $('#invTotal').textContent = money(total);
+  $('#invTotal').textContent = money(Math.max(0, total));
   $('#invSub').innerHTML = !pos.length ? 'Nenhum investimento ainda.' : comSaldo.length
     ? `${money(aportado)} aplicados · rendimento <span class="${rend >= 0 ? 'delta-down' : 'delta-up'}">${rend >= 0 ? '+' : '−'}${money(Math.abs(rend))}${baseRend > 0 ? ` (${rend >= 0 ? '+' : '−'}${Math.abs(rend / baseRend * 100).toLocaleString('pt-BR', { maximumFractionDigits: 1 })}%)` : ''}</span>`
     : `${money(aportado)} aplicados · toque num destino para informar o saldo atual e ver o rendimento`;
@@ -795,11 +798,26 @@ function renderInvest() {
     ['Média 6 meses', moneyShort(mediaAporte)],
   ].map(([k, v]) => `<div class="stat"><div class="k">${k}</div><div class="v num">${v}</div></div>`).join('');
 
-  $('#invPos').innerHTML = pos.length ? `<ul class="cat-list">${pos.map(p => {
+  $('#invPos').innerHTML = pos.length ? pos.map(p => {
+    const tem = Math.max(0, p.atual ?? p.aportado);
     const r = p.atual != null ? p.atual - p.aportado : null;
-    return `<li data-id="${p.c.id}"><span class="em">${p.c.emoji}</span><span class="n">${escapeHtml(p.c.nome)}<small>${money(p.aportado)} aplicados${p.saldo ? ` · saldo informado em ${parseISO(p.saldo.data).toLocaleDateString('pt-BR')}` : ' · toque para informar o saldo'}</small></span><span class="b"><b class="num">${money(p.atual ?? p.aportado)}</b>${r != null ? `<br><span class="${r >= 0 ? 'delta-down' : 'delta-up'}">${r >= 0 ? '+' : '−'}${money(Math.abs(r))}</span>` : ''}</span></li>`;
-  }).join('')}</ul>` : '<div class="empty">Quando investir, digite na tela inicial:<br><b>guardei 100 na caixinha</b> · <b>investi 200 no tesouro</b><br>Para tirar: <b>resgatei 50 da poupança</b></div>';
-  $$('#invPos li[data-id]').forEach(li => li.onclick = () => openSaldo(li.dataset.id));
+    const det = [`${money(Math.max(0, p.aportado))} colocados`];
+    if (r != null) det.push(`<span class="${r >= 0 ? 'delta-down' : 'delta-up'}">${r >= 0 ? 'rendeu +' : 'perdeu −'}${money(Math.abs(r))}</span>`);
+    return `<div class="pos ${tem ? '' : 'zero'}" data-id="${p.c.id}">
+      <div class="pos-top"><span class="em">${p.c.emoji}</span><span class="pos-name">${escapeHtml(p.c.nome)}<small>${det.join(' · ')}</small></span><span class="pos-val num">${tem ? money(tem) : 'zerado'}</span></div>
+      <div class="pos-actions">
+        <button type="button" class="btn small" data-act="add">➕ Colocar</button>
+        <button type="button" class="btn small" data-act="take" ${tem ? '' : 'disabled'}>➖ Tirar</button>
+        <button type="button" class="btn small ghost" data-act="saldo" title="Informar quanto tem hoje no banco">🔄 Saldo</button>
+      </div>
+    </div>`;
+  }).join('') : '<div class="empty">Você ainda não tem nada investido.<br>Toque em <b>➕ Investir</b> acima, ou digite na tela inicial:<br><b>guardei 100 na caixinha</b> · <b>investi 200 no tesouro</b></div>';
+  $$('#invPos .pos').forEach(el => {
+    const id = el.dataset.id;
+    $('[data-act=add]', el).onclick = () => openMove(id, false);
+    $('[data-act=take]', el).onclick = () => openMove(id, true);
+    $('[data-act=saldo]', el).onclick = () => openSaldo(id);
+  });
 
   $('#invChart').innerHTML = aportes.some(v => v) ? columnChart(aportes, keys.map(k => monthName(k, true)), keys.map((k, i) => [`aportes em ${monthName(k)}`, aportes[i]]), { width: $('#invChart').clientWidth, highlight: 5, valueLabels: true }) : '<div class="empty">Sem aportes nos últimos 6 meses.</div>';
   bindTips();
@@ -808,6 +826,43 @@ function renderInvest() {
   $('#invList').innerHTML = recent.length ? recent.map(txRow).join('') : '<li class="empty">Nenhuma movimentação.</li>';
   bindTx($('#invList'));
 }
+// Colocar dinheiro num investimento ou tirar dele (resgate). Não deixa tirar mais do que tem.
+function openMove(catId, resgate) {
+  const pos = investPositions();
+  const has = id => { const p = pos.find(x => x.c.id === id); return p ? Math.max(0, Math.round((p.atual ?? p.aportado) * 100) / 100) : 0; };
+  const options = resgate ? sortedCats('invest').filter(c => has(c.id) > 0) : sortedCats('invest');
+  if (!options.length) { toast('Você ainda não tem nada investido para tirar'); return; }
+  const sel = catId && options.some(c => c.id === catId) ? catId : options[0].id;
+  openSheet(`<h3>${resgate ? '➖ Tirar do investimento' : '➕ Colocar no investimento'}</h3>
+    <div class="field"><label>${resgate ? 'De onde' : 'Para onde'}</label><select name="cat">${options.map(c => `<option value="${c.id}" ${c.id === sel ? 'selected' : ''}>${c.emoji} ${escapeHtml(c.nome)}${resgate ? ` — tem ${money(has(c.id))}` : ''}</option>`).join('')}</select></div>
+    <div class="field-row">
+      <div class="field"><label>Valor (R$)</label><input name="valor" inputmode="decimal" required placeholder="ex.: 100" autofocus></div>
+      <div class="field"><label>Data</label><input name="data" type="date" value="${isoDate(new Date())}" required></div>
+    </div>
+    ${resgate ? `<div class="move-info"><span id="moveHas"></span><button type="button" class="link" id="moveAll">tirar tudo</button></div>` : ''}
+    <p class="muted small">${resgate ? 'O valor tirado volta para o seu dinheiro do mês (aparece no Balanço como “Resgatou”).' : 'Sai do seu dinheiro do mês e entra no total investido.'}</p>
+    <div class="sheet-actions"><span></span><div class="right"><button class="btn" value="cancel" formnovalidate>Cancelar</button><button class="btn solid" value="save">${resgate ? 'Tirar' : 'Colocar'}</button></div></div>`,
+    (action, fd) => {
+      const cat = fd.get('cat');
+      const valor = parseAmount(String(fd.get('valor')).trim());
+      if (!valor) { toast('Digite o valor'); return false; }
+      if (resgate && valor > has(cat) + 0.005) { toast(`Você só tem ${money(has(cat))} em ${catById(cat).nome}`); return false; }
+      const c = catById(cat);
+      const created = addExpense({ desc: c.nome, valor, data: fd.get('data'), cat, metodo: '', resgate });
+      if (created[0].data.slice(0, 7) !== ui.month) ui.month = created[0].data.slice(0, 7);
+      render();
+      toast(resgate ? `↩️ ${money(valor)} tirado de ${c.nome}` : `📈 ${money(valor)} colocado em ${c.nome}`, 'desfazer', () => {
+        state.gastos = state.gastos.filter(g => g.id !== created[0].id); save(); render();
+      });
+    });
+  if (resgate) {
+    const s = $('#sheetForm select[name=cat]'), v = $('#sheetForm input[name=valor]');
+    const upd = () => { $('#moveHas').textContent = `Você tem ${money(has(s.value))} aí`; };
+    s.onchange = upd; upd();
+    $('#moveAll').onclick = () => { v.value = String(has(s.value)).replace('.', ','); };
+  }
+}
+
 function openSaldo(catId) {
   const c = catById(catId);
   const p = investPositions().find(x => x.c.id === catId) || { aportado: 0, atual: null };
@@ -1194,6 +1249,8 @@ function init() {
   $('#searchInput').addEventListener('input', e => { ui.search = e.target.value; renderList(); $('#searchInput').focus(); });
   $('#catFilter').addEventListener('change', e => { ui.cat = e.target.value; renderList(); });
   $('#addCat').onclick = () => openCategory(null);
+  $('#invAdd').onclick = () => openMove(null, false);
+  $('#invTake').onclick = () => openMove(null, true);
   $$('#tipoSeg button').forEach(b => b.onclick = () => {
     ui.tipoForce = ui.tipoForce === b.dataset.tipo ? null : b.dataset.tipo;
     if (pending) pending.catManual = false;

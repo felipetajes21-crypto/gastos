@@ -342,3 +342,24 @@ table.simple td.p { text-align: right; color: var(--muted); width: 56px; font-va
 .cat-list li.group-head { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; cursor: default; padding: 14px 0 6px; }
 .cat-list li.group-head:first-child { padding-top: 0; }
 #invPos .b { text-align: right; }
+
+/* Investimentos */
+.hero-actions { margin-top: 14px; }
+.hero-actions .btn { flex: 1; margin: 0; }
+.pos { padding: 12px 0; border-bottom: 1px solid var(--line); }
+.pos:last-child { border-bottom: 0; padding-bottom: 0; }
+.pos:first-child { padding-top: 0; }
+.pos-top { display: flex; align-items: center; gap: 10px; }
+.pos-top .em { font-size: 22px; width: 32px; text-align: center; flex: none; }
+.pos-name { flex: 1; min-width: 0; font-size: 15px; font-weight: 600; }
+.pos-name small { display: block; font-weight: 400; font-size: 12px; color: var(--muted); }
+.pos-val { font-size: 17px; font-weight: 700; white-space: nowrap; }
+.pos.zero .pos-val { color: var(--muted); font-weight: 400; font-size: 14px; }
+.pos-actions { display: flex; gap: 6px; margin: 10px 0 0; }
+.pos-actions .btn { flex: 1; }
+.btn.small { height: 34px; padding: 0 12px; font-size: 13px; margin: 0; border-radius: 10px; }
+.btn.ghost { background: transparent; color: var(--ink-2); }
+.btn:disabled { opacity: .4; cursor: default; }
+.move-info { display: flex; justify-content: space-between; align-items: baseline; font-size: 14px; color: var(--ink-2); margin: -4px 0 8px; }
+.inv-link { display: flex; justify-content: space-between; width: 100%; margin-top: 12px; padding: 10px 12px; border: 0; border-radius: 10px; background: var(--surface-2); font-size: 14px; color: var(--ink-2); text-align: left; }
+.inv-link b { color: var(--ink); }
