@@ -177,7 +177,8 @@ def main(path):
     titulos.sort(key=lambda t: (ORDER.index(t["tipo"]), t["vencimento"]))
     out = {
         "atualizado": quando, "buscado": datetime.now(BRT).isoformat(timespec="minutes"), "fonte": fonte,
-        "selic": bcb(432), "ipca12m": bcb(13522), "titulos": titulos,
+        # Selic meta (432), CDI anualizado (4389), Selic efetiva anualizada (1178), IPCA 12 meses (13522)
+        "selic": bcb(432), "cdi": bcb(4389), "selicOver": bcb(1178), "ipca12m": bcb(13522), "titulos": titulos,
     }
     with open(path, "w", encoding="utf-8") as f:
         json.dump(out, f, ensure_ascii=False, indent=1)

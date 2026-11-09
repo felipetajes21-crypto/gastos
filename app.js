@@ -135,6 +135,13 @@ function parseText(text) {
   if (!raw) return out;
   // "+50 pix do joão" = entrada
   if (/^\+/.test(raw)) { out.tipo = 'entrada'; raw = raw.replace(/^\+\s*/, ''); }
+  // Rentabilidade: "110% do cdi", "100% da selic", "13% ao ano", "ipca + 6%"
+  raw = raw.replace(/(\d)\s+%/g, '$1%');
+  let rm;
+  if ((rm = raw.match(/(\d+(?:[.,]\d+)?)%\s*(?:do|da|de)?\s*(cdi|selic)\b/i))) out.rend = { ind: norm(rm[2]), pct: parseFloat(rm[1].replace(',', '.')) };
+  else if ((rm = raw.match(/ipca\s*\+\s*(\d{1,2}(?:[.,]\d+)?)%/i))) out.rend = { ind: 'ipca', pct: parseFloat(rm[1].replace(',', '.')) };
+  else if ((rm = raw.match(/(?:pre(?:fixado)?\s*)?(\d{1,2}(?:[.,]\d+)?)%\s*(?:a\.?\s*a\.?|ao ano)/i))) out.rend = { ind: 'pre', pct: parseFloat(rm[1].replace(',', '.')) };
+  if (rm && out.rend) raw = raw.replace(rm[0], ' ').replace(/\s+/g, ' ').trim();
   // "r$ 20" → "r$20"
   raw = raw.replace(/r\$\s+(?=\d)/gi, 'r$')
     .replace(/[()\[\]]/g, ' ')                       // "(01/07)" → " 01/07 "
@@ -355,6 +362,10 @@ function updatePreview() {
   parts.push(`<button type="button" class="chip" id="previewCat" title="Trocar categoria">${c.emoji} ${escapeHtml(c.nome)} ▾</button>`);
   parts.push(`<span class="chip">📅 ${relDay(p.data)}</span>`);
   if (p.metodo) parts.push(`<span class="chip">💳 ${METHODS[p.metodo].nome}</span>`);
+  if (tipo === 'invest' && !isTesouroCat(pending.cat)) {
+    const r = p.rend || catRend(pending.cat);
+    if (r.ind !== 'nenhum' && !p.resgate) parts.push(`<span class="chip">📈 ${escapeHtml(rendTexto(r, false))}</span>`);
+  }
   if (tipo === 'invest' && isTesouroCat(pending.cat)) {
     const t = matchTitulo(text);
     parts.push(t ? `<span class="chip">🏛️ ${escapeHtml(t.nome.replace(/^Tesouro /, ''))}${t.taxaCompra && !p.resgate ? ' · ' + taxaTexto(t.tipo, t.taxaCompra) : ''}</span>` : `<span class="chip">🏛️ qual título? ex.: “ipca 2035”</span>`);
@@ -403,6 +414,12 @@ function submitQuick(e) {
   const resgate = !!pending.resgate;
   const tTes = tipo === 'invest' && isTesouroCat(pending.cat) ? matchTitulo(input.value) : null;
   const created = addExpense({ desc: tTes ? tTes.nome : desc, valor: p.valor, data: p.data, cat: pending.cat, metodo: p.metodo, parcelas: tipo === 'gasto' ? p.parcelas : 1, resgate });
+  if (tipo === 'invest' && !resgate && !isTesouroCat(pending.cat) && p.rend) {
+    const r = { ...p.rend, ...(/\b(lci|lca)\b/i.test(desc) ? { isento: true } : {}) };
+    state.rend = state.rend || {};
+    if (!state.rend[pending.cat] && !DEFAULT_REND[pending.cat]) state.rend[pending.cat] = r; else created[0].rend = r;
+    save();
+  }
   if (tTes) {
     const g = created[0];
     g.titulo = tTes.nome;
@@ -574,7 +591,7 @@ function txRow(g) {
   const c = catById(g.cat);
   const t = tipoOf(g);
   const kind = t === 'entrada' ? 'entrada' : t === 'invest' ? (g.resgate ? 'resgate' : 'investimento') : '';
-  const meta = [relDay(g.data), g.titulo ? [g.titulo === g.desc ? c.nome : g.titulo, g.taxa != null ? taxaTexto(tipoTitulo(g.titulo), g.taxa) : ''].filter(Boolean).join(' · ') : c.nome, kind, g.metodo && METHODS[g.metodo] ? METHODS[g.metodo].nome : '', g.fixo ? 'fixo' : ''].filter(Boolean).join(' · ');
+  const meta = [relDay(g.data), g.rend ? `${c.nome} · ${rendTexto(g.rend, false)}` : g.titulo ? [g.titulo === g.desc ? c.nome : g.titulo, g.taxa != null ? taxaTexto(tipoTitulo(g.titulo), g.taxa) : ''].filter(Boolean).join(' · ') : c.nome, kind, g.metodo && METHODS[g.metodo] ? METHODS[g.metodo].nome : '', g.fixo ? 'fixo' : ''].filter(Boolean).join(' · ');
   return `<li class="tx" data-id="${g.id}"><div class="em">${c.emoji}</div><div class="info"><div class="d">${escapeHtml(g.desc)}</div><div class="meta">${escapeHtml(meta)}</div></div>${amountHtml(g)}</li>`;
 }
 function bindTx(el) { $$('.tx', el).forEach(li => li.onclick = () => openExpense(li.dataset.id)); }
@@ -848,6 +865,53 @@ function tesouroHoldings(items) {
 }
 const holdingValue = h => Math.max(0, h.estimado ?? h.aportado);
 
+// ── Rentabilidade dos investimentos (exceto Tesouro, que usa o preço oficial)
+const REND_TIPOS = {
+  cdi: { nome: '% do CDI', curto: 'do CDI', pct: 100, label: 'Quantos % do CDI?', ex: 'Caixinha e CDB costumam render 100% a 120% do CDI' },
+  selic: { nome: '% da Selic', curto: 'da Selic', pct: 100, label: 'Quantos % da Selic?', ex: '' },
+  pre: { nome: 'Prefixado (% ao ano)', curto: 'ao ano', pct: 12, label: 'Taxa ao ano (%)', ex: 'Ex.: CDB prefixado de 13% ao ano' },
+  ipca: { nome: 'IPCA + %', curto: '', pct: 6, label: 'IPCA + quantos %?', ex: 'Ex.: CDB IPCA + 6%' },
+  poupanca: { nome: 'Poupança', curto: '', pct: 100, label: '', ex: 'Rende 0,5% ao mês + TR quando a Selic está acima de 8,5%; senão, 70% da Selic' },
+  nenhum: { nome: 'Não calcular (ações, cripto…)', curto: '', pct: 0, label: '', ex: 'Renda variável: use 🔄 Saldo para informar quanto tem' },
+};
+const DEFAULT_REND = { caixinha: { ind: 'cdi', pct: 100 }, reserva: { ind: 'poupanca', pct: 100, isento: true } };
+function catRend(catId) {
+  const r = (state.rend && state.rend[catId]) || DEFAULT_REND[catId];
+  return r ? { isento: false, ...r } : { ind: 'nenhum', pct: 0 };
+}
+function mercado() {
+  const m = TESOURO || {};
+  const selic = m.selic ? m.selic.valor : null;
+  const selicOver = m.selicOver ? m.selicOver.valor : selic != null ? selic - 0.1 : null;
+  const cdi = m.cdi ? m.cdi.valor : selicOver;
+  return { selic, selicOver, cdi, ipca: m.ipca12m ? m.ipca12m.valor : null };
+}
+// taxa anual (%) que o investimento rende hoje; null = não dá para calcular
+function annualRate(r) {
+  if (!r) return null;
+  const m = mercado();
+  switch (r.ind) {
+    case 'cdi': return m.cdi != null ? m.cdi * r.pct / 100 : null;
+    case 'selic': return m.selicOver != null ? m.selicOver * r.pct / 100 : null;
+    case 'pre': return r.pct;
+    case 'ipca': return m.ipca != null ? ((1 + m.ipca / 100) * (1 + r.pct / 100) - 1) * 100 : null;
+    case 'poupanca': return m.selic == null ? null : m.selic > 8.5 ? (Math.pow(1.005, 12) - 1) * 100 : m.selic * 0.7;
+    default: return null;
+  }
+}
+function rendTexto(r, comTaxa = true) {
+  if (!r || r.ind === 'nenhum') return '';
+  const t = annualRate(r);
+  const base = r.ind === 'cdi' || r.ind === 'selic' ? `${pctFmt(r.pct).replace(/,00$/, '')}% ${REND_TIPOS[r.ind].curto}`
+    : r.ind === 'pre' ? `${pctFmt(r.pct)}% ao ano` : r.ind === 'ipca' ? `IPCA + ${pctFmt(r.pct)}%` : 'Poupança';
+  return base + (comTaxa && t != null && r.ind !== 'pre' ? ` (≈ ${pctFmt(Math.round(t * 100) / 100)}% ao ano)` : '');
+}
+const daysSince = iso => Math.max(0, Math.round((Date.now() - parseISO(iso).getTime()) / 864e5));
+const grow = (iso, rate) => rate == null ? 1 : Math.pow(1 + rate / 100, daysSince(iso) / 365);
+// IR regressivo sobre o lucro (CDB, caixinha…): até 180 dias 22,5%; até 360, 20%; até 720, 17,5%; depois 15%
+const aliquotaIR = d => d <= 180 ? 0.225 : d <= 360 ? 0.20 : d <= 720 ? 0.175 : 0.15;
+const isentoIR = (r, c) => !!(r && (r.isento || r.ind === 'poupanca')) || /\b(lci|lca|poupanca)\b/.test(norm(c.nome));
+
 // ── Investimentos
 // Patrimônio por destino: aportado (aportes − resgates) e, se você informou, o saldo atual
 // (saldo informado + movimentações depois dele) → rendimento.
@@ -860,14 +924,30 @@ function investPositions() {
     if (!items.length && !saldo) continue;
     const aportado = sumSigned(items);
     let atual = saldo ? Math.round((saldo.valor + sumSigned(items.filter(g => g.criado > saldo.ts))) * 100) / 100 : null;
-    let titulos = null, estimado = false;
+    let titulos = null, estimado = false, liquido = null, rend = null;
+    if (!isTesouroCat(c.id)) {
+      // Estima o valor de hoje: cada aporte/resgate rende desde a sua data (taxa de hoje).
+      rend = catRend(c.id);
+      const flows = saldo ? items.filter(g => g.criado > saldo.ts) : items;
+      const rateOf = g => annualRate(g.rend || rend);
+      if ((saldo && annualRate(rend) != null) || flows.some(g => rateOf(g) != null)) {
+        let v = saldo ? saldo.valor * grow(saldo.data, annualRate(rend)) : 0, gross = 0, ir = 0;
+        for (const g of flows) {
+          const f = grow(g.data, rateOf(g));
+          v += signed(g) * f;
+          if (!g.resgate) { gross += g.valor * f; ir += g.valor * (f - 1) * aliquotaIR(daysSince(g.data)); }
+        }
+        atual = Math.round(v * 100) / 100; estimado = true;
+        if (!isentoIR(rend, c) && gross > 0 && !saldo) liquido = Math.round((v - ir * Math.max(0, v) / gross) * 100) / 100;
+      }
+    }
     if (isTesouroCat(c.id)) {
       titulos = tesouroHoldings(items);
       if (!saldo && titulos.length && titulos.every(h => h.estimado != null)) {
         atual = Math.round(titulos.reduce((a, h) => a + h.estimado, 0) * 100) / 100; estimado = true;
       }
     }
-    out.push({ c, aportado, atual, saldo, n: items.length, titulos, estimado });
+    out.push({ c, aportado, atual, saldo, n: items.length, titulos, estimado, liquido, rend });
   }
   return out;
 }
@@ -898,10 +978,11 @@ function renderInvest() {
     const r = p.atual != null ? p.atual - p.aportado : null;
     const det = [`${money(Math.max(0, p.aportado))} colocados`];
     if (r != null) det.push(`<span class="${r >= 0 ? 'delta-down' : 'delta-up'}">${r >= 0 ? 'rendeu +' : (p.estimado ? 'por enquanto −' : 'perdeu −')}${money(Math.abs(r))}</span>`);
-    if (p.estimado) det.push('valor se vendesse hoje');
+    if (p.estimado) det.push(p.titulos ? 'valor se vendesse hoje' : 'estimado');
+    const rendLine = p.rend ? `<button type="button" class="rend-line" data-act="rend"><span>${p.rend.ind === 'nenhum' ? '📊 Renda variável — toque para dizer quanto rende, ou use 🔄 Saldo' : `📈 Rende <b>${escapeHtml(rendTexto(p.rend))}</b>${isentoIR(p.rend, p.c) ? ' · isento de IR' : ''}`}</span><span>✏️</span></button>${p.liquido != null && p.atual > p.aportado ? `<p class="muted small liq">≈ ${money(p.liquido)} se tirar hoje, já descontado o imposto de renda</p>` : ''}` : '';
     const subs = p.titulos && p.titulos.length ? `<ul class="tes-holds">${p.titulos.map(h => `<li><span>${escapeHtml(h.nome.replace(/^Tesouro /, ''))}<small>${[h.taxa != null ? taxaTexto(h.tipo, h.taxa) : '', `${money(Math.max(0, h.aportado))} colocados`].filter(Boolean).join(' · ')}</small></span><b class="num">${money(holdingValue(h))}</b></li>`).join('')}</ul>${p.estimado && r != null && r < 0 && Math.abs(r) <= p.aportado * 0.03 ? '<p class="muted small" style="margin:6px 0 0">Logo depois de comprar o valor fica um pouco abaixo: o Tesouro paga um pouco menos na venda do que cobra na compra. Com o tempo, os juros cobrem essa diferença.</p>' : ''}` : '';
     return `<div class="pos ${tem ? '' : 'zero'}" data-id="${p.c.id}">
-      <div class="pos-top"><span class="em">${p.c.emoji}</span><span class="pos-name">${escapeHtml(p.c.nome)}<small>${det.join(' · ')}</small></span><span class="pos-val num">${tem ? money(tem) : 'zerado'}</span></div>${subs}
+      <div class="pos-top"><span class="em">${p.c.emoji}</span><span class="pos-name">${escapeHtml(p.c.nome)}<small>${det.join(' · ')}</small></span><span class="pos-val num">${tem ? money(tem) : 'zerado'}</span></div>${rendLine}${subs}
       <div class="pos-actions">
         <button type="button" class="btn small" data-act="add">➕ Colocar</button>
         <button type="button" class="btn small" data-act="take" ${tem ? '' : 'disabled'}>➖ Tirar</button>
@@ -914,6 +995,7 @@ function renderInvest() {
     $('[data-act=add]', el).onclick = () => openMove(id, false);
     $('[data-act=take]', el).onclick = () => openMove(id, true);
     $('[data-act=saldo]', el).onclick = () => openSaldo(id);
+    const rl = $('[data-act=rend]', el); if (rl) rl.onclick = () => openRend(id);
   });
 
   renderTesouroHoje();
@@ -937,7 +1019,7 @@ function renderTesouroHoje() {
     if (/^\d{4}-\d{2}-\d{2}$/.test(a)) return 'fechamento de ' + parseISO(a).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
     const d = new Date(a); return isNaN(d) ? a : d.toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
   })();
-  const ref = [TESOURO.selic ? `Selic hoje <b>${pctFmt(TESOURO.selic.valor)}%</b> ao ano` : '', TESOURO.ipca12m ? `inflação (IPCA) 12 meses <b>${pctFmt(TESOURO.ipca12m.valor)}%</b>` : ''].filter(Boolean).join(' · ');
+  const ref = [TESOURO.selic ? `Selic hoje <b>${pctFmt(TESOURO.selic.valor)}%</b> ao ano` : '', TESOURO.cdi ? `CDI <b>${pctFmt(TESOURO.cdi.valor)}%</b>` : '', TESOURO.ipca12m ? `inflação (IPCA) 12 meses <b>${pctFmt(TESOURO.ipca12m.valor)}%</b>` : ''].filter(Boolean).join(' · ');
   el.innerHTML = (ref ? `<p class="small tes-ref">${ref}</p>` : '') + Object.entries(groups).map(([tipo, ts]) => `
     <details class="tes-group" ${tipo === 'selic' || tipo === 'prefixado' || tipo === 'ipca' ? 'open' : ''}>
       <summary><span>${escapeHtml(TES_TIPOS[tipo].nome)}</span><span class="muted small">${ts.length} título${ts.length > 1 ? 's' : ''}</span></summary>
@@ -966,6 +1048,7 @@ function openMove(catId, resgate, tituloSel) {
   const sel = catId && options.some(c => c.id === catId) ? catId : options[0].id;
   openSheet(`<h3>${resgate ? '➖ Tirar do investimento' : '➕ Colocar no investimento'}</h3>
     <div class="field"><label>${resgate ? 'De onde' : 'Para onde'}</label><select name="cat">${options.map(c => `<option value="${c.id}" ${c.id === sel ? 'selected' : ''}>${c.emoji} ${escapeHtml(c.nome)}${resgate ? ` — tem ${money(has(c.id))}` : ''}</option>`).join('')}</select></div>
+    ${resgate ? '' : `<div id="rendBox" hidden>${rendFields({ ind: 'cdi', pct: 100 }, 'r_')}</div>`}
     <div id="tesBox" hidden>
       <div class="field"><label>Título do Tesouro</label><select name="titulo">${tituloOpts()}</select></div>
       <div class="field" id="tesOutro" hidden><label>Nome do título</label><input name="tituloNome" placeholder="ex.: Tesouro IPCA+ 2035"></div>
@@ -991,6 +1074,13 @@ function openMove(catId, resgate, tituloSel) {
       } else if (resgate && valor > has(cat) + 0.005) { toast(`Você só tem ${money(has(cat))} em ${catById(cat).nome}`); return false; }
       const c = catById(cat);
       const created = addExpense({ desc: titulo || c.nome, valor, data: fd.get('data'), cat, metodo: '', resgate });
+      if (!resgate && !tes && readRend) {
+        const r = readRend(), base = catRend(cat);
+        state.rend = state.rend || {};
+        if (!state.rend[cat] && !DEFAULT_REND[cat]) state.rend[cat] = { ...r, isento: false }; // primeira vez: vira o padrão
+        else if (r.ind !== base.ind || r.pct !== base.pct) created[0].rend = r;             // taxa diferente só neste aporte
+        save();
+      }
       if (tes && titulo) {
         const g = created[0], t = tesouroByName(titulo);
         g.titulo = titulo;
@@ -1009,6 +1099,19 @@ function openMove(catId, resgate, tituloSel) {
     });
   const s = $('#sheetForm select[name=cat]'), v = $('#sheetForm input[name=valor]');
   const ts = $('#sheetForm select[name=titulo]'), tx = $('#sheetForm input[name=taxa]');
+  let readRend = null;
+  if (!resgate) {
+    readRend = bindRendFields($('#rendBox'), 'r_');
+    const setRend = () => {
+      const r = catRend(s.value), box = $('#rendBox');
+      box.hidden = isTesouroCat(s.value);
+      $('select[name=r_ind]', box).value = r.ind;
+      $('input[name=r_pct]', box).value = r.pct ? String(r.pct).replace('.', ',') : '';
+      $('select[name=r_ind]', box).dispatchEvent(new Event('input'));
+      $('input[name=r_pct]', box).dispatchEvent(new Event('input'));
+    };
+    s.addEventListener('change', setRend); setRend();
+  }
   const useTit = () => isTesouroCat(s.value) && (resgate ? held.length > 0 : true);
   const avail = () => useTit() && resgate ? hasTit(ts.value) : has(s.value);
   const upd = () => {
@@ -1028,6 +1131,46 @@ function openMove(catId, resgate, tituloSel) {
   if (ts) ts.addEventListener('change', upd);
   upd();
   if (resgate) $('#moveAll').onclick = () => { v.value = String(avail()).replace('.', ','); };
+}
+
+function rendFields(r, prefix = '') {
+  return `<div class="field-row rend-row">
+      <div class="field"><label>Rende como?</label><select name="${prefix}ind">${Object.entries(REND_TIPOS).map(([k, t]) => `<option value="${k}" ${k === r.ind ? 'selected' : ''}>${t.nome}</option>`).join('')}</select></div>
+      <div class="field" data-pct><label data-pct-label>${REND_TIPOS[r.ind].label}</label><input name="${prefix}pct" inputmode="decimal" value="${r.pct ? String(r.pct).replace('.', ',') : ''}"></div>
+    </div>
+    <p class="muted small" data-rend-info></p>`;
+}
+function bindRendFields(form, prefix = '') {
+  const sel = $(`select[name=${prefix}ind]`, form), pct = $(`input[name=${prefix}pct]`, form);
+  const box = $('[data-pct]', form), lab = $('[data-pct-label]', form), info = $('[data-rend-info]', form);
+  const upd = (changed) => {
+    const t = REND_TIPOS[sel.value];
+    box.hidden = !t.label; lab.textContent = t.label;
+    if (changed) pct.value = t.pct ? String(t.pct) : '';
+    const r = { ind: sel.value, pct: parseFloat(String(pct.value).replace(',', '.')) || 0 };
+    const a = annualRate(r), m = mercado();
+    const ref = [m.cdi != null ? `CDI hoje ${pctFmt(m.cdi)}%` : '', m.selic != null ? `Selic ${pctFmt(m.selic)}%` : '', m.ipca != null ? `IPCA 12m ${pctFmt(m.ipca)}%` : ''].filter(Boolean).join(' · ');
+    info.innerHTML = [t.ex, a != null ? `≈ <b>${pctFmt(Math.round(a * 100) / 100)}% ao ano</b> → R$ 1.000 vira ≈ ${money(1000 * (1 + a / 100))} em 1 ano (antes do IR).` : (sel.value !== 'nenhum' && !TESOURO ? 'Sem internet para buscar o CDI/Selic agora.' : ''), ref].filter(Boolean).join(' ');
+  };
+  sel.addEventListener('change', () => upd(true));
+  pct.addEventListener('input', () => upd(false));
+  upd(false);
+  return () => ({ ind: sel.value, pct: parseFloat(String(pct.value).replace(',', '.')) || 0 });
+}
+function openRend(catId) {
+  const c = catById(catId), r = catRend(catId);
+  openSheet(`<h3>${c.emoji} Quanto rende ${escapeHtml(c.nome)}?</h3>
+    <p class="muted small">Olhe no app do banco (ex.: “100% do CDI”). Eu uso a taxa de hoje para estimar quanto seu dinheiro vale. Vale para todos os aportes daqui, menos os que você marcou com outra taxa.</p>
+    ${rendFields(r)}
+    <label class="check"><input type="checkbox" name="isento" ${isentoIR(r, c) ? 'checked' : ''}> Isento de imposto de renda (LCI, LCA, poupança)</label>
+    <div class="sheet-actions"><span></span><div class="right"><button class="btn" value="cancel" formnovalidate>Cancelar</button><button class="btn solid" value="save">Salvar</button></div></div>`,
+    (action, fd) => {
+      const v = read();
+      state.rend = state.rend || {};
+      state.rend[catId] = { ...v, isento: !!fd.get('isento') };
+      save(); render(); toast('Rentabilidade salva');
+    });
+  const read = bindRendFields($('#sheetForm'));
 }
 
 function openSaldo(catId) {

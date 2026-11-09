@@ -381,3 +381,9 @@ table.simple td.p { text-align: right; color: var(--muted); width: 56px; font-va
 .tes-list li { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 9px 0; border-top: 1px solid var(--line); cursor: pointer; font-size: 14px; }
 .tes-list li b { white-space: nowrap; font-variant-numeric: tabular-nums; }
 .tes-src { margin: 10px 0 0; }
+
+/* Rentabilidade */
+.rend-line { display: flex; justify-content: space-between; align-items: center; gap: 8px; width: 100%; margin: 10px 0 0; padding: 8px 12px; border: 0; border-radius: 10px; background: var(--surface-2); font-size: 13px; color: var(--ink-2); text-align: left; }
+.rend-line b { color: var(--ink); }
+.pos .liq { margin: 6px 0 0; }
+[data-pct][hidden] { display: none !important; }

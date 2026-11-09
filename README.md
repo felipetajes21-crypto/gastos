@@ -29,6 +29,8 @@ O app também registra o que **entra** e o que você **investe**. O tipo é dete
 
 - **Início → Balanço do mês:** entrou, gastou, investiu e quanto sobrou.
 - **Aba Investir:** total investido, onde está cada parte, aportes por mês. Toque num destino e informe o saldo que aparece no banco para ver o **rendimento**.
+- **Quanto rende:** cada investimento tem sua rentabilidade (ex.: caixinha 100% do CDI, CDB 110% do CDI, prefixado 13% ao ano, IPCA + 6%, poupança). O app usa o CDI/Selic/IPCA do dia (Banco Central) para estimar quanto vale hoje e quanto sobra depois do imposto de renda. Dá para digitar: `guardei 500 no cdb 110% do cdi`.
+- **Tesouro Direto:** lista de títulos com as taxas oficiais do dia (Selic, Prefixado, IPCA+, Renda+, Educa+…). Ao investir você escolhe o título e o app estima o valor pelo preço oficial. As taxas são buscadas por um robô do GitHub (`scripts/tesouro.py`) a cada 2h em dias úteis.
 - **Análise → Entradas × saídas:** os últimos 6 meses lado a lado.
 - **Lançamentos fixos** aceitam entradas também (ex.: mesada todo dia 1).
 
