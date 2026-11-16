@@ -600,6 +600,7 @@ function submitQuick(e) {
   e.preventDefault();
   const input = $('#quickInput');
   if (!input.value.trim()) { input.focus(); return; }
+  pararMic();
   if (!pending && !multi) updatePreview();
   let created, msg;
   if (multi) {
@@ -674,7 +675,24 @@ function setMic(on) {
   b.classList.toggle('on', on);
   b.setAttribute('aria-pressed', on);
   b.setAttribute('aria-label', on ? 'Parar de ouvir' : 'Falar o lançamento');
+  b.title = on ? 'Parar' : 'Falar';
+  $('#micStop').hidden = !on;
   $('#quickInput').placeholder = on ? 'Ouvindo… ex.: “gastei 23 no uber ontem”' : 'ex.: mercado 87,90 · recebi mesada 300';
+}
+
+// Desliga o microfone (botão ■, ao salvar, ao sair do app ou depois de um tempo)
+function pararMic() {
+  clearTimeout(voz.timer);
+  if (!voz.rec) return;
+  try { voz.rec.stop(); } catch { /* já parou */ }
+  try { voz.rec.abort(); } catch { /* já parou */ }
+  voz.rec = null;
+  setMic(false);
+}
+
+function aplicarMicVisivel() {
+  $('#micBtn').hidden = state.vozBotao === false;
+  if (state.vozBotao === false) pararMic();
 }
 
 const isIOS = typeof navigator !== 'undefined' && (/iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1));
@@ -708,7 +726,7 @@ function dicaPermissao() {
 function toggleMic() {
   const input = $('#quickInput');
   if (!SpeechRec) { vozFallback('Este navegador não deixa o app ouvir direto.'); return; }
-  if (voz.rec) { voz.rec.stop(); return; }
+  if (voz.rec) { pararMic(); return; }
   let rec;
   try { rec = new SpeechRec(); } catch { vozFallback('Não consegui ligar o reconhecimento de voz.'); return; }
   rec.lang = 'pt-BR';
@@ -744,6 +762,8 @@ function toggleMic() {
     } else vozFallback(`Não consegui ouvir (${erro}).`);
   };
   rec.onend = () => {
+    clearTimeout(voz.timer);
+    if (voz.rec !== rec && voz.rec) return;
     voz.rec = null;
     setMic(false);
     if (finalText.trim()) { voz.falou = true; updatePreview(); return; }
@@ -758,6 +778,7 @@ function toggleMic() {
   };
   try { rec.start(); } catch (e) { vozFallback('Não consegui ligar o microfone.'); return; }
   voz.rec = rec;
+  voz.timer = setTimeout(pararMic, 15000); // nunca fica ouvindo para sempre
   if (navigator.vibrate) navigator.vibrate(15);
   setMic(true);
 }
@@ -1981,6 +2002,11 @@ function init() {
   ui.month = monthKey(new Date());
   $('#quickForm').addEventListener('submit', submitQuick);
   $('#micBtn').onclick = toggleMic;
+  $('#micStop').onclick = pararMic;
+  document.addEventListener('visibilitychange', () => { if (document.hidden) pararMic(); });
+  aplicarMicVisivel();
+  $('#vozBotao').checked = state.vozBotao !== false;
+  $('#vozBotao').onchange = e => { state.vozBotao = e.target.checked; save(); aplicarMicVisivel(); };
   $('#vozResposta').checked = state.vozResposta !== false;
   $('#vozResposta').onchange = e => { state.vozResposta = e.target.checked; save(); };
   $('#quickInput').addEventListener('input', () => { if (pending) pending.catManual = pending.catManual && $('#quickInput').value.trim() !== ''; updatePreview(); });

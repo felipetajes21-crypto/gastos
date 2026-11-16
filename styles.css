@@ -118,6 +118,14 @@ main { max-width: 640px; margin: 0 auto; padding: 4px 16px 24px; }
   50% { box-shadow: 0 0 0 8px color-mix(in srgb, var(--accent) 0%, transparent); }
 }
 @media (prefers-reduced-motion: reduce) { .mic.on { animation: none; } }
+.mic[hidden], .mic-stop[hidden] { display: none; }
+.mic.on svg { display: none; }
+.mic.on::before { content: ""; width: 16px; height: 16px; border-radius: 3px; background: currentColor; }
+.mic-stop {
+  display: block; width: 100%; margin: 0 0 10px; padding: 10px 12px; border-radius: 12px;
+  border: 1px solid var(--accent); background: var(--accent-soft); color: var(--ink);
+  font-size: 15px; font-weight: 600;
+}
 .multi-head { width: 100%; font-size: 13px; font-weight: 600; color: var(--ink-2); }
 .multi-row { display: flex; flex-wrap: wrap; gap: 6px; width: 100%; padding-top: 6px; border-top: 1px solid var(--line); }
 .multi-row:first-of-type { border-top: 0; }

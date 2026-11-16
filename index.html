@@ -39,6 +39,7 @@
         <button type="button" data-tipo="entrada" aria-pressed="false">💰 Entrada</button>
         <button type="button" data-tipo="invest" aria-pressed="false">📈 Investir</button>
       </div>
+      <button type="button" class="mic-stop" id="micStop" hidden>■ Ouvindo… toque para parar</button>
       <div class="preview" id="preview" hidden></div>
       <div class="hint" id="quickHint">Escreva ou toque no 🎤 e fale: <b>“gastei vinte e três no uber ontem”</b>, <b>uber 23 ontem pix</b>, <b>tênis 300 3x</b>, <b>recebi salário 1500</b>, <b>guardei 100 na caixinha</b>, <b>resgatei 50 da poupança</b>. Vários de uma vez também: <b>uber 20, ifood 35 e mercado 150</b>. O tipo é detectado sozinho — ou toque acima para escolher.</div>
 
@@ -160,6 +161,7 @@
       <div class="card">
         <h2>Voz</h2>
         <p class="muted small">Toque no 🎤 ao lado da caixa e fale: <b>“gastei vinte e três reais no uber ontem”</b>, <b>“café dois e cinquenta no pix”</b>, <b>“tênis de trezentos em três vezes”</b>, <b>“recebi mil e quinhentos de salário”</b>. Dá para falar vários de uma vez: <b>“vinte no uber e trinta e cinco no ifood”</b>. Confira a prévia e toque em ＋.</p>
+        <label class="check"><input type="checkbox" id="vozBotao"> Mostrar o botão de microfone</label>
         <label class="check"><input type="checkbox" id="vozResposta"> Confirmar em voz alta o que foi salvo</label>
       </div>
 
