@@ -677,21 +677,47 @@ function setMic(on) {
   $('#quickInput').placeholder = on ? 'Ouvindo… ex.: “gastei 23 no uber ontem”' : 'ex.: mercado 87,90 · recebi mesada 300';
 }
 
+const isIOS = typeof navigator !== 'undefined' && (/iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1));
+const isStandalone = () => !!(navigator.standalone || (window.matchMedia && matchMedia('(display-mode: standalone)').matches));
+
+// Quando a voz direta não dá certo: abre o teclado (que tem o 🎤 de ditado) e explica.
+function vozFallback(msg) {
+  const input = $('#quickInput');
+  input.focus();
+  toast(msg + ' Use o 🎤 do teclado (ditado) — o app entende do mesmo jeito.');
+}
+
+// Pede a permissão do microfone de forma explícita (faz o aviso "Permitir microfone?" aparecer).
+async function pedirMicrofone() {
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return 'sem-suporte';
+  try {
+    const s = await navigator.mediaDevices.getUserMedia({ audio: true });
+    s.getTracks().forEach(t => t.stop());
+    return 'ok';
+  } catch (e) {
+    return e && e.name === 'NotAllowedError' ? 'negado' : 'erro';
+  }
+}
+
+function dicaPermissao() {
+  return isIOS
+    ? 'O microfone está bloqueado. No iPhone: Ajustes → Apps → Safari → Microfone → Perguntar ou Permitir (e Ajustes → Privacidade → Reconhecimento de Fala).'
+    : 'O microfone está bloqueado. Toque no cadeado ao lado do endereço (ou segure o ícone do app → Informações do app → Permissões) e libere o Microfone.';
+}
+
 function toggleMic() {
   const input = $('#quickInput');
-  if (!SpeechRec) {
-    input.focus();
-    toast('Aqui não dá para ouvir direto — use o 🎤 do teclado (ditado). O app entende do mesmo jeito.');
-    return;
-  }
+  if (!SpeechRec) { vozFallback('Este navegador não deixa o app ouvir direto.'); return; }
   if (voz.rec) { voz.rec.stop(); return; }
-  const rec = new SpeechRec();
+  let rec;
+  try { rec = new SpeechRec(); } catch { vozFallback('Não consegui ligar o reconhecimento de voz.'); return; }
   rec.lang = 'pt-BR';
   rec.interimResults = true;
   rec.continuous = false;
   rec.maxAlternatives = 1;
   const base = input.value.trim();
-  let finalText = '';
+  let finalText = '', ouviu = false, erro = null;
+  rec.onaudiostart = () => { ouviu = true; };
   rec.onresult = e => {
     let interim = '';
     for (let i = e.resultIndex; i < e.results.length; i++) {
@@ -702,22 +728,35 @@ function toggleMic() {
     if (pending) pending.catManual = false;
     updatePreview();
   };
-  rec.onerror = e => {
-    const msgs = {
-      'not-allowed': 'Permita o uso do microfone para falar seus gastos',
-      'service-not-allowed': 'Permita o uso do microfone para falar seus gastos',
-      'no-speech': 'Não ouvi nada — toque no microfone e fale',
-      'network': 'O reconhecimento de voz precisa de internet',
-      'audio-capture': 'Não achei o microfone',
-    };
-    if (msgs[e.error]) toast(msgs[e.error]);
+  rec.onerror = async e => {
+    erro = e.error || 'erro';
+    if (erro === 'no-speech') toast('Não ouvi nada — toque no microfone e fale');
+    else if (erro === 'aborted') { /* parou pelo usuário */ }
+    else if (erro === 'network') vozFallback('O reconhecimento de voz precisa de internet.');
+    else if (erro === 'audio-capture') vozFallback('Não achei o microfone.');
+    else if (erro === 'not-allowed' || erro === 'service-not-allowed') {
+      // Tenta fazer o aviso de permissão aparecer; se já estiver bloqueado, explica onde liberar.
+      const r = await pedirMicrofone();
+      if (r === 'ok') toast('Microfone liberado ✅ Toque no 🎤 de novo e fale.');
+      else if (r === 'negado') toast(dicaPermissao());
+      else if (isIOS && isStandalone()) vozFallback('No iPhone, o app da tela de início não consegue ouvir direto.');
+      else vozFallback('O navegador não deixou usar o reconhecimento de voz.');
+    } else vozFallback(`Não consegui ouvir (${erro}).`);
   };
   rec.onend = () => {
     voz.rec = null;
     setMic(false);
-    if (finalText.trim()) { voz.falou = true; updatePreview(); }
+    if (finalText.trim()) { voz.falou = true; updatePreview(); return; }
+    // terminou sem erro e sem nem abrir o áudio: o aparelho bloqueou em silêncio
+    if (!erro && !ouviu) {
+      pedirMicrofone().then(r => {
+        if (r === 'ok') toast('Microfone liberado ✅ Toque no 🎤 de novo e fale.');
+        else if (r === 'negado') toast(dicaPermissao());
+        else vozFallback('O aparelho não deixou o app ouvir.');
+      });
+    }
   };
-  try { rec.start(); } catch { toast('Não consegui ligar o microfone'); return; }
+  try { rec.start(); } catch (e) { vozFallback('Não consegui ligar o microfone.'); return; }
   voz.rec = rec;
   if (navigator.vibrate) navigator.vibrate(15);
   setMic(true);
@@ -1934,7 +1973,7 @@ function toast(msg, actionLabel, action) {
   }
   t.hidden = false;
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => t.hidden = true, actionLabel ? 6000 : 3000);
+  toastTimer = setTimeout(() => t.hidden = true, Math.max(actionLabel ? 6000 : 3000, msg.length * 70));
 }
 
 // ───────────────────────── Inicialização ─────────────────────────
