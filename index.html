@@ -31,6 +31,7 @@
       <form class="quick" id="quickForm" autocomplete="off">
         <label for="quickInput" class="sr-only">Novo gasto</label>
         <input id="quickInput" enterkeyhint="done" placeholder="ex.: mercado 87,90 · recebi mesada 300" autocomplete="off">
+        <button type="button" class="mic" id="micBtn" aria-label="Falar o lançamento" aria-pressed="false" title="Falar"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><rect x="9" y="3" width="6" height="12" rx="3" fill="currentColor"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M8.5 21h7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
         <button type="submit" class="primary" aria-label="Adicionar">＋</button>
       </form>
       <div class="seg" id="tipoSeg" role="group" aria-label="Tipo de lançamento">
@@ -39,7 +40,7 @@
         <button type="button" data-tipo="invest" aria-pressed="false">📈 Investir</button>
       </div>
       <div class="preview" id="preview" hidden></div>
-      <div class="hint" id="quickHint">Escreva do jeito que falaria: <b>uber 23 ontem pix</b>, <b>tênis 300 3x</b>, <b>recebi salário 1500</b>, <b>guardei 100 na caixinha</b>, <b>resgatei 50 da poupança</b>. O tipo é detectado sozinho — ou toque acima para escolher.</div>
+      <div class="hint" id="quickHint">Escreva ou toque no 🎤 e fale: <b>“gastei vinte e três no uber ontem”</b>, <b>uber 23 ontem pix</b>, <b>tênis 300 3x</b>, <b>recebi salário 1500</b>, <b>guardei 100 na caixinha</b>, <b>resgatei 50 da poupança</b>. Vários de uma vez também: <b>uber 20, ifood 35 e mercado 150</b>. O tipo é detectado sozinho — ou toque acima para escolher.</div>
 
       <div class="card hero">
         <div class="hero-label">Gasto no mês</div>
@@ -154,6 +155,12 @@
         <div class="card-head"><h2>Lançamentos fixos</h2><button class="link" id="addRec">+ novo</button></div>
         <p class="muted small">Aluguel, academia, salário, mesada, aporte mensal… lançados automaticamente todo mês no dia escolhido.</p>
         <ul class="cat-list" id="recList"></ul>
+      </div>
+
+      <div class="card">
+        <h2>Voz</h2>
+        <p class="muted small">Toque no 🎤 ao lado da caixa e fale: <b>“gastei vinte e três reais no uber ontem”</b>, <b>“café dois e cinquenta no pix”</b>, <b>“tênis de trezentos em três vezes”</b>, <b>“recebi mil e quinhentos de salário”</b>. Dá para falar vários de uma vez: <b>“vinte no uber e trinta e cinco no ifood”</b>. Confira a prévia e toque em ＋.</p>
+        <label class="check"><input type="checkbox" id="vozResposta"> Confirmar em voz alta o que foi salvo</label>
       </div>
 
       <div class="card">

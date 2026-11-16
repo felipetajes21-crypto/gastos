@@ -16,6 +16,24 @@ Digite do jeito que você falaria e aperte Enter:
 | `barbearia 50 sábado` | R$ 50 · 💇 Cuidados pessoais · último sábado |
 | `r$ 1.250 aluguel` | R$ 1.250,00 · 🏠 Moradia |
 
+### Por voz 🎤
+
+Toque no microfone ao lado da caixa e fale normalmente. O app transforma a fala no mesmo formato do texto:
+
+| Você fala | O app entende |
+|---|---|
+| “gastei vinte e três reais no uber ontem” | R$ 23,00 · 🚗 Transporte · ontem |
+| “café dois e cinquenta no pix” | R$ 2,50 · Pix |
+| “almoço trinta e cinco reais e noventa centavos” | R$ 35,90 |
+| “comprei um tênis de trezentos em três vezes no cartão” | 3 parcelas de R$ 100 · Crédito |
+| “gasolina duzentos reais dia doze de outubro” | R$ 200 · 12 de outubro |
+| “recebi mil e quinhentos de salário” | 💰 +R$ 1.500 · Salário |
+| “vinte no uber, trinta e cinco no ifood e cento e cinquenta no mercado” | 3 lançamentos de uma vez |
+
+- Funciona no Chrome (Android/computador) e no Safari (iPhone). Onde o navegador não deixa ouvir direto, use o 🎤 do **teclado** (ditado): o app entende igual.
+- Vários lançamentos numa frase (ou digitados com vírgula/“e”) aparecem numa prévia só; dá para trocar a categoria de cada um antes de salvar. Data e tipo valem para os seguintes (“ontem gastei 40 no cinema e 25 de pipoca”).
+- Opcional: o app confirma em voz alta o que salvou (**Ajustes → Voz**).
+
 ### Entradas e investimentos
 
 O app também registra o que **entra** e o que você **investe**. O tipo é detectado pelo texto (ou escolha em 💸 Gasto · 💰 Entrada · 📈 Investir, logo abaixo da caixa):

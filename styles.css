@@ -106,6 +106,21 @@ main { max-width: 640px; margin: 0 auto; padding: 4px 16px 24px; }
   background: var(--accent); color: #fff; font-size: 24px; font-weight: 600;
 }
 .primary:active { transform: scale(.96); }
+.mic {
+  width: 52px; height: 52px; flex: none; border-radius: 14px;
+  border: 1px solid var(--line); background: var(--surface); color: var(--ink-2);
+  display: grid; place-items: center; box-shadow: var(--shadow);
+}
+.mic:active { transform: scale(.96); }
+.mic.on { background: var(--accent); border-color: var(--accent); color: #fff; animation: mic-pulse 1.2s ease-in-out infinite; }
+@keyframes mic-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 45%, transparent); }
+  50% { box-shadow: 0 0 0 8px color-mix(in srgb, var(--accent) 0%, transparent); }
+}
+@media (prefers-reduced-motion: reduce) { .mic.on { animation: none; } }
+.multi-head { width: 100%; font-size: 13px; font-weight: 600; color: var(--ink-2); }
+.multi-row { display: flex; flex-wrap: wrap; gap: 6px; width: 100%; padding-top: 6px; border-top: 1px solid var(--line); }
+.multi-row:first-of-type { border-top: 0; }
 .hint { font-size: 13px; color: var(--muted); margin: 0 4px 16px; }
 .hint b { color: var(--ink-2); font-weight: 600; }
 .preview {
