@@ -11,7 +11,7 @@ const DEFAULT_CATEGORIES = [
   { id: 'moradia', nome: 'Moradia', emoji: '🏠', palavras: ['aluguel', 'condominio', 'iptu', 'reforma', 'pedreiro', 'eletricista', 'encanador', 'diarista', 'faxina', 'faxineira', 'empregada', 'moveis', 'movel', 'sofa', 'colchao', 'decoracao', 'leroy', 'telhanorte', 'tok stok', 'tokstok', 'etna', 'camicado', 'material de construcao', 'utensilios', 'produto de limpeza', 'limpeza', 'lavanderia', 'gas', 'botijao', 'mudanca', 'chaveiro', 'chave', 'copia chave', 'dedetizacao', 'financiamento', 'prestacao casa'] },
   { id: 'contas', nome: 'Contas', emoji: '💡', palavras: ['luz', 'energia', 'enel', 'light', 'cemig', 'copel', 'celesc', 'coelba', 'cpfl', 'equatorial', 'neoenergia', 'agua', 'sabesp', 'cedae', 'copasa', 'sanepar', 'embasa', 'internet', 'wifi', 'vivo', 'claro', 'tim', 'celular', 'telefone', 'plano celular', 'recarga', 'fibra', 'conta de luz', 'conta de agua', 'boleto', 'fatura', 'cartao', 'fatura cartao', 'pagar o cartao', 'cartao de credito', 'tarifa', 'anuidade', 'juros', 'iof', 'imposto', 'irpf', 'darf', 'mei', 'taxa', 'cartorio'] },
   { id: 'saude', nome: 'Saúde', emoji: '💊', palavras: ['farmacia', 'remedio', 'medicamento', 'drogasil', 'raia', 'drogaria', 'pague menos', 'pacheco', 'panvel', 'medico', 'consulta', 'dentista', 'odonto', 'exame', 'laboratorio', 'hospital', 'clinica', 'plano de saude', 'unimed', 'amil', 'sulamerica', 'bradesco saude', 'hapvida', 'notredame', 'psicologo', 'psicologa', 'terapia', 'terapeuta', 'fisioterapia', 'fisio', 'nutricionista', 'vacina', 'oculos', 'lente', 'otica', 'vitamina', 'suplemento', 'whey', 'creatina', 'academia', 'smartfit', 'smart fit', 'bluefit', 'crossfit', 'pilates', 'yoga', 'personal', 'natacao', 'gympass', 'wellhub', 'totalpass'] },
-  { id: 'lazer', nome: 'Lazer', emoji: '🎉', palavras: ['cinema', 'filme', 'teatro', 'show', 'ingresso', 'sympla', 'eventim', 'ticketmaster', 'festa', 'balada', 'role', 'parque', 'museu', 'jogo', 'game', 'steam', 'playstation', 'psn', 'xbox', 'nintendo', 'futebol', 'pelada', 'quadra', 'boliche', 'karaoke', 'praia', 'clube', 'passeio', 'happy hour', 'aniversario', 'cinemark', 'kinoplex', 'livro', 'livraria', 'amazon kindle', 'hobby', 'tabacaria', 'narguile', 'sinuca', 'volei', 'xadrez', 'esquenta', 'copao', 'ctg', 'festa junina', 'festas juninas', 'resenha', 'dia com', 'meu amor', 'namorada', 'namorado', 'date', 'encontro'] },
+  { id: 'lazer', nome: 'Lazer', emoji: '🎉', palavras: ['cinema', 'pipoca', 'filme', 'teatro', 'show', 'ingresso', 'sympla', 'eventim', 'ticketmaster', 'festa', 'balada', 'role', 'parque', 'museu', 'jogo', 'game', 'steam', 'playstation', 'psn', 'xbox', 'nintendo', 'futebol', 'pelada', 'quadra', 'boliche', 'karaoke', 'praia', 'clube', 'passeio', 'happy hour', 'aniversario', 'cinemark', 'kinoplex', 'livro', 'livraria', 'amazon kindle', 'hobby', 'tabacaria', 'narguile', 'sinuca', 'volei', 'xadrez', 'esquenta', 'copao', 'ctg', 'festa junina', 'festas juninas', 'resenha', 'dia com', 'meu amor', 'namorada', 'namorado', 'date', 'encontro'] },
   { id: 'assinaturas', nome: 'Assinaturas', emoji: '📺', palavras: ['netflix', 'spotify', 'deezer', 'youtube premium', 'youtube', 'prime video', 'amazon prime', 'prime', 'disney', 'disney+', 'hbo', 'globoplay', 'paramount', 'apple tv', 'apple music', 'icloud', 'google one', 'google drive', 'dropbox', 'chatgpt', 'openai', 'claude', 'plano plus', 'anthropic', 'notion', 'canva', 'adobe', 'microsoft 365', 'office', 'assinatura', 'mensalidade app', 'twitch', 'crunchyroll', 'duolingo', 'tinder', 'bumble', 'linkedin premium', 'xbox game pass', 'game pass', 'ps plus', 'mubi', 'telecine', 'premiere', 'sky', 'kindle unlimited', 'audible', 'patreon'] },
   { id: 'compras', nome: 'Compras', emoji: '🛍️', palavras: ['roupa', 'roupas', 'camisa', 'camiseta', 'calca', 'bermuda', 'vestido', 'blusa', 'casaco', 'jaqueta', 'tenis', 'sapato', 'sandalia', 'chinelo', 'meia', 'cueca', 'calcinha', 'sutia', 'bolsa', 'mochila', 'relogio', 'acessorio', 'shein', 'shopee', 'aliexpress', 'temu', 'mercado livre', 'mercadolivre', 'amazon', 'magalu', 'magazine luiza', 'americanas', 'casas bahia', 'renner', 'riachuelo', 'cea', 'c&a', 'zara', 'hering', 'centauro', 'netshoes', 'decathlon', 'nike', 'adidas', 'shopping', 'loja', 'eletronico', 'celular novo', 'fone', 'carregador', 'cabo', 'notebook', 'computador', 'teclado', 'mouse', 'monitor', 'tv', 'kabum', 'fast shop', 'apple', 'iphone', 'samsung', 'xiaomi', 'papelaria', 'kalunga', 'havan', 'parcela tenis'] },
   { id: 'beleza', nome: 'Cuidados pessoais', emoji: '💇', palavras: ['cabelo', 'cabeleireiro', 'cabeleireira', 'barbeiro', 'barbearia', 'corte', 'salao', 'manicure', 'unha', 'sobrancelha', 'depilacao', 'estetica', 'maquiagem', 'make', 'perfume', 'boticario', 'natura', 'avon', 'sephora', 'eudora', 'oboticario', 'creme', 'shampoo', 'condicionador', 'sabonete', 'desodorante', 'skincare', 'protetor solar', 'higiene', 'escova de dente', 'pasta de dente', 'massagem', 'spa'] },
@@ -117,6 +117,145 @@ function relDay(iso) {
   return d.toLocaleDateString('pt-BR', { weekday: 'short', day: 'numeric', month: 'short' }).replace('.', '');
 }
 
+// ───────────────────────── Fala → texto ─────────────────────────
+// Transforma o jeito que se fala ("gastei vinte e três reais no uber ontem",
+// "café dois e cinquenta", "tênis em três vezes", "dia doze de outubro")
+// no formato curto que o leitor entende ("23 reais uber ontem", "café 2,50"…).
+// Vale para o microfone e também para o ditado do teclado.
+const NUM_WORDS = {
+  zero: 0, um: 1, uma: 1, dois: 2, duas: 2, tres: 3, quatro: 4, cinco: 5, seis: 6, sete: 7, oito: 8, nove: 9,
+  dez: 10, onze: 11, doze: 12, treze: 13, quatorze: 14, catorze: 14, quinze: 15, dezesseis: 16, dezasseis: 16,
+  dezessete: 17, dezasete: 17, dezoito: 18, dezenove: 19, dezanove: 19,
+  vinte: 20, trinta: 30, quarenta: 40, cinquenta: 50, cincoenta: 50, sessenta: 60, setenta: 70, oitenta: 80, noventa: 90,
+  cem: 100, cento: 100, duzentos: 200, duzentas: 200, trezentos: 300, trezentas: 300, quatrocentos: 400, quatrocentas: 400,
+  quinhentos: 500, quinhentas: 500, seiscentos: 600, seiscentas: 600, setecentos: 700, setecentas: 700,
+  oitocentos: 800, oitocentas: 800, novecentos: 900, novecentas: 900,
+};
+const MONTH_IDX = { janeiro: 1, fevereiro: 2, marco: 3, abril: 4, maio: 5, junho: 6, julho: 7, agosto: 8, setembro: 9, outubro: 10, novembro: 11, dezembro: 12 };
+const MONEY_AFTER = new Set(['reais', 'real', 'conto', 'contos', 'pila', 'pilas', 'centavos', 'centavo', 'mil', 'vezes', 'vez', 'parcelas', 'x', 'de', 'r$']);
+const placeOf = v => v >= 1000 ? 1000 : v >= 100 ? 100 : v >= 10 ? 10 : 1;
+
+// junta "vinte e três" → 23, "mil e duzentos" → 1200, "2 mil e 500" → 2500
+function numberWords(tokens) {
+  const n = tokens.map(norm);
+  const seqs = []; // { i, j (exclusivo), v, followedByMoney }
+  for (let i = 0; i < n.length; i++) {
+    const isW = t => t in NUM_WORDS;
+    const isD = t => /^\d+$/.test(t);
+    if (!isW(n[i]) && n[i] !== 'mil' && !(isD(n[i]) && n[i + 1] === 'mil')) continue;
+    // "um"/"uma" sozinhos costumam ser artigo ("uma pizza")
+    if ((n[i] === 'um' || n[i] === 'uma') && !['real', 'reais', 'mil', 'conto', 'centavo'].includes(n[i + 1])) continue;
+    let total = 0, cur = 0, last = 0, j = i, words = 0;
+    while (j < n.length) {
+      const t = n[j];
+      if (isW(t) || (isD(t) && j === i)) {
+        const v = isW(t) ? NUM_WORDS[t] : +t;
+        if (last && !(last > v && last % (placeOf(v) * 10) === 0)) break;
+        cur += v; last = v; if (isW(t)) words++; j++;
+      } else if (t === 'mil' && (cur || j === i)) {
+        total += (cur || 1) * 1000; cur = 0; last = 1000; words++; j++;
+      } else if (t === 'e' && last && j + 1 < n.length) {
+        const nx = n[j + 1];
+        const v = nx in NUM_WORDS ? NUM_WORDS[nx] : (/^\d+$/.test(nx) && words ? +nx : null);
+        if (v == null || !(last > v && last % (placeOf(v) * 10) === 0)) break;
+        j++; // pula o "e"; o número entra na próxima volta
+        if (/^\d+$/.test(nx)) { cur += v; last = v; j++; }
+      } else break;
+    }
+    if (!words) continue;
+    seqs.push({ i, j, v: total + cur, money: MONEY_AFTER.has(n[j] || '') });
+    i = j - 1;
+  }
+  // "dois e cinquenta" = 2,50 (duas sequências ligadas por "e", a segunda com 2 dígitos)
+  for (let k = seqs.length - 1; k > 0; k--) {
+    const a = seqs[k - 1], b = seqs[k];
+    if (b.i === a.j + 1 && n[a.j] === 'e' && b.v >= 10 && b.v <= 99 && a.v < 1000) {
+      a.v = `${a.v},${b.v}`; a.j = b.j; a.money = true; seqs.splice(k, 1);
+    }
+  }
+  if (!seqs.length) return tokens;
+  // Com dígitos no texto, só troca o que claramente é valor/parcela; sem dígitos, troca o que tiver jeito de valor
+  // (ou o último número, que costuma ser o preço).
+  const hasDigits = tokens.some((t, k) => /\d/.test(t) && !seqs.some(s => k >= s.i && k < s.j));
+  let use = seqs.filter(s => s.money);
+  if (!use.length && !hasDigits) use = [seqs[seqs.length - 1]];
+  const out = [];
+  for (let k = 0; k < tokens.length; k++) {
+    const s = use.find(s => s.i === k);
+    if (s) { out.push(String(s.v)); k = s.j - 1; } else out.push(tokens[k]);
+  }
+  return out;
+}
+
+const METHOD_WORDS = ['pix', 'credito', 'debito', 'dinheiro', 'cartao', 'vale', 'boleto', 'vr', 'va'];
+const DATE_WORDS = ['hoje', 'ontem', 'anteontem', ...WEEKDAYS];
+
+function falaParaTexto(text) {
+  let s = ' ' + (text || '').replace(/\s+/g, ' ').trim() + ' ';
+  if (!s.trim()) return '';
+  s = s.replace(/(\d)\s*%/g, '$1%')
+    .replace(/\bpor\s+cento\b/gi, '%')
+    .replace(/\b(?:contos?|pilas?|mangos?)\b/gi, 'reais')
+    .replace(/\bR\$\s*/gi, 'r$');
+  let tokens = s.trim().split(' ');
+  tokens = numberWords(tokens);
+  s = ' ' + tokens.join(' ') + ' ';
+  const tail = '(?=\\s+(?:(?:no|na|via|pelo|pela|em|de|com)\\s+)?(?:pix|cr[eé]dito|d[eé]bito|dinheiro|cart[aã]o|vale|boleto|hoje|ontem|anteontem|reais)\\b|\\s*$)';
+  s = s
+    // "café 2 e 50" (no fim ou antes de pix/ontem…) = 2,50
+    .replace(new RegExp('(?<![\\d,.])(\\d{1,3})\\s+e\\s+(\\d{2})' + tail, 'gi'), '$1,$2')
+    // "2 vírgula 50" / "dois e cinquenta centavos" / "10 reais e 50 centavos" / "50 centavos"
+    .replace(/(\d+)\s+v[ií]rgula\s+(\d{1,2})\b/gi, '$1,$2')
+    .replace(/(\d+)\s+(?:reais|real)\s+e\s+(\d{1,2})(?:\s+centavos?)?(?=\s)/gi, (_, a, b) => `${a},${b.padStart(2, '0')} reais`)
+    .replace(/(\d+)\s+e\s+(\d{1,2})\s+centavos?(?=\s)/gi, (_, a, b) => `${a},${b.padStart(2, '0')}`)
+    .replace(/(?<![\d,])(\d{1,2})\s+centavos?(?=\s)/gi, (_, b) => `0,${b.padStart(2, '0')}`)
+    // parcelas: "em 3 vezes", "parcelado em 10", "3 parcelas", "em 3x"
+    .replace(/\s(?:parcelad[oa]s?|dividid[oa]s?)\s+(?:em\s+)?(\d{1,2})(?:\s*(?:x|vezes|parcelas))?(?=\s)/gi, ' $1x')
+    .replace(/\s(?:em\s+)?(\d{1,2})\s+(?:vezes|parcelas)(?:\s+(?:no|na)\s+(cart[aã]o|cr[eé]dito))?(?=\s)/gi, (_, a, c) => ` ${a}x${c ? ' crédito' : ''}`)
+    // datas: "dia 12 de outubro (de 2026)", "12 de outubro"
+    .replace(/\s(?:dia\s+)?(\d{1,2})\s+de\s+([a-zç]+)(?:\s+de\s+(\d{4}))?(?=\s)/gi, (m, d, mes, y) => {
+      const mi = MONTH_IDX[norm(mes)];
+      return mi ? ` ${d}/${mi}${y ? '/' + y : ''}` : m;
+    })
+    // "sexta passada", "na última sexta", "semana passada" (sem dia: tira só o "passada")
+    .replace(/\s(?:n[ao]\s+)?[uú]ltim[ao]\s+(?=(?:domingo|segunda|ter[cç]a|quarta|quinta|sexta|s[aá]bado)\b)/gi, ' ')
+    .replace(/\b((?:domingo|segunda|ter[cç]a|quarta|quinta|sexta|s[aá]bado)(?:-feira| feira)?)\s+passad[oa]\b/gi, '$1')
+    // verbos e ligações que não fazem parte da descrição
+    .replace(/^\s(?:eu\s+|a[ií]\s+)?(?:foi|deu)\s+/i, ' ')
+    .replace(/\s(?:eu\s+)?(?:gastei|paguei|comprei|torrei)\s+(?:(?:um|uma)\s+(?=\D))?/gi, ' ')
+    .replace(/\s(?:deu|custou|saiu|ficou|foi|por|de|com)\s+(?=(?:r\$)?\d)/gi, ' ')
+    .replace(/\s(?:reais|real)\s+(?:de|em|com|no|na)\s+/gi, ' reais ');
+  return s.replace(/\s+/g, ' ').trim();
+}
+
+// "20 no uber e 35 no ifood" → ["20 no uber", "35 no ifood"].
+// Só separa se cada parte tiver um valor; partes sem valor juntam com a próxima ("pão e leite 12").
+function splitEntries(text) {
+  const t = falaParaTexto(text);
+  const parts = t.split(/\s*(?:[,;]\s+|\s+e\s+(?:tamb[eé]m\s+|depois\s+|mais\s+)?|\s+depois\s+|\s+mais\s+(?=(?:r\$)?\d))/i).filter(Boolean);
+  if (parts.length < 2) return [text];
+  const hasVal = p => parseText(p).valor != null;
+  const out = [];
+  let carry = '';
+  for (const p of parts) {
+    const cand = carry ? carry + ' e ' + p : p;
+    if (hasVal(p)) { out.push(cand); carry = ''; } else carry = cand;
+  }
+  if (carry) { if (out.length) out[out.length - 1] += ' e ' + carry; else out.push(carry); }
+  return out.length > 1 ? out : [text];
+}
+
+// Vários lançamentos numa frase: as partes herdam o tipo ("recebi…") e a data ("ontem…") da anterior.
+function parseMany(text) {
+  const items = splitEntries(text).map(t => ({ text: t, p: parseText(t) }));
+  for (let k = 1; k < items.length; k++) {
+    const prev = items[k - 1].p, p = items[k].p;
+    if (!p.tipo && prev.tipo) { p.tipo = prev.tipo; p.resgate = prev.resgate; }
+    if (!p.dataDita && prev.dataDita) { p.data = prev.data; p.dataDita = true; }
+  }
+  return items;
+}
+
 // ───────────────────────── Interpretação do texto ─────────────────────────
 function parseAmount(tok) {
   let t = tok.replace(/^r\$/i, '').replace(/reais$/i, '');
@@ -131,7 +270,7 @@ function parseAmount(tok) {
 
 function parseText(text) {
   const out = { valor: null, data: isoDate(new Date()), metodo: '', parcelas: 1, desc: '', tipo: null, resgate: false };
-  let raw = text.trim().replace(/\s+/g, ' ');
+  let raw = falaParaTexto(text);
   if (!raw) return out;
   // "+50 pix do joão" = entrada
   if (/^\+/.test(raw)) { out.tipo = 'entrada'; raw = raw.replace(/^\+\s*/, ''); }
@@ -215,7 +354,7 @@ function parseText(text) {
         if (m2) { d = new Date(now.getFullYear(), now.getMonth(), +m2[1]); if (d > now) d.setMonth(d.getMonth() - 1); keep[i + 1] = false; }
       }
     }
-    if (d) { out.data = isoDate(d); keep[i] = false; if (['em', 'no'].includes(n[i - 1])) keep[i - 1] = false; }
+    if (d) { out.data = isoDate(d); out.dataDita = true; keep[i] = false; if (['em', 'no'].includes(n[i - 1])) keep[i - 1] = false; }
   });
 
   // Valor: prefere token com R$ ou com centavos; senão o último número.
@@ -233,7 +372,7 @@ function parseText(text) {
   });
   if (best >= 0) { out.valor = parseAmount(tokens[best]); keep[best] = false; if (/^(reais|real|rs)$/.test(n[best + 1] || '')) keep[best + 1] = false; }
 
-  let desc = tokens.filter((_, i) => keep[i]).join(' ').replace(/^(no|na|em|de|da|do|com)\s+/i, '').trim();
+  let desc = tokens.filter((_, i) => keep[i]).join(' ').replace(/^(no|na|em|de|da|do|com|o|a|os|as|um|uma)\s+/i, '').trim();
   // "R$275 cartão" sozinho = pagamento da fatura, não forma de pagamento
   if (!desc && out.metodo === 'credito') { desc = tokens.filter((_, i) => !keep[i] && /^cart/i.test(n[i])).join(' ') || 'Cartão'; out.metodo = ''; }
   out.desc = desc ? desc[0].toUpperCase() + desc.slice(1) : '';
@@ -349,8 +488,11 @@ let pending = null; // { parsed, cat, catManual }
 function updatePreview() {
   const text = $('#quickInput').value;
   const box = $('#preview');
-  if (!text.trim()) { box.hidden = true; $('#quickHint').hidden = false; pending = null; return; }
-  const p = parseText(text);
+  if (!text.trim()) { box.hidden = true; $('#quickHint').hidden = false; pending = null; multi = null; return; }
+  const items = parseMany(text);
+  if (items.length > 1) { pending = null; renderMulti(items); return; }
+  multi = null;
+  const p = items[0].p;
   const hint = ui.tipoForce || p.tipo;
   const auto = categorize(p.desc, hint || undefined);
   if (pending && pending.catManual && hint && tipoCat(catById(pending.cat)) !== hint) pending.catManual = false;
@@ -386,6 +528,49 @@ function updatePreview() {
   $('#previewCat').onclick = () => toggleCatPicker();
 }
 
+// Vários lançamentos de uma vez ("uber 20, ifood 35 e mercado 150")
+let multi = null; // [{ text, p, cat, manual }]
+function renderMulti(items) {
+  const box = $('#preview');
+  const old = multi || [];
+  multi = items.map((it, k) => {
+    const hint = ui.tipoForce || it.p.tipo || undefined;
+    const o = old[k];
+    const keep = o && o.manual && (!hint || tipoCat(catById(o.cat)) === hint);
+    return { ...it, cat: keep ? o.cat : categorize(it.p.desc, hint).cat, manual: !!keep };
+  });
+  const total = multi.reduce((s, m) => s + (m.p.valor || 0), 0);
+  updateSeg(ui.tipoForce);
+  box.innerHTML = `<div class="multi-head">🧾 ${multi.length} lançamentos · ${money(total)}</div>` + multi.map((m, k) => {
+    const c = catById(m.cat), tipo = tipoCat(c), p = m.p;
+    const chips = [`<span class="chip value ${tipo}">${p.valor ? (tipo === 'entrada' ? '+' : '') + money(p.valor) : 'sem valor'}</span>`,
+      `<button type="button" class="chip" data-mcat="${k}">${c.emoji} ${escapeHtml(c.nome)} ▾</button>`];
+    if (p.data !== isoDate(new Date())) chips.push(`<span class="chip">📅 ${relDay(p.data)}</span>`);
+    if (p.metodo) chips.push(`<span class="chip">💳 ${METHODS[p.metodo].nome}</span>`);
+    if (p.parcelas > 1 && tipo === 'gasto') chips.push(`<span class="chip">${p.parcelas}×</span>`);
+    if (p.desc) chips.push(`<span class="chip">“${escapeHtml(p.desc)}”</span>`);
+    return `<div class="multi-row" data-row="${k}">${chips.join('')}</div>`;
+  }).join('');
+  box.hidden = false;
+  $('#quickHint').hidden = true;
+  $$('[data-mcat]', box).forEach(b => b.onclick = () => {
+    const k = +b.dataset.mcat, row = b.closest('.multi-row');
+    const ex = $('.cat-picker', box); const same = ex && ex.dataset.k == k;
+    if (ex) ex.remove();
+    if (same) return;
+    const picker = document.createElement('div');
+    picker.className = 'cat-picker'; picker.dataset.k = k;
+    for (const c of catsOf(tipoCat(catById(multi[k].cat)))) {
+      const cb = document.createElement('button');
+      cb.type = 'button'; cb.className = 'chip' + (c.id === multi[k].cat ? ' sel' : '');
+      cb.textContent = `${c.emoji} ${c.nome}`;
+      cb.onclick = () => { multi[k].cat = c.id; multi[k].manual = true; renderMulti(multi); };
+      picker.appendChild(cb);
+    }
+    row.after(picker);
+  });
+}
+
 // Seletor Gasto / Entrada / Investir: mostra o tipo detectado; tocar força o tipo.
 function updateSeg(tipo) {
   $$('#tipoSeg button').forEach(b => {
@@ -415,18 +600,53 @@ function submitQuick(e) {
   e.preventDefault();
   const input = $('#quickInput');
   if (!input.value.trim()) { input.focus(); return; }
-  if (!pending) updatePreview();
-  const p = pending.parsed;
-  if (!p.valor) { toast('Faltou o valor — ex.: “almoço 32,90”'); input.focus(); return; }
-  const desc = p.desc || catById(pending.cat).nome;
-  const tipo = pending.tipo || 'gasto';
-  const resgate = !!pending.resgate;
-  const tTes = tipo === 'invest' && isTesouroCat(pending.cat) ? matchTitulo(input.value) : null;
-  const created = addExpense({ desc: tTes ? tTes.nome : desc, valor: p.valor, data: p.data, cat: pending.cat, metodo: p.metodo, parcelas: tipo === 'gasto' ? p.parcelas : 1, resgate });
-  if (tipo === 'invest' && !resgate && !isTesouroCat(pending.cat) && p.rend) {
+  if (!pending && !multi) updatePreview();
+  let created, msg;
+  if (multi) {
+    const semValor = multi.filter(m => !m.p.valor);
+    if (semValor.length) { toast(`Faltou o valor em “${semValor[0].p.desc || semValor[0].text}”`); input.focus(); return; }
+    created = [];
+    for (const m of multi) created.push(...commitEntry(m.text, m.p, m.cat));
+    const total = multi.reduce((s, m) => s + m.p.valor, 0);
+    msg = `🧾 ${multi.length} lançamentos · ${money(total)}`;
+  } else {
+    const p = pending.parsed;
+    if (!p.valor) { toast('Faltou o valor — ex.: “almoço 32,90”'); input.focus(); return; }
+    created = commitEntry(input.value, p, pending.cat);
+    const tipo = pending.tipo || 'gasto', resgate = !!pending.resgate;
+    const c = catById(created[0].cat);
+    msg = tipo === 'entrada' ? `💰 +${money(p.valor)} em ${c.nome}`
+      : tipo === 'invest' ? (resgate ? `↩️ ${money(p.valor)} resgatado de ${c.nome}` : `📈 ${money(p.valor)} investido em ${c.nome}`)
+      : `${c.emoji} ${money(p.valor)} em ${c.nome}`;
+  }
+  input.value = '';
+  pending = null;
+  multi = null;
+  ui.tipoForce = null;
+  updatePreview();
+  updateSeg(null);
+  if (voz.falou) { falar(msg.replace(/^\S+\s/, '')); voz.falou = false; }
+  toast(msg, 'desfazer', () => {
+    const ids = new Set(created.map(g => g.id));
+    state.gastos = state.gastos.filter(g => !ids.has(g.id));
+    save(); render();
+  });
+  if (created[0].data.slice(0, 7) !== ui.month) ui.month = created[0].data.slice(0, 7);
+  render();
+  input.focus();
+}
+
+// Salva um lançamento já interpretado (usado pela entrada rápida, uma ou várias linhas)
+function commitEntry(text, p, cat) {
+  const desc = p.desc || catById(cat).nome;
+  const tipo = tipoCat(catById(cat)) || 'gasto';
+  const resgate = tipo === 'invest' && !!p.resgate;
+  const tTes = tipo === 'invest' && isTesouroCat(cat) ? matchTitulo(text) : null;
+  const created = addExpense({ desc: tTes ? tTes.nome : desc, valor: p.valor, data: p.data, cat, metodo: p.metodo, parcelas: tipo === 'gasto' ? p.parcelas : 1, resgate });
+  if (tipo === 'invest' && !resgate && !isTesouroCat(cat) && p.rend) {
     const r = { ...p.rend, ...(/\b(lci|lca)\b/i.test(desc) ? { isento: true } : {}) };
     state.rend = state.rend || {};
-    if (!state.rend[pending.cat] && !DEFAULT_REND[pending.cat]) state.rend[pending.cat] = r; else created[0].rend = r;
+    if (!state.rend[cat] && !DEFAULT_REND[cat]) state.rend[cat] = r; else created[0].rend = r;
     save();
   }
   if (tTes) {
@@ -440,23 +660,80 @@ function submitQuick(e) {
     if (pu && !g.cotas && g.data === isoDate(new Date())) g.qtd = Math.round(p.valor / pu * 1e6) / 1e6;
     save();
   }
-  input.value = '';
-  pending = null;
-  ui.tipoForce = null;
-  updatePreview();
-  updateSeg(null);
-  const c = catById(created[0].cat);
-  const msg = tipo === 'entrada' ? `💰 +${money(p.valor)} em ${c.nome}`
-    : tipo === 'invest' ? (resgate ? `↩️ ${money(p.valor)} resgatado de ${c.nome}` : `📈 ${money(p.valor)} investido em ${c.nome}`)
-    : `${c.emoji} ${money(p.valor)} em ${c.nome}`;
-  toast(msg, 'desfazer', () => {
-    const ids = new Set(created.map(g => g.id));
-    state.gastos = state.gastos.filter(g => !ids.has(g.id));
-    save(); render();
-  });
-  if (created[0].data.slice(0, 7) !== ui.month) ui.month = created[0].data.slice(0, 7);
-  render();
-  input.focus();
+  return created;
+}
+
+// ───────────────────────── Voz ─────────────────────────
+// Usa o reconhecimento de fala do próprio navegador (Chrome/Android, Safari/iPhone).
+// O texto falado cai na caixa e passa pelo mesmo leitor do texto digitado.
+const voz = { rec: null, falou: false };
+const SpeechRec = typeof window !== 'undefined' && (window.SpeechRecognition || window.webkitSpeechRecognition);
+
+function setMic(on) {
+  const b = $('#micBtn');
+  b.classList.toggle('on', on);
+  b.setAttribute('aria-pressed', on);
+  b.setAttribute('aria-label', on ? 'Parar de ouvir' : 'Falar o lançamento');
+  $('#quickInput').placeholder = on ? 'Ouvindo… ex.: “gastei 23 no uber ontem”' : 'ex.: mercado 87,90 · recebi mesada 300';
+}
+
+function toggleMic() {
+  const input = $('#quickInput');
+  if (!SpeechRec) {
+    input.focus();
+    toast('Aqui não dá para ouvir direto — use o 🎤 do teclado (ditado). O app entende do mesmo jeito.');
+    return;
+  }
+  if (voz.rec) { voz.rec.stop(); return; }
+  const rec = new SpeechRec();
+  rec.lang = 'pt-BR';
+  rec.interimResults = true;
+  rec.continuous = false;
+  rec.maxAlternatives = 1;
+  const base = input.value.trim();
+  let finalText = '';
+  rec.onresult = e => {
+    let interim = '';
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      const r = e.results[i];
+      if (r.isFinal) finalText += r[0].transcript + ' '; else interim += r[0].transcript;
+    }
+    input.value = [base, (finalText + interim).trim()].filter(Boolean).join(' ');
+    if (pending) pending.catManual = false;
+    updatePreview();
+  };
+  rec.onerror = e => {
+    const msgs = {
+      'not-allowed': 'Permita o uso do microfone para falar seus gastos',
+      'service-not-allowed': 'Permita o uso do microfone para falar seus gastos',
+      'no-speech': 'Não ouvi nada — toque no microfone e fale',
+      'network': 'O reconhecimento de voz precisa de internet',
+      'audio-capture': 'Não achei o microfone',
+    };
+    if (msgs[e.error]) toast(msgs[e.error]);
+  };
+  rec.onend = () => {
+    voz.rec = null;
+    setMic(false);
+    if (finalText.trim()) { voz.falou = true; updatePreview(); }
+  };
+  try { rec.start(); } catch { toast('Não consegui ligar o microfone'); return; }
+  voz.rec = rec;
+  if (navigator.vibrate) navigator.vibrate(15);
+  setMic(true);
+}
+
+// Confirma em voz alta o que foi salvo (só quando o lançamento veio da fala)
+function falar(texto) {
+  if (state.vozResposta === false || typeof speechSynthesis === 'undefined') return;
+  try {
+    const fala = texto.replace(/^\+/, '')
+      .replace(/R\$\s?([\d.]+),00/g, '$1 reais')
+      .replace(/R\$\s?([\d.]+),(\d{2})/g, '$1 reais e $2 centavos');
+    const u = new SpeechSynthesisUtterance(fala + '. Anotado.');
+    u.lang = 'pt-BR'; u.rate = 1.1;
+    speechSynthesis.cancel(); speechSynthesis.speak(u);
+  } catch { /* sem voz, sem problema */ }
 }
 
 // ───────────────────────── Renderização ─────────────────────────
@@ -1664,6 +1941,9 @@ function toast(msg, actionLabel, action) {
 function init() {
   ui.month = monthKey(new Date());
   $('#quickForm').addEventListener('submit', submitQuick);
+  $('#micBtn').onclick = toggleMic;
+  $('#vozResposta').checked = state.vozResposta !== false;
+  $('#vozResposta').onchange = e => { state.vozResposta = e.target.checked; save(); };
   $('#quickInput').addEventListener('input', () => { if (pending) pending.catManual = pending.catManual && $('#quickInput').value.trim() !== ''; updatePreview(); });
   $('#prevMonth').onclick = () => { ui.month = shiftMonth(ui.month, -1); render(); };
   $('#nextMonth').onclick = () => { ui.month = shiftMonth(ui.month, 1); render(); };
