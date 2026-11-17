@@ -720,7 +720,7 @@ async function pedirMicrofone() {
 function dicaPermissao() {
   return isIOS
     ? 'O microfone está bloqueado. No iPhone: Ajustes → Apps → Safari → Microfone → Perguntar ou Permitir (e Ajustes → Privacidade → Reconhecimento de Fala).'
-    : 'O microfone está bloqueado. Toque no cadeado ao lado do endereço (ou segure o ícone do app → Informações do app → Permissões) e libere o Microfone.';
+    : 'O microfone está bloqueado. Libere em: ⋮ → Configurações → Configurações do site → Microfone (ligado). Confira também Configurações do celular → Aplicativos → Chrome → Permissões → Microfone, e o botão “Acesso ao microfone” na barra de notificações.';
 }
 
 function toggleMic() {
@@ -748,6 +748,7 @@ function toggleMic() {
   };
   rec.onerror = async e => {
     erro = e.error || 'erro';
+    if (erro !== 'aborted') pararMic(); // não fica mostrando "Ouvindo…" se deu erro
     if (erro === 'no-speech') toast('Não ouvi nada — toque no microfone e fale');
     else if (erro === 'aborted') { /* parou pelo usuário */ }
     else if (erro === 'network') vozFallback('O reconhecimento de voz precisa de internet.');
