@@ -230,9 +230,60 @@ function falaParaTexto(text) {
 
 // "20 no uber e 35 no ifood" → ["20 no uber", "35 no ifood"].
 // Só separa se cada parte tiver um valor; partes sem valor juntam com a próxima ("pão e leite 12").
+// "12 reais vôlei 40 reais mercado 30 lanche" (sem "e" nem vírgula, como sai da fala)
+// → ["12 reais vôlei", "40 reais mercado", "30 lanche"]. Cada valor começa (ou termina) um lançamento.
+const SEG_LIGA = ['no', 'na', 'via', 'pelo', 'pela', 'em', 'de', 'com'];
+function splitByAmounts(text) {
+  const tk = text.split(' ');
+  const n = tk.map(norm);
+  const isMoneyWord = t => ['reais', 'real', 'rs'].includes(t);
+  const amounts = [];
+  tk.forEach((t, i) => {
+    if (parseAmount(t) == null) return;
+    if (/^20\d\d$/.test(t) && /(prefixado|ipca|selic|renda|educa|tesouro|semestrais|extra|igpm)/.test(n[i - 1] || '')) return;
+    if (n[i - 1] === 'dia') return;
+    const marked = /^r\$/i.test(t) || isMoneyWord(n[i + 1] || '');
+    // número pequeno colado numa palavra costuma ser quantidade ("2 pães"), não preço
+    if (!marked && parseAmount(t) <= 10 && /^\d+$/.test(t) && i > 0 && n[i + 1] && !/\d/.test(n[i + 1]) && !isMoneyWord(n[i + 1])) return;
+    amounts.push({ i, marked });
+  });
+  // com valores marcados ("R$", "reais") só eles contam; senão, os números soltos
+  const use = amounts.filter(a => a.marked).length >= 2 ? amounts.filter(a => a.marked) : amounts;
+  if (use.length < 2) return [text];
+  // o texto começa pelo valor? (ignorando "recebi", "gastei"…)
+  let first = 0;
+  const lead = [...TRIGGERS.entrada, ...TRIGGERS.invest, ...TRIGGERS.resgate, 'gastei', 'paguei', 'comprei', 'eu', ...SEG_LIGA];
+  while (first < n.length && lead.includes(n[first])) first++;
+  const valorPrimeiro = use[0].i === first;
+  const cuts = [];
+  if (valorPrimeiro) {
+    for (const a of use.slice(1)) cuts.push(a.i);
+  } else {
+    for (const a of use.slice(0, -1)) {
+      let j = a.i + 1;
+      if (isMoneyWord(n[j] || '')) j++;
+      // "vôlei 12 no pix mercado 40": pix/ontem ficam com o anterior
+      while (j < n.length) {
+        if (METHOD_WORDS.includes(n[j]) || DATE_WORDS.includes(n[j].replace(/-feira$/, ''))) j++;
+        else if (SEG_LIGA.includes(n[j]) && n[j + 1] && METHOD_WORDS.includes(n[j + 1])) j += 2;
+        else break;
+      }
+      cuts.push(j);
+    }
+  }
+  const segs = [];
+  let s = 0;
+  for (const c of cuts) { segs.push(tk.slice(s, c).join(' ')); s = c; }
+  segs.push(tk.slice(s).join(' '));
+  // só separa se todo pedaço tiver valor e alguma descrição
+  const ok = segs.every(x => { const p = parseText(x); return p.valor != null && p.desc; });
+  return ok ? segs : [text];
+}
+
 function splitEntries(text) {
   const t = falaParaTexto(text);
-  const parts = t.split(/\s*(?:[,;]\s+|\s+e\s+(?:tamb[eé]m\s+|depois\s+|mais\s+)?|\s+depois\s+|\s+mais\s+(?=(?:r\$)?\d))/i).filter(Boolean);
+  const parts = t.split(/\s*(?:[,;.]\s+|\s+e\s+(?:tamb[eé]m\s+|depois\s+|mais\s+)?|\s+depois\s+|\s+mais\s+(?=(?:r\$)?\d))/i).filter(Boolean)
+    .flatMap(splitByAmounts);
   if (parts.length < 2) return [text];
   const hasVal = p => parseText(p).valor != null;
   const out = [];
@@ -731,17 +782,21 @@ function toggleMic() {
   try { rec = new SpeechRec(); } catch { vozFallback('Não consegui ligar o reconhecimento de voz.'); return; }
   rec.lang = 'pt-BR';
   rec.interimResults = true;
-  rec.continuous = false;
+  rec.continuous = true;
   rec.maxAlternatives = 1;
   const base = input.value.trim();
   let finalText = '', ouviu = false, erro = null;
   rec.onaudiostart = () => { ouviu = true; };
   rec.onresult = e => {
     let interim = '';
-    for (let i = e.resultIndex; i < e.results.length; i++) {
+    finalText = '';
+    for (let i = 0; i < e.results.length; i++) {
       const r = e.results[i];
       if (r.isFinal) finalText += r[0].transcript + ' '; else interim += r[0].transcript;
     }
+    // continua ouvindo enquanto você fala; para 4 s depois que você ficar quieto
+    clearTimeout(voz.timer);
+    voz.timer = setTimeout(pararMic, 4000);
     input.value = [base, (finalText + interim).trim()].filter(Boolean).join(' ');
     if (pending) pending.catManual = false;
     updatePreview();
@@ -779,14 +834,14 @@ function toggleMic() {
   };
   try { rec.start(); } catch (e) { vozFallback('Não consegui ligar o microfone.'); return; }
   voz.rec = rec;
-  voz.timer = setTimeout(pararMic, 15000); // nunca fica ouvindo para sempre
+  voz.timer = setTimeout(pararMic, 10000); // se ninguém falar, desliga
   if (navigator.vibrate) navigator.vibrate(15);
   setMic(true);
 }
 
 // Confirma em voz alta o que foi salvo (só quando o lançamento veio da fala)
 function falar(texto) {
-  if (state.vozResposta === false || typeof speechSynthesis === 'undefined') return;
+  if (state.vozFalar !== true || typeof speechSynthesis === 'undefined') return;
   try {
     const fala = texto.replace(/^\+/, '')
       .replace(/R\$\s?([\d.]+),00/g, '$1 reais')
@@ -2008,8 +2063,8 @@ function init() {
   aplicarMicVisivel();
   $('#vozBotao').checked = state.vozBotao !== false;
   $('#vozBotao').onchange = e => { state.vozBotao = e.target.checked; save(); aplicarMicVisivel(); };
-  $('#vozResposta').checked = state.vozResposta !== false;
-  $('#vozResposta').onchange = e => { state.vozResposta = e.target.checked; save(); };
+  $('#vozResposta').checked = state.vozFalar === true;
+  $('#vozResposta').onchange = e => { state.vozFalar = e.target.checked; save(); };
   $('#quickInput').addEventListener('input', () => { if (pending) pending.catManual = pending.catManual && $('#quickInput').value.trim() !== ''; updatePreview(); });
   $('#prevMonth').onclick = () => { ui.month = shiftMonth(ui.month, -1); render(); };
   $('#nextMonth').onclick = () => { ui.month = shiftMonth(ui.month, 1); render(); };

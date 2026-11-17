@@ -31,8 +31,9 @@ Toque no microfone ao lado da caixa e fale normalmente. O app transforma a fala 
 | “vinte no uber, trinta e cinco no ifood e cento e cinquenta no mercado” | 3 lançamentos de uma vez |
 
 - Funciona no Chrome (Android/computador) e no Safari (iPhone). Onde o navegador não deixa ouvir direto, use o 🎤 do **teclado** (ditado): o app entende igual.
-- Vários lançamentos numa frase (ou digitados com vírgula/“e”) aparecem numa prévia só; dá para trocar a categoria de cada um antes de salvar. Data e tipo valem para os seguintes (“ontem gastei 40 no cinema e 25 de pipoca”).
-- Opcional: o app confirma em voz alta o que salvou (**Ajustes → Voz**).
+- Vários lançamentos numa frase — com ou sem “e”/vírgula: “12 reais vôlei 40 reais mercado 30 reais lanche” — aparecem numa prévia só; dá para trocar a categoria de cada um antes de salvar. Data e tipo valem para os seguintes (“ontem gastei 40 no cinema e 25 de pipoca”).
+- O microfone continua ouvindo enquanto você fala (pode fazer pausas) e desliga sozinho uns segundos depois.
+- Opcional (vem desligado): o app confirma em voz alta o que salvou (**Ajustes → Voz**).
 
 ### Entradas e investimentos
 
