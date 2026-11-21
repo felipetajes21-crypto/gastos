@@ -413,3 +413,12 @@ table.simple td.p { text-align: right; color: var(--muted); width: 56px; font-va
 
 .tes-holds small + small { margin-top: 1px; }
 .small-link { font-size: 12px; padding: 2px 0 0; text-align: left; }
+
+/* ── Modo rápido (janelinha aberta pelo widget do app Android) ── */
+.rapido-head, .rapido-ok { display: none; }
+body.rapido .rapido-head { display: flex; justify-content: space-between; align-items: center; margin: 2px 4px 10px; font-size: 16px; }
+body.rapido .rapido-ok:not([hidden]) { display: block; margin: 0 0 10px; padding: 10px 12px; border-radius: 12px; background: var(--accent-soft); font-weight: 600; }
+body.rapido .topbar, body.rapido .tabbar, body.rapido #quickHint,
+body.rapido #view-home > .card, body.rapido #view-home > .stats { display: none !important; }
+body.rapido main { padding-top: 12px; padding-bottom: 12px; }
+a.btn { display: inline-flex; align-items: center; justify-content: center; text-decoration: none; }

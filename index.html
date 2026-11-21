@@ -28,6 +28,8 @@
   <main>
     <!-- INÍCIO -->
     <section class="view active" id="view-home" aria-label="Início">
+      <div class="rapido-head"><b>Novo lançamento</b><button type="button" class="link" id="rapidoAbrir">abrir o app ›</button></div>
+      <div class="rapido-ok" id="rapidoOk" hidden></div>
       <form class="quick" id="quickForm" autocomplete="off">
         <label for="quickInput" class="sr-only">Novo gasto</label>
         <input id="quickInput" enterkeyhint="done" placeholder="ex.: mercado 87,90 · recebi mesada 300" autocomplete="off">
@@ -156,6 +158,12 @@
         <div class="card-head"><h2>Lançamentos fixos</h2><button class="link" id="addRec">+ novo</button></div>
         <p class="muted small">Aluguel, academia, salário, mesada, aporte mensal… lançados automaticamente todo mês no dia escolhido.</p>
         <ul class="cat-list" id="recList"></ul>
+      </div>
+
+      <div class="card" id="appCard" hidden>
+        <h2>📱 App Android com widget</h2>
+        <p class="muted small">Instale o app para ter um <b>widget na tela inicial</b>: toque nele, digite ou fale o gasto e pronto, sem abrir o app. Antes, use <b>Salvar backup</b> aqui embaixo; depois, no app, <b>Restaurar backup</b> para levar seus dados.</p>
+        <a class="btn" href="https://github.com/felipetajes21-crypto/gastos/releases/download/app/gastos.apk">Baixar o app (APK)</a>
       </div>
 
       <div class="card">

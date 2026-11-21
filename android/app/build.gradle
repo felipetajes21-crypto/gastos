@@ -1,0 +1,45 @@
+plugins {
+    id 'com.android.application'
+}
+
+// Cada compilação no GitHub ganha um número maior, para o celular aceitar a atualização.
+def numero = Integer.parseInt(System.getenv('GITHUB_RUN_NUMBER') ?: '1')
+
+android {
+    namespace 'io.github.gastos.app'
+    compileSdk 35
+
+    defaultConfig {
+        applicationId 'io.github.gastos.app'
+        minSdk 26
+        targetSdk 35
+        versionCode numero
+        versionName "1.${numero}"
+    }
+
+    // Chave fixa (guardada nos segredos do GitHub, nunca no repositório): sem ela cada versão
+    // teria assinatura diferente e o celular não atualizaria por cima.
+    signingConfigs {
+        release {
+            def ks = System.getenv('KEYSTORE_FILE')
+            if (ks) {
+                storeFile file(ks)
+                storePassword System.getenv('KEYSTORE_PASSWORD')
+                keyAlias 'gastos'
+                keyPassword System.getenv('KEYSTORE_PASSWORD')
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            signingConfig signingConfigs.release
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}

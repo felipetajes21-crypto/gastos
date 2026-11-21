@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="fundo">#f6f6f3</color>
+    <color name="widget_fundo">#F2FFFFFF</color>
+    <color name="widget_campo">#FFF1F1EC</color>
+    <color name="widget_texto">#0b0b0b</color>
+    <color name="widget_texto2">#6b6a65</color>
+    <color name="acento">#2a78d6</color>
+</resources>

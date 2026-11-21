@@ -85,7 +85,38 @@ function load() {
 function save() {
   try { localStorage.setItem(KEY, JSON.stringify(state)); }
   catch (e) { toast('Não consegui salvar — faça um backup!'); }
+  atualizarWidget();
 }
+
+// ───────────────────────── App Android (widget) ─────────────────────────
+// Dentro do app Android existe window.Android (ponte com o código nativo).
+const NATIVO = typeof window !== 'undefined' && window.Android ? window.Android : null;
+const RAPIDO = typeof location !== 'undefined' && new URLSearchParams(location.search).has('rapido');
+
+// Manda para o widget o resumo do mês atual ("Gasto em novembro: R$ 511,55")
+function atualizarWidget() {
+  if (!NATIVO || !NATIVO.atualizarWidget) return;
+  try {
+    const mk = monthKey(new Date());
+    const gasto = sum(inMonth(mk));
+    const entrou = sum(ofType(mk, 'entrada'));
+    const sobrou = Math.round((entrou - gasto - sumSigned(ofType(mk, 'invest'))) * 100) / 100;
+    const mes = MONTHS[new Date().getMonth()];
+    NATIVO.atualizarWidget(JSON.stringify({
+      linha: `Gasto em ${mes}: ${money(gasto)}`,
+      sobrou: entrou ? `Sobrou ${money(sobrou)}` : '',
+    }));
+  } catch (e) { /* widget é extra */ }
+}
+
+// Outra tela (widget / outra aba) mudou os dados: recarrega para não sobrescrever
+function recarregarDados() {
+  try {
+    const raw = localStorage.getItem(KEY);
+    if (raw && raw !== JSON.stringify(state)) { state = load(); render(); }
+  } catch (e) { /* ignora */ }
+}
+if (typeof window !== 'undefined') window.recarregarDados = recarregarDados;
 
 // ───────────────────────── Utilidades ─────────────────────────
 const $ = (s, el = document) => el.querySelector(s);
@@ -685,6 +716,7 @@ function submitQuick(e) {
   });
   if (created[0].data.slice(0, 7) !== ui.month) ui.month = created[0].data.slice(0, 7);
   render();
+  if (RAPIDO && NATIVO && NATIVO.fechar) { $('#rapidoOk').textContent = '✅ ' + msg; $('#rapidoOk').hidden = false; setTimeout(() => NATIVO.fechar(), 900); return; }
   input.focus();
 }
 
@@ -734,6 +766,7 @@ function setMic(on) {
 // Desliga o microfone (botão ■, ao salvar, ao sair do app ou depois de um tempo)
 function pararMic() {
   clearTimeout(voz.timer);
+  if (NATIVO && NATIVO.ouvir) { setMic(false); return; }
   if (!voz.rec) return;
   try { voz.rec.stop(); } catch { /* já parou */ }
   try { voz.rec.abort(); } catch { /* já parou */ }
@@ -774,8 +807,25 @@ function dicaPermissao() {
     : 'O microfone está bloqueado. Libere em: ⋮ → Configurações → Configurações do site → Microfone (ligado). Confira também Configurações do celular → Aplicativos → Chrome → Permissões → Microfone, e o botão “Acesso ao microfone” na barra de notificações.';
 }
 
+// No app Android a fala usa o reconhecimento do próprio celular (Google)
+(typeof window !== "undefined" ? window : {}).vozNativa = texto => {
+  setMic(false);
+  if (!texto) return;
+  const input = $('#quickInput');
+  input.value = [input.value.trim(), texto.trim()].filter(Boolean).join(' ');
+  voz.falou = true;
+  if (pending) pending.catManual = false;
+  updatePreview();
+};
+
 function toggleMic() {
   const input = $('#quickInput');
+  if (NATIVO && NATIVO.ouvir) {
+    if ($('#micBtn').classList.contains('on')) { setMic(false); return; }
+    setMic(true);
+    NATIVO.ouvir();
+    return;
+  }
   if (!SpeechRec) { vozFallback('Este navegador não deixa o app ouvir direto.'); return; }
   if (voz.rec) { pararMic(); return; }
   let rec;
@@ -2014,6 +2064,11 @@ function openPaste() {
 }
 
 function download(name, content, type) {
+  if (NATIVO && NATIVO.salvarArquivo) {
+    const r = NATIVO.salvarArquivo(name, content, type);
+    toast(r || `Salvo em Downloads: ${name}`);
+    return;
+  }
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob([content], { type }));
   a.download = name;
@@ -2058,6 +2113,13 @@ function init() {
   ui.month = monthKey(new Date());
   $('#quickForm').addEventListener('submit', submitQuick);
   $('#micBtn').onclick = toggleMic;
+  if (RAPIDO) document.body.classList.add('rapido');
+  if (NATIVO) document.body.classList.add('no-app');
+  $('#rapidoAbrir').onclick = () => NATIVO && NATIVO.abrirApp && NATIVO.abrirApp();
+  window.addEventListener('storage', e => { if (e.key === KEY) recarregarDados(); });
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) recarregarDados(); });
+  // link para baixar o app Android (só aparece no Android, fora do app)
+  if (!NATIVO && /Android/i.test(navigator.userAgent)) $('#appCard').hidden = false;
   $('#micStop').onclick = pararMic;
   document.addEventListener('visibilitychange', () => { if (document.hidden) pararMic(); });
   aplicarMicVisivel();
@@ -2112,7 +2174,12 @@ function init() {
   runRecurring();
   render();
   loadRates();
-  if (pre) { $('#quickInput').value = pre; updatePreview(); history.replaceState(null, '', location.pathname); }
+  if (pre) { $('#quickInput').value = pre; updatePreview(); history.replaceState(null, '', location.pathname + (RAPIDO ? '?rapido=1' : '')); }
+  atualizarWidget();
+  if (RAPIDO) {
+    $('#quickInput').focus();
+    if (new URLSearchParams(location.search).has('voz')) setTimeout(toggleMic, 300);
+  }
   if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
   if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('sw.js').catch(() => {});
 }
