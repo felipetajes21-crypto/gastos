@@ -15,7 +15,7 @@
   --series-dim: #9ec5f4;
   --good: #006300;
   --critical: #d03b3b;
-  --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a;
+  --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a; --s4: #eda100; --s5: #e87ba4; --s-outros: #b5b4ae;
   --warning: #fab219;
   --shadow: 0 1px 2px rgba(0,0,0,.05), 0 4px 16px rgba(0,0,0,.04);
   --radius: 16px;
@@ -40,7 +40,7 @@
     --good: #0ca30c;
     --critical: #e66767;
     --shadow: none;
-    --s1: #3987e5; --s2: #d95926; --s3: #199e70;
+    --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500; --s5: #d55181; --s-outros: #5e5d58;
   }
 }
 :root[data-theme="dark"] {
@@ -49,7 +49,7 @@
   --muted: #898781; --line: rgba(255,255,255,.10); --grid: #2c2c2a; --axis: #383835;
   --accent: #3987e5; --accent-soft: #184f95; --series: #3987e5; --series-dim: #1c5cab;
   --good: #0ca30c; --critical: #e66767; --shadow: none;
-  --s1: #3987e5; --s2: #d95926; --s3: #199e70;
+  --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500; --s5: #d55181; --s-outros: #5e5d58;
 }
 
 * { box-sizing: border-box; }
@@ -430,3 +430,27 @@ a.btn { display: inline-flex; align-items: center; justify-content: center; text
 .futuro small { display: block; color: var(--muted); font-size: 12px; margin-top: 2px; }
 .futuro b { text-transform: capitalize; font-weight: 600; }
 .futuro .num { font-weight: 600; white-space: nowrap; }
+
+/* Gastos por mês: meses futuros = previsto (barra clara tracejada) */
+.chart .bar.fut { fill: color-mix(in srgb, var(--series) 22%, transparent); stroke: var(--series); stroke-width: 1.5; stroke-dasharray: 4 3; }
+.chart .hit[data-key] { cursor: pointer; }
+.meses-nota { display: flex; gap: 8px; align-items: flex-start; margin: 6px 0 0; }
+.sw-fut { flex: none; width: 12px; height: 12px; margin-top: 2px; border-radius: 3px; border: 1.5px dashed var(--series); background: color-mix(in srgb, var(--series) 22%, transparent); }
+
+/* Pizza (rosca) de categorias */
+.pizza-wrap { display: flex; gap: 16px; align-items: center; }
+.pizza-wrap .pizza { flex: none; width: 150px; }
+.pizza-wrap .pizza svg { width: 150px; height: 150px; display: block; }
+.pizza-wrap .pizza-lista { flex: 1; min-width: 0; }
+.chart .seg { fill: none; cursor: pointer; }
+.chart .seg:hover { opacity: .85; }
+.chart text.pz-k { font-size: 11px; fill: var(--muted); }
+.chart text.pz-v { font-size: 17px; font-weight: 700; fill: var(--ink); }
+.pizza-lista .cat-bar { padding: 7px 0; }
+.pizza-lista .cat-bar .name { display: flex; align-items: center; gap: 6px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pz-dot { flex: none; width: 10px; height: 10px; border-radius: 3px; }
+@media (max-width: 420px) {
+  .pizza-wrap { flex-direction: column; align-items: stretch; }
+  .pizza-wrap .pizza { align-self: center; }
+}
+.pizza-wrap .chart.pizza { height: 150px; min-height: 0; margin: 0; }

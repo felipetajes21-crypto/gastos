@@ -970,6 +970,50 @@ function ultimoMesFuturo() {
   return ultimo;
 }
 
+// Gastos por mês: 3 meses antes, o mês escolhido e 2 depois. Meses que ainda não chegaram
+// mostram o que já está previsto (parcelas + fixos), em barra clara tracejada.
+function renderMeses(el) {
+  const hoje = hojeKey();
+  const keys = [...Array(6)].map((_, i) => shiftMonth(ui.month, i - 3));
+  const vals = keys.map(k => k > hoje ? previsaoMes(k).total : sum(inMonth(k)));
+  const futFrom = keys.findIndex(k => k > hoje);
+  const temPrevisto = keys.some((k, i) => k > hoje && vals[i]);
+  if (!vals.some(v => v)) { el.innerHTML = '<div class="empty">Seus gastos de cada mês aparecem aqui.</div>'; $('#mesesNota').hidden = true; return; }
+  el.innerHTML = columnChart(vals, keys.map(k => monthName(k, true)),
+    keys.map((k, i) => [k > hoje ? `${monthName(k)} · a pagar (previsto)` : monthName(k), vals[i]]),
+    { width: el.clientWidth || 320, valueLabels: true, highlight: 3, futureFrom: futFrom < 0 ? null : futFrom, keys });
+  $('#mesesNota').hidden = !temPrevisto;
+  $$('.hit[data-key]', el).forEach(r => r.addEventListener('click', () => { if (r.dataset.key !== ui.month) { ui.month = r.dataset.key; render(); } }));
+  bindTips();
+}
+
+// Pizza (rosca) das categorias: as 5 maiores + "Outros", com a lista colorida embaixo.
+const PIZZA_CORES = ['var(--s1)', 'var(--s2)', 'var(--s3)', 'var(--s4)', 'var(--s5)', 'var(--s-outros)'];
+function catPizza(items, total) {
+  const todas = byCategory(items);
+  const fatias = todas.slice(0, 5);
+  const resto = todas.slice(5);
+  if (resto.length) fatias.push({ id: '', cat: { emoji: '•••', nome: `Outras ${resto.length} categorias` }, valor: Math.round(resto.reduce((s, c) => s + c.valor, 0) * 100) / 100 });
+  const R = 62, C = 2 * Math.PI * R, gap = fatias.length > 1 ? 2 : 0;
+  let acc = 0;
+  const segs = fatias.map((f, i) => {
+    const len = total ? f.valor / total * C : 0;
+    const dash = Math.max(0.5, len - gap);
+    const seg = `<circle class="hit seg" cx="80" cy="80" r="${R}" fill="none" stroke="${PIZZA_CORES[i]}" stroke-width="26" stroke-dasharray="${dash} ${C - dash}" stroke-dashoffset="${-acc}" transform="rotate(-90 80 80)" data-tip="${escapeHtml(f.cat.nome)} · ${total ? Math.round(f.valor / total * 100) : 0}%" data-val="${f.valor}"/>`;
+    acc += len;
+    return seg;
+  }).join('');
+  const svg = `<div class="chart pizza"><svg viewBox="0 0 160 160" role="img" aria-label="Gastos por categoria">${segs}
+    <text x="80" y="76" text-anchor="middle" class="pz-k">total</text><text x="80" y="96" text-anchor="middle" class="pz-v">${escapeHtml(moneyShort(total))}</text></svg></div>`;
+  const lista = '<div class="cat-bars pizza-lista">' + fatias.map((f, i) => {
+    const pct = total ? Math.round(f.valor / total * 100) : 0;
+    return `<button class="cat-bar" ${f.id ? `data-cat="${f.id}"` : 'disabled'} aria-label="${escapeHtml(f.cat.nome)}: ${money(f.valor)}">
+      <span class="name"><i class="pz-dot" style="background:${PIZZA_CORES[i]}"></i>${f.cat.emoji} ${escapeHtml(f.cat.nome)}</span>
+      <span class="val">${money(f.valor)}<small>${pct}%</small></span></button>`;
+  }).join('') + '</div>';
+  return `<div class="pizza-wrap">${svg}${lista}</div>`;
+}
+
 function renderFuturo(el) {
   const hoje = hojeKey();
   const meses = [...Array(6)].map((_, i) => previsaoMes(shiftMonth(hoje, i + 1)));
@@ -1006,15 +1050,15 @@ function renderHome() {
   $('#heroLabel').textContent = futuro ? `A pagar em ${MONTHS[+ui.month.slice(5) - 1]}` : 'Gasto no mês';
   $('#stats').hidden = futuro;
   $('#balance').hidden = futuro;
-  renderFuturo($('#futuroCard'));
+  renderMeses($('#mesesChart'));
   if (futuro) {
     const p = previsaoMes(ui.month);
     $('#heroTotal').textContent = money(p.total);
     $('#heroSub').innerHTML = [p.parcelas ? `${money(p.parcelas)} em parcelas` : '', p.fixos ? `${money(p.fixos)} em fixos (${fixosPrevistos(ui.month).map(f => escapeHtml(f.desc)).join(', ')})` : ''].filter(Boolean).join(' · ') || 'Nada a pagar ainda neste mês.';
     $('#heroBudget').innerHTML = '';
-    const cats = byCategory(s.items).slice(0, 5);
-    $('#homeCats').innerHTML = cats.length ? catBars(cats, s.total, false) : '<div class="empty">Sem parcelas neste mês.</div>';
+    $('#homeCats').innerHTML = s.items.length ? catPizza(s.items, s.total) : '<div class="empty">Sem parcelas neste mês.</div>';
     bindCatBars($('#homeCats'));
+    bindTips();
     const lista = [...allMonth(ui.month)].sort((a, b) => a.data.localeCompare(b.data));
     $('#recentList').innerHTML = lista.length ? lista.map(txRow).join('') : '<li class="empty">Nenhuma parcela neste mês.</li>';
     bindTx($('#recentList'));
@@ -1048,9 +1092,9 @@ function renderHome() {
   } else stats.push(['Lançamentos', String(s.items.length)]);
   $('#stats').innerHTML = stats.map(([k, v]) => `<div class="stat"><div class="k">${k}</div><div class="v num">${v}</div></div>`).join('');
 
-  const cats = byCategory(s.items).slice(0, 5);
-  $('#homeCats').innerHTML = cats.length ? catBars(cats, s.total, false) : '<div class="empty">Seus gastos por categoria aparecem aqui.</div>';
+  $('#homeCats').innerHTML = s.items.length ? catPizza(s.items, s.total) : '<div class="empty">Seus gastos por categoria aparecem aqui.</div>';
   bindCatBars($('#homeCats'));
+  bindTips();
 
   renderBalance(ui.month, $('#balance'));
 
@@ -1258,12 +1302,13 @@ function columnChart(values, labels, tips, opt = {}) {
     const cx = padL + step * i + step / 2;
     const h = H - padB - y(v);
     const dim = (opt.highlight != null && i !== opt.highlight) || (opt.limitTo != null && i >= opt.limitTo);
+    const fut = opt.futureFrom != null && i >= opt.futureFrom;
     if (v > 0) {
       const r = Math.min(4, bw / 2, h);
       const x0 = cx - bw / 2, yb = H - padB, yt = y(v);
-      svg += `<path class="bar ${dim ? 'dim' : ''}" d="M${x0},${yb} V${yt + r} Q${x0},${yt} ${x0 + r},${yt} H${x0 + bw - r} Q${x0 + bw},${yt} ${x0 + bw},${yt + r} V${yb} Z"/>`;
+      svg += `<path class="bar ${fut ? 'fut' : dim ? 'dim' : ''}" d="M${x0},${yb} V${yt + r} Q${x0},${yt} ${x0 + r},${yt} H${x0 + bw - r} Q${x0 + bw},${yt} ${x0 + bw},${yt + r} V${yb} Z"/>`;
     }
-    svg += `<rect class="hit" x="${padL + step * i}" y="${padT}" width="${step}" height="${H - padT}" data-tip="${escapeHtml(tips[i][0])}" data-val="${tips[i][1]}" tabindex="-1"/>`;
+    svg += `<rect class="hit" x="${padL + step * i}" y="${padT}" width="${step}" height="${H - padT}" data-tip="${escapeHtml(tips[i][0])}" data-val="${tips[i][1]}"${opt.keys ? ` data-key="${opt.keys[i]}"` : ''} tabindex="-1"/>`;
     if (!opt.labelEvery || i === 0 || (i + 1) % opt.labelEvery === 0) svg += `<text x="${cx}" y="${H - 6}" text-anchor="middle">${escapeHtml(labels[i])}</text>`;
     if (opt.valueLabels && v > 0) svg += `<text class="lbl" x="${cx}" y="${y(v) - 6}" text-anchor="middle">${Math.round(v).toLocaleString('pt-BR')}</text>`;
   });

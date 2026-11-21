@@ -61,9 +61,10 @@ Antes de salvar aparece uma prévia; se a categoria estiver errada, toque nela e
 
 Compra parcelada já cai em todos os meses: `tênis 300 3x` lança R$ 100 agora e R$ 100 em cada um dos 2 meses seguintes. Para uma compra antiga, informe a data da 1ª parcela: `conta 3x de 70 21/10`.
 
-- **Início → A pagar nos próximos meses:** gráfico dos próximos 6 meses com o que já está comprometido (parcelas + lançamentos fixos), quanto falta pagar e quando termina a última parcela. Toque num mês para abrir.
+- **Início → Gastos por mês:** os meses anteriores e os próximos num gráfico só; os que ainda não chegaram aparecem tracejados com o que você já tem para pagar (parcelas + fixos). Toque numa barra para abrir o mês.
+- **Início → Por categoria:** gráfico de pizza com as 5 maiores categorias do mês.
+- **Análise → A pagar nos próximos meses:** detalhe mês a mês, quanto falta pagar e quando termina a última parcela.
 - A seta **›** do topo vai até os meses futuros: lá aparece **“A pagar em dezembro”** com as parcelas e os fixos previstos.
-- O mesmo gráfico aparece em **Análise**.
 
 ## O que tem
 

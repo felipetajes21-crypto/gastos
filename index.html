@@ -54,7 +54,11 @@
 
       <div class="card" id="balance"></div>
 
-      <div class="card" id="futuroCard" hidden></div>
+      <div class="card">
+        <div class="card-head"><h2>Gastos por mês</h2><button class="link" data-goto="analysis">ver análise</button></div>
+        <div id="mesesChart" class="chart"></div>
+        <p class="muted small meses-nota" id="mesesNota" hidden><i class="sw-fut"></i>Meses que ainda não chegaram: o que você já tem para pagar (parcelas e fixos). Toque numa barra para abrir o mês.</p>
+      </div>
 
       <div class="stats" id="stats"></div>
 
