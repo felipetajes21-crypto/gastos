@@ -972,46 +972,88 @@ function ultimoMesFuturo() {
 
 // Gastos por mês: 3 meses antes, o mês escolhido e 2 depois. Meses que ainda não chegaram
 // mostram o que já está previsto (parcelas + fixos), em barra clara tracejada.
-function renderMeses(el) {
+function renderMeses(el, centro = ui.month, nota = $('#mesesNota')) {
   const hoje = hojeKey();
-  const keys = [...Array(6)].map((_, i) => shiftMonth(ui.month, i - 3));
+  const keys = [...Array(6)].map((_, i) => shiftMonth(centro, i - 3));
   const vals = keys.map(k => k > hoje ? previsaoMes(k).total : sum(inMonth(k)));
   const futFrom = keys.findIndex(k => k > hoje);
   const temPrevisto = keys.some((k, i) => k > hoje && vals[i]);
-  if (!vals.some(v => v)) { el.innerHTML = '<div class="empty">Seus gastos de cada mês aparecem aqui.</div>'; $('#mesesNota').hidden = true; return; }
+  if (!vals.some(v => v)) { el.innerHTML = '<div class="empty">Sem gastos nesses meses.</div>'; nota.hidden = true; return keys; }
   el.innerHTML = columnChart(vals, keys.map(k => monthName(k, true)),
     keys.map((k, i) => [k > hoje ? `${monthName(k)} · a pagar (previsto)` : monthName(k), vals[i]]),
-    { width: el.clientWidth || 320, valueLabels: true, highlight: 3, futureFrom: futFrom < 0 ? null : futFrom, keys });
-  $('#mesesNota').hidden = !temPrevisto;
-  $$('.hit[data-key]', el).forEach(r => r.addEventListener('click', () => { if (r.dataset.key !== ui.month) { ui.month = r.dataset.key; render(); } }));
+    { width: el.clientWidth || 320, valueLabels: true, highlight: keys.indexOf(ui.month) < 0 ? -1 : keys.indexOf(ui.month), futureFrom: futFrom < 0 ? null : futFrom, keys });
+  nota.hidden = !temPrevisto;
+  $$('.hit[data-key]', el).forEach(r => r.addEventListener('click', () => { if (r.dataset.key !== ui.month) { ui.month = r.dataset.key; ui.mesesDesloc = 0; render(); } }));
   bindTips();
+  return keys;
 }
 
-// Pizza (rosca) das categorias: as 5 maiores + "Outros", com a lista colorida embaixo.
-const PIZZA_CORES = ['var(--s1)', 'var(--s2)', 'var(--s3)', 'var(--s4)', 'var(--s5)', 'var(--s-outros)'];
-function catPizza(items, total) {
+// Análise: mesmo gráfico, com ‹ › para voltar (ou avançar) de 6 em 6 meses
+function renderMesesAnalise() {
+  ui.mesesDesloc = ui.mesesDesloc || 0;
+  const centro = shiftMonth(ui.month, ui.mesesDesloc);
+  const keys = renderMeses($('#trendChart'), centro, $('#trendNota'));
+  const ini = keys[0], fim = keys[keys.length - 1];
+  const nome = k => `${MONTHS_SHORT[+k.slice(5) - 1]}/${k.slice(2, 4)}`;
+  $('#trendRange').textContent = `${nome(ini)} – ${nome(fim)}`;
+  $('#trendNext').disabled = fim >= ultimoMesFuturo();
+  $('#trendHoje').hidden = !ui.mesesDesloc;
+}
+
+// Pizza (rosca) das categorias. Início: as 5 maiores + "Outras" (toque para abrir).
+// Análise: as 7 maiores e, embaixo, a lista completa com orçamento.
+const PIZZA_CORES = ['var(--s1)', 'var(--s2)', 'var(--s3)', 'var(--s4)', 'var(--s5)', 'var(--s6)', 'var(--s7)'];
+const COR_OUTRAS = 'var(--s-outros)';
+function catPizza(items, total, opt = {}) {
+  const max = opt.max || 5;
   const todas = byCategory(items);
-  const fatias = todas.slice(0, 5);
-  const resto = todas.slice(5);
-  if (resto.length) fatias.push({ id: '', cat: { emoji: '•••', nome: `Outras ${resto.length} categorias` }, valor: Math.round(resto.reduce((s, c) => s + c.valor, 0) * 100) / 100 });
-  const R = 62, C = 2 * Math.PI * R, gap = fatias.length > 1 ? 2 : 0;
+  const fatias = todas.slice(0, max);
+  const resto = todas.slice(max);
+  const pedacos = fatias.map((f, i) => ({ ...f, cor: PIZZA_CORES[i] }));
+  if (resto.length) pedacos.push({ id: '', outras: true, cor: COR_OUTRAS, cat: { emoji: '➕', nome: `Outras ${resto.length} categoria${resto.length > 1 ? 's' : ''}` }, valor: Math.round(resto.reduce((s, c) => s + c.valor, 0) * 100) / 100 });
+  const R = 62, C = 2 * Math.PI * R, gap = pedacos.length > 1 ? 2 : 0;
   let acc = 0;
-  const segs = fatias.map((f, i) => {
+  const segs = pedacos.map(f => {
     const len = total ? f.valor / total * C : 0;
     const dash = Math.max(0.5, len - gap);
-    const seg = `<circle class="hit seg" cx="80" cy="80" r="${R}" fill="none" stroke="${PIZZA_CORES[i]}" stroke-width="26" stroke-dasharray="${dash} ${C - dash}" stroke-dashoffset="${-acc}" transform="rotate(-90 80 80)" data-tip="${escapeHtml(f.cat.nome)} · ${total ? Math.round(f.valor / total * 100) : 0}%" data-val="${f.valor}"/>`;
+    const seg = `<circle class="hit seg" cx="80" cy="80" r="${R}" fill="none" stroke="${f.cor}" stroke-width="26" stroke-dasharray="${dash} ${C - dash}" stroke-dashoffset="${-acc}" transform="rotate(-90 80 80)" ${f.outras ? 'data-outras="1"' : `data-cat="${f.id}"`} data-tip="${escapeHtml(f.cat.nome)} · ${total ? Math.round(f.valor / total * 100) : 0}%" data-val="${f.valor}"/>`;
     acc += len;
     return seg;
   }).join('');
   const svg = `<div class="chart pizza"><svg viewBox="0 0 160 160" role="img" aria-label="Gastos por categoria">${segs}
     <text x="80" y="76" text-anchor="middle" class="pz-k">total</text><text x="80" y="96" text-anchor="middle" class="pz-v">${escapeHtml(moneyShort(total))}</text></svg></div>`;
-  const lista = '<div class="cat-bars pizza-lista">' + fatias.map((f, i) => {
+  const linha = (f, cor) => {
     const pct = total ? Math.round(f.valor / total * 100) : 0;
-    return `<button class="cat-bar" ${f.id ? `data-cat="${f.id}"` : 'disabled'} aria-label="${escapeHtml(f.cat.nome)}: ${money(f.valor)}">
-      <span class="name"><i class="pz-dot" style="background:${PIZZA_CORES[i]}"></i>${f.cat.emoji} ${escapeHtml(f.cat.nome)}</span>
+    return `<button class="cat-bar" data-cat="${f.id}" aria-label="${escapeHtml(f.cat.nome)}: ${money(f.valor)}">
+      <span class="name"><i class="pz-dot" style="background:${cor}"></i>${f.cat.emoji} ${escapeHtml(f.cat.nome)}</span>
       <span class="val">${money(f.valor)}<small>${pct}%</small></span></button>`;
-  }).join('') + '</div>';
+  };
+  let lista;
+  if (opt.completa) {
+    // Análise: todas as categorias (com orçamento), na cor da fatia
+    const cats = todas.slice();
+    for (const c of state.categorias) if (+c.orcamento > 0 && tipoCat(c) === 'gasto' && !cats.some(x => x.id === c.id)) cats.push({ cat: c, id: c.id, valor: 0 });
+    const cores = Object.fromEntries(cats.map((c, i) => [c.id, i < max ? PIZZA_CORES[i] : COR_OUTRAS]));
+    lista = `<div class="pizza-lista">${catBars(cats, total, true, cores)}</div>`;
+  } else {
+    lista = '<div class="cat-bars pizza-lista">' + fatias.map((f, i) => linha(f, PIZZA_CORES[i])).join('') +
+      (resto.length ? `<button type="button" class="pz-mais" data-outras="1" aria-expanded="false"><span class="name"><i class="pz-dot" style="background:${COR_OUTRAS}"></i>➕ Outras ${resto.length} categoria${resto.length > 1 ? 's' : ''} <span class="pz-seta">▾</span></span><span class="val">${money(pedacos[pedacos.length - 1].valor)}<small>${total ? Math.round(pedacos[pedacos.length - 1].valor / total * 100) : 0}%</small></span></button>
+        <div class="pz-outras" hidden>${resto.map(f => linha(f, COR_OUTRAS)).join('')}</div>` : '') + '</div>';
+  }
   return `<div class="pizza-wrap">${svg}${lista}</div>`;
+}
+// toque na fatia abre o Extrato da categoria; "Outras" abre a lista escondida
+function bindPizza(el) {
+  const abrirOutras = () => {
+    const box = $('.pz-outras', el), b = $('.pz-mais', el);
+    if (!box) return;
+    box.hidden = !box.hidden;
+    b.setAttribute('aria-expanded', String(!box.hidden));
+    b.classList.toggle('aberto', !box.hidden);
+  };
+  $$('.pz-mais', el).forEach(b => b.onclick = abrirOutras);
+  $$('.seg[data-outras]', el).forEach(s => s.addEventListener('click', abrirOutras));
+  $$('.seg[data-cat]', el).forEach(s => s.addEventListener('click', () => { ui.cat = s.dataset.cat; ui.search = ''; ui.tipoFiltro = 'tudo'; go('list'); }));
 }
 
 function renderFuturo(el) {
@@ -1023,13 +1065,13 @@ function renderFuturo(el) {
   el.hidden = false;
   const restante = sum(futurasParcelas);
   const fim = futurasParcelas.reduce((m, g) => g.data > m ? g.data : m, '');
-  const series = [{ name: 'Parcelas', cls: 's2', values: meses.map(m => m.parcelas) }];
-  if (temFixo) series.push({ name: 'Fixos (previsto)', cls: 's3', values: meses.map(m => m.fixos) });
-  el.innerHTML = `<div class="card-head"><h2>A pagar nos próximos meses</h2></div>
+  const series = [{ name: 'Parcelas', cls: 's7', values: meses.map(m => m.parcelas) }];
+  if (temFixo) series.push({ name: 'Fixos (previsto)', cls: 's4', values: meses.map(m => m.fixos) });
+  el.innerHTML = `<div class="card-head"><h2>🗓️ A pagar nos próximos meses</h2></div>
     ${restante ? `<p class="muted small" style="margin:0 0 8px">Faltam <b>${money(restante)}</b> em parcelas${fim ? ` · a última é em ${monthName(fim.slice(0, 7), true)}/${fim.slice(2, 4)}` : ''}.</p>` : ''}
     <div class="chart">${temFixo
       ? legendHtml(series) + groupedChart(series, meses.map(m => monthName(m.key, true)), meses.map(m => monthName(m.key)), { width: el.clientWidth ? el.clientWidth - 32 : 320 })
-      : columnChart(meses.map(m => m.total), meses.map(m => monthName(m.key, true)), meses.map(m => [monthName(m.key), m.total]), { width: el.clientWidth ? el.clientWidth - 32 : 320, valueLabels: true })}</div>
+      : columnChart(meses.map(m => m.total), meses.map(m => monthName(m.key, true)), meses.map(m => [monthName(m.key), m.total]), { width: el.clientWidth ? el.clientWidth - 32 : 320, valueLabels: true, cls: 's7' })}</div>
     <ul class="futuro">${meses.filter(m => m.total).map(m => {
       const partes = [m.itens.length ? `${m.itens.length} parcela${m.itens.length > 1 ? 's' : ''}` : '', m.fixos ? `${money(m.fixos)} em fixos` : ''].filter(Boolean).join(' · ');
       return `<li><button type="button" data-mes="${m.key}"><span><b>${monthName(m.key)}</b><small>${partes}</small></span><span class="num">${money(m.total)} ›</span></button></li>`;
@@ -1058,6 +1100,7 @@ function renderHome() {
     $('#heroBudget').innerHTML = '';
     $('#homeCats').innerHTML = s.items.length ? catPizza(s.items, s.total) : '<div class="empty">Sem parcelas neste mês.</div>';
     bindCatBars($('#homeCats'));
+    bindPizza($('#homeCats'));
     bindTips();
     const lista = [...allMonth(ui.month)].sort((a, b) => a.data.localeCompare(b.data));
     $('#recentList').innerHTML = lista.length ? lista.map(txRow).join('') : '<li class="empty">Nenhuma parcela neste mês.</li>';
@@ -1094,6 +1137,7 @@ function renderHome() {
 
   $('#homeCats').innerHTML = s.items.length ? catPizza(s.items, s.total) : '<div class="empty">Seus gastos por categoria aparecem aqui.</div>';
   bindCatBars($('#homeCats'));
+  bindPizza($('#homeCats'));
   bindTips();
 
   renderBalance(ui.month, $('#balance'));
@@ -1135,7 +1179,7 @@ function renderBalance(key, el) {
     ${rate !== null ? `<p class="muted small" style="margin:8px 0 0">${b.sobrou < 0 ? '⚠️ Saiu mais do que entrou neste mês.' : rate > 0 ? `Você investiu <b>${rate}%</b> do que entrou.` : 'Nada investido ainda neste mês.'}</p>` : ''}${invLine}`;
 }
 
-function catBars(cats, total, withBudget) {
+function catBars(cats, total, withBudget, cores) {
   const max = Math.max(...cats.map(c => Math.max(c.valor, withBudget ? (+c.cat.orcamento || 0) : 0)), 1);
   return '<div class="cat-bars">' + cats.map(c => {
     const b = +c.cat.orcamento || 0;
@@ -1144,9 +1188,9 @@ function catBars(cats, total, withBudget) {
     let note = '';
     if (withBudget && b > 0) note = over ? `<div class="note over">⚠️ ${money(c.valor - b)} acima do orçamento (${money(b)})</div>` : `<div class="note">${Math.round(c.valor / b * 100)}% de ${money(b)}</div>`;
     return `<button class="cat-bar" data-cat="${c.id}" aria-label="${escapeHtml(c.cat.nome)}: ${money(c.valor)}">
-      <span class="name">${c.cat.emoji} ${escapeHtml(c.cat.nome)}</span>
+      <span class="name">${cores ? `<i class="pz-dot" style="background:${cores[c.id]}"></i>` : ''}${c.cat.emoji} ${escapeHtml(c.cat.nome)}</span>
       <span class="val">${money(c.valor)}<small>${pct}%</small></span>
-      <span class="track"><span class="fill ${over ? 'over' : ''}" style="display:block;width:${c.valor / max * 100}%"></span>${withBudget && b > 0 ? `<span class="mark" style="left:calc(${b / max * 100}% - 1px)"></span>` : ''}</span>
+      <span class="track"><span class="fill ${over ? 'over' : ''}" style="display:block;width:${c.valor / max * 100}%${cores && !over ? `;background:${cores[c.id]}` : ''}"></span>${withBudget && b > 0 ? `<span class="mark" style="left:calc(${b / max * 100}% - 1px)"></span>` : ''}</span>
       ${note}
     </button>`;
   }).join('') + '</div>';
@@ -1210,21 +1254,20 @@ function renderAnalysis() {
   const cats = byCategory(s.items);
   // categorias com orçamento mas sem gasto também aparecem
   for (const c of state.categorias) if (+c.orcamento > 0 && !cats.some(x => x.id === c.id)) cats.push({ cat: c, id: c.id, valor: 0 });
-  $('#catChart').innerHTML = cats.length ? catBars(cats, s.total, true) : '<div class="empty">Sem gastos neste mês.</div>';
+  $('#catChart').innerHTML = s.items.length ? catPizza(s.items, s.total, { max: 7, completa: true }) : '<div class="empty">Sem gastos neste mês.</div>';
   bindCatBars($('#catChart'));
+  bindPizza($('#catChart'));
 
   // Diário
   const daily = new Array(s.dim).fill(0);
   for (const g of s.items) daily[+g.data.slice(8) - 1] += g.valor;
   const dLabels = daily.map((_, i) => String(i + 1));
   const dTips = daily.map((v, i) => [`${i + 1} de ${monthName(ui.month, true)}`, v]);
-  $('#dailyChart').innerHTML = s.total ? columnChart(daily, dLabels, dTips, { width: $('#dailyChart').clientWidth, avg: s.avg, limitTo: s.isCurrent ? s.elapsed : s.dim, labelEvery: 5 }) : '<div class="empty">Sem dados.</div>';
+  $('#dailyChart').innerHTML = s.total ? columnChart(daily, dLabels, dTips, { width: $('#dailyChart').clientWidth, avg: s.avg, limitTo: s.isCurrent ? s.elapsed : s.dim, labelEvery: 5, cls: 's2' }) : '<div class="empty">Sem dados.</div>';
 
-  // 6 meses
+  // Gastos por mês (com setas)
+  renderMesesAnalise();
   const keys = [...Array(6)].map((_, i) => shiftMonth(ui.month, i - 5));
-  const vals = keys.map(k => sum(inMonth(k)));
-  $('#trendChart').innerHTML = vals.some(v => v) ? columnChart(vals, keys.map(k => monthName(k, true)), keys.map((k, i) => [monthName(k), vals[i]]), { width: $('#trendChart').clientWidth, highlight: 5, valueLabels: true }) : '<div class="empty">Sem dados.</div>';
-  bindTips();
 
   // Entradas × saídas (6 meses)
   const bal = keys.map(balanceOf);
@@ -1245,7 +1288,12 @@ function renderAnalysis() {
   const mm = {};
   for (const g of s.items) { const k = g.metodo || ''; mm[k] = (mm[k] || 0) + g.valor; }
   const rows = Object.entries(mm).sort((a, b) => b[1] - a[1]);
-  $('#methodTable').innerHTML = rows.length ? `<table class="simple">${rows.map(([k, v]) => `<tr><td>${k ? METHODS[k].nome : 'Não informado'}</td><td class="r">${money(v)}</td><td class="p">${Math.round(v / s.total * 100)}%</td></tr>`).join('')}</table>` : '<div class="empty">Sem dados.</div>';
+  const ICONE_METODO = { pix: '💠', credito: '💳', debito: '🏧', dinheiro: '💵', vale: '🍽️', boleto: '🧾', '': '❔' };
+  const maxM = rows.length ? rows[0][1] : 1;
+  $('#methodTable').innerHTML = rows.length ? `<div class="cat-bars">${rows.map(([k, v]) => `<div class="cat-bar estatico">
+      <span class="name">${ICONE_METODO[k] || '❔'} ${k && METHODS[k] ? METHODS[k].nome : 'Não informado'}</span>
+      <span class="val">${money(v)}<small>${Math.round(v / s.total * 100)}%</small></span>
+      <span class="track"><span class="fill" style="display:block;width:${v / maxM * 100}%;background:var(--s3)"></span></span></div>`).join('')}</div>` : '<div class="empty">Sem dados.</div>';
 
   const top = [...s.items].sort((a, b) => b.valor - a.valor).slice(0, 5);
   $('#topList').innerHTML = top.length ? top.map(txRow).join('') : '<li class="empty">Sem dados.</li>';
@@ -1306,7 +1354,7 @@ function columnChart(values, labels, tips, opt = {}) {
     if (v > 0) {
       const r = Math.min(4, bw / 2, h);
       const x0 = cx - bw / 2, yb = H - padB, yt = y(v);
-      svg += `<path class="bar ${fut ? 'fut' : dim ? 'dim' : ''}" d="M${x0},${yb} V${yt + r} Q${x0},${yt} ${x0 + r},${yt} H${x0 + bw - r} Q${x0 + bw},${yt} ${x0 + bw},${yt + r} V${yb} Z"/>`;
+      svg += `<path class="bar ${opt.cls ? 'cor ' + opt.cls : ''} ${fut ? 'fut' : dim ? 'dim' : ''}" d="M${x0},${yb} V${yt + r} Q${x0},${yt} ${x0 + r},${yt} H${x0 + bw - r} Q${x0 + bw},${yt} ${x0 + bw},${yt + r} V${yb} Z"/>`;
     }
     svg += `<rect class="hit" x="${padL + step * i}" y="${padT}" width="${step}" height="${H - padT}" data-tip="${escapeHtml(tips[i][0])}" data-val="${tips[i][1]}"${opt.keys ? ` data-key="${opt.keys[i]}"` : ''} tabindex="-1"/>`;
     if (!opt.labelEvery || i === 0 || (i + 1) % opt.labelEvery === 0) svg += `<text x="${cx}" y="${H - 6}" text-anchor="middle">${escapeHtml(labels[i])}</text>`;
@@ -2234,6 +2282,9 @@ function init() {
   ui.month = monthKey(new Date());
   $('#quickForm').addEventListener('submit', submitQuick);
   $('#micBtn').onclick = toggleMic;
+  $('#trendPrev').onclick = () => { ui.mesesDesloc = (ui.mesesDesloc || 0) - 6; renderMesesAnalise(); };
+  $('#trendNext').onclick = () => { ui.mesesDesloc = (ui.mesesDesloc || 0) + 6; renderMesesAnalise(); };
+  $('#trendHoje').onclick = () => { ui.mesesDesloc = 0; renderMesesAnalise(); };
   if (RAPIDO) document.body.classList.add('rapido');
   if (NATIVO) document.body.classList.add('no-app');
   $('#rapidoAbrir').onclick = () => NATIVO && NATIVO.abrirApp && NATIVO.abrirApp();
@@ -2249,8 +2300,8 @@ function init() {
   $('#vozResposta').checked = state.vozFalar === true;
   $('#vozResposta').onchange = e => { state.vozFalar = e.target.checked; save(); };
   $('#quickInput').addEventListener('input', () => { if (pending) pending.catManual = pending.catManual && $('#quickInput').value.trim() !== ''; updatePreview(); });
-  $('#prevMonth').onclick = () => { ui.month = shiftMonth(ui.month, -1); render(); };
-  $('#nextMonth').onclick = () => { ui.month = shiftMonth(ui.month, 1); render(); };
+  $('#prevMonth').onclick = () => { ui.month = shiftMonth(ui.month, -1); ui.mesesDesloc = 0; render(); };
+  $('#nextMonth').onclick = () => { ui.month = shiftMonth(ui.month, 1); ui.mesesDesloc = 0; render(); };
   $$('.tab').forEach(t => t.onclick = () => { if (t.dataset.view === 'list') { ui.cat = ''; ui.tipoFiltro = 'tudo'; } go(t.dataset.view); });
   $$('[data-goto]').forEach(b => b.onclick = () => { ui.cat = ''; go(b.dataset.goto); });
   $('#searchInput').addEventListener('input', e => { ui.search = e.target.value; renderList(); $('#searchInput').focus(); });

@@ -55,7 +55,7 @@
       <div class="card" id="balance"></div>
 
       <div class="card">
-        <div class="card-head"><h2>Gastos por mês</h2><button class="link" data-goto="analysis">ver análise</button></div>
+        <div class="card-head"><h2>📊 Gastos por mês</h2><button class="link" data-goto="analysis">ver análise</button></div>
         <div id="mesesChart" class="chart"></div>
         <p class="muted small meses-nota" id="mesesNota" hidden><i class="sw-fut"></i>Meses que ainda não chegaram: o que você já tem para pagar (parcelas e fixos). Toque numa barra para abrir o mês.</p>
       </div>
@@ -63,7 +63,7 @@
       <div class="stats" id="stats"></div>
 
       <div class="card">
-        <div class="card-head"><h2>Por categoria</h2><button class="link" data-goto="analysis">ver análise</button></div>
+        <div class="card-head"><h2>🥧 Por categoria</h2><button class="link" data-goto="analysis">ver análise</button></div>
         <div id="homeCats"></div>
       </div>
 
@@ -92,33 +92,36 @@
     <!-- ANÁLISE -->
     <section class="view" id="view-analysis" aria-label="Análise">
       <div class="card" id="insightsCard">
-        <h2>O que chama atenção</h2>
+        <h2>💡 O que chama atenção</h2>
         <ul class="insights" id="insights"></ul>
       </div>
       <div class="card" id="futuroCard2" hidden></div>
       <div class="card" id="flowCard" hidden>
-        <h2>Entradas × saídas</h2>
+        <h2>↔️ Entradas × saídas</h2>
         <div id="flowChart" class="chart"></div>
         <div id="flowTable" class="flow-table"></div>
       </div>
       <div class="card">
-        <div class="card-head"><h2>Categorias</h2><span class="muted small">barra = gasto · traço = orçamento</span></div>
+        <div class="card-head"><h2>🥧 Categorias</h2><span class="muted small">traço = orçamento</span></div>
         <div id="catChart"></div>
       </div>
       <div class="card">
-        <h2>Gasto por dia</h2>
+        <h2>📅 Gasto por dia</h2>
         <div id="dailyChart" class="chart"></div>
       </div>
       <div class="card">
-        <h2>Últimos 6 meses</h2>
+        <div class="card-head"><h2>📊 Gastos por mês</h2>
+          <div class="nav-mini"><button type="button" class="icon-btn" id="trendPrev" aria-label="6 meses antes">‹</button><span class="muted small" id="trendRange"></span><button type="button" class="icon-btn" id="trendNext" aria-label="6 meses depois">›</button></div></div>
         <div id="trendChart" class="chart"></div>
+        <p class="muted small meses-nota" id="trendNota" hidden><i class="sw-fut"></i>Tracejado = o que você já tem para pagar (parcelas e fixos).</p>
+        <button type="button" class="link" id="trendHoje" hidden>voltar para o mês atual</button>
       </div>
       <div class="card">
-        <h2>Forma de pagamento</h2>
+        <h2>💳 Forma de pagamento</h2>
         <div id="methodTable"></div>
       </div>
       <div class="card">
-        <h2>Maiores gastos do mês</h2>
+        <div class="card-head"><h2>🏆 Maiores gastos do mês</h2><button class="link" data-goto="list">ver todos</button></div>
         <ul class="tx-list" id="topList"></ul>
       </div>
     </section>

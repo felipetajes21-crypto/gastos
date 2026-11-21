@@ -15,7 +15,7 @@
   --series-dim: #9ec5f4;
   --good: #006300;
   --critical: #d03b3b;
-  --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a; --s4: #eda100; --s5: #e87ba4; --s-outros: #b5b4ae;
+  --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a; --s4: #eda100; --s5: #e87ba4; --s6: #008300; --s7: #6250d6; --s-outros: #b5b4ae;
   --warning: #fab219;
   --shadow: 0 1px 2px rgba(0,0,0,.05), 0 4px 16px rgba(0,0,0,.04);
   --radius: 16px;
@@ -40,7 +40,7 @@
     --good: #0ca30c;
     --critical: #e66767;
     --shadow: none;
-    --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500; --s5: #d55181; --s-outros: #5e5d58;
+    --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500; --s5: #d55181; --s6: #0ca30c; --s7: #9085e9; --s-outros: #5e5d58;
   }
 }
 :root[data-theme="dark"] {
@@ -49,7 +49,7 @@
   --muted: #898781; --line: rgba(255,255,255,.10); --grid: #2c2c2a; --axis: #383835;
   --accent: #3987e5; --accent-soft: #184f95; --series: #3987e5; --series-dim: #1c5cab;
   --good: #0ca30c; --critical: #e66767; --shadow: none;
-  --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500; --s5: #d55181; --s-outros: #5e5d58;
+  --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500; --s5: #d55181; --s6: #0ca30c; --s7: #9085e9; --s-outros: #5e5d58;
 }
 
 * { box-sizing: border-box; }
@@ -454,3 +454,27 @@ a.btn { display: inline-flex; align-items: center; justify-content: center; text
   .pizza-wrap .pizza { align-self: center; }
 }
 .pizza-wrap .chart.pizza { height: 150px; min-height: 0; margin: 0; }
+
+/* Cada gráfico com a sua cor (série única) */
+.chart .bar.s1, .chart .bar.cor.s1 { fill: var(--s1); } .sw.s1, .tooltip .key.s1 { background: var(--s1); }
+.chart .bar.s2, .chart .bar.cor.s2 { fill: var(--s2); } .sw.s2, .tooltip .key.s2 { background: var(--s2); }
+.chart .bar.s3, .chart .bar.cor.s3 { fill: var(--s3); } .sw.s3, .tooltip .key.s3 { background: var(--s3); }
+.chart .bar.s4, .chart .bar.cor.s4 { fill: var(--s4); } .sw.s4, .tooltip .key.s4 { background: var(--s4); }
+.chart .bar.s5, .chart .bar.cor.s5 { fill: var(--s5); } .sw.s5, .tooltip .key.s5 { background: var(--s5); }
+.chart .bar.s6, .chart .bar.cor.s6 { fill: var(--s6); } .sw.s6, .tooltip .key.s6 { background: var(--s6); }
+.chart .bar.s7, .chart .bar.cor.s7 { fill: var(--s7); } .sw.s7, .tooltip .key.s7 { background: var(--s7); }
+.chart .bar.cor.dim { opacity: .4; }
+.nav-mini { display: flex; align-items: center; gap: 2px; }
+.nav-mini .icon-btn { width: 32px; height: 32px; font-size: 20px; }
+.nav-mini .icon-btn:disabled { opacity: .3; }
+#trendHoje { margin-top: 6px; }
+/* "Outras categorias" da pizza */
+.pz-mais { display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; align-items: center; width: 100%; padding: 7px 0; border: 0; background: none; color: var(--ink); text-align: left; font: inherit; font-size: 14px; }
+.pz-mais .name { display: flex; align-items: center; gap: 6px; }
+.pz-mais .val { font-weight: 600; text-align: right; font-variant-numeric: tabular-nums; }
+.pz-mais .val small { font-weight: 400; color: var(--muted); margin-left: 6px; }
+.pz-seta { color: var(--accent); transition: transform .15s; }
+.pz-mais.aberto .pz-seta { transform: rotate(180deg); }
+.pz-outras { padding-left: 12px; border-left: 2px solid var(--line); margin-left: 4px; }
+.cat-bar.estatico { cursor: default; }
+.pizza-lista .cat-bars { display: grid; gap: 12px; }
