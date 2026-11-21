@@ -43,16 +43,18 @@
       </div>
       <button type="button" class="mic-stop" id="micStop" hidden>■ Ouvindo… toque para parar</button>
       <div class="preview" id="preview" hidden></div>
-      <div class="hint" id="quickHint">Escreva ou toque no 🎤 e fale: <b>“gastei vinte e três no uber ontem”</b>, <b>uber 23 ontem pix</b>, <b>tênis 300 3x</b>, <b>recebi salário 1500</b>, <b>guardei 100 na caixinha</b>, <b>resgatei 50 da poupança</b>. Vários de uma vez também: <b>uber 20, ifood 35 e mercado 150</b>. O tipo é detectado sozinho — ou toque acima para escolher.</div>
+      <div class="hint" id="quickHint">Escreva ou toque no 🎤 e fale: <b>“gastei vinte e três no uber ontem”</b>, <b>uber 23 ontem pix</b>, <b>tênis 300 3x</b>, <b>conta 3x de 70</b>, <b>recebi salário 1500</b>, <b>guardei 100 na caixinha</b>, <b>resgatei 50 da poupança</b>. Vários de uma vez também: <b>uber 20, ifood 35 e mercado 150</b>. O tipo é detectado sozinho — ou toque acima para escolher.</div>
 
       <div class="card hero">
-        <div class="hero-label">Gasto no mês</div>
+        <div class="hero-label" id="heroLabel">Gasto no mês</div>
         <div class="hero-value" id="heroTotal">R$ 0,00</div>
         <div class="hero-sub" id="heroSub"></div>
         <div class="budget" id="heroBudget"></div>
       </div>
 
       <div class="card" id="balance"></div>
+
+      <div class="card" id="futuroCard" hidden></div>
 
       <div class="stats" id="stats"></div>
 
@@ -89,6 +91,7 @@
         <h2>O que chama atenção</h2>
         <ul class="insights" id="insights"></ul>
       </div>
+      <div class="card" id="futuroCard2" hidden></div>
       <div class="card" id="flowCard" hidden>
         <h2>Entradas × saídas</h2>
         <div id="flowChart" class="chart"></div>

@@ -243,6 +243,8 @@ function falaParaTexto(text) {
     // parcelas: "em 3 vezes", "parcelado em 10", "3 parcelas", "em 3x"
     .replace(/\s(?:parcelad[oa]s?|dividid[oa]s?)\s+(?:em\s+)?(\d{1,2})(?:\s*(?:x|vezes|parcelas))?(?=\s)/gi, ' $1x')
     .replace(/\s(?:em\s+)?(\d{1,2})\s+(?:vezes|parcelas)(?:\s+(?:no|na)\s+(cart[aã]o|cr[eé]dito))?(?=\s)/gi, (_, a, c) => ` ${a}x${c ? ' crédito' : ''}`)
+    // "3x de 70", "3 parcelas de 70 reais" = 70 em cada parcela (total 210)
+    .replace(/\s(\d{1,2})x(\s+cr[eé]dito)?\s+de\s+((?:r\$)?\d[\d.,]*)(?:\s+(?:reais|real))?(?=\s)/gi, ' $1x$2 $3 reais cada')
     // datas: "dia 12 de outubro (de 2026)", "12 de outubro"
     .replace(/\s(?:dia\s+)?(\d{1,2})\s+de\s+([a-zç]+)(?:\s+de\s+(\d{4}))?(?=\s)/gi, (m, d, mes, y) => {
       const mi = MONTH_IDX[norm(mes)];
@@ -410,6 +412,13 @@ function parseText(text) {
   // "ifood" deve ficar na descrição mesmo que exista "ifood beneficios"
   // Parcelas: 3x, 10x
   n.forEach((t, i) => { const m = t.match(/^(\d{1,2})x$/); if (m && +m[1] > 1) { out.parcelas = +m[1]; keep[i] = false; if (n[i - 1] === 'em') keep[i - 1] = false; } });
+  // "70 cada" / "70 por mês" / "70 por parcela": o valor é de cada parcela
+  let porParcela = false;
+  n.forEach((t, i) => {
+    if (!keep[i]) return;
+    if (t === 'cada' || t === 'mensais') { porParcela = true; keep[i] = false; }
+    else if (t === 'por' && ['mes', 'parcela'].includes(n[i + 1])) { porParcela = true; keep[i] = keep[i + 1] = false; }
+  });
 
   // Datas
   const now = new Date();
@@ -453,6 +462,7 @@ function parseText(text) {
     if (score > bestScore) { bestScore = score; best = i; }
   });
   if (best >= 0) { out.valor = parseAmount(tokens[best]); keep[best] = false; if (/^(reais|real|rs)$/.test(n[best + 1] || '')) keep[best + 1] = false; }
+  if (porParcela && out.parcelas > 1 && out.valor) { out.valorParcela = out.valor; out.valor = Math.round(out.valor * out.parcelas * 100) / 100; }
 
   let desc = tokens.filter((_, i) => keep[i]).join(' ').replace(/^(no|na|em|de|da|do|com|o|a|os|as|um|uma)\s+/i, '').trim();
   // "R$275 cartão" sozinho = pagamento da fatura, não forma de pagamento
@@ -905,7 +915,7 @@ function falar(texto) {
 // ───────────────────────── Renderização ─────────────────────────
 function render() {
   $('#monthLabel').textContent = monthName(ui.month);
-  $('#nextMonth').style.visibility = ui.month >= monthKey(new Date()) ? 'hidden' : 'visible';
+  $('#nextMonth').style.visibility = ui.month >= ultimoMesFuturo() ? 'hidden' : 'visible';
   renderHome();
   const v = $('.view.active').id;
   if (v === 'view-list') renderList();
@@ -937,6 +947,53 @@ function monthStats(key) {
   return { items, total, isCurrent, dim, elapsed, prevSame, prevTotal: sum(prevItems), projection, budget, avg: elapsed ? total / elapsed : 0 };
 }
 
+// ───────────────────────── Contas futuras ─────────────────────────
+// O que já está comprometido nos próximos meses: parcelas (e gastos com data futura)
+// + lançamentos fixos de gasto que ainda vão ser lançados.
+const hojeKey = () => monthKey(new Date());
+function fixosPrevistos(key) {
+  if (key <= hojeKey()) return [];
+  return state.fixos.filter(f => tipoCat(catById(f.cat)) === 'gasto' && (!f.inicio || f.inicio <= key) && !state.fixosLancados[`${f.id}@${key}`]);
+}
+function previsaoMes(key) {
+  const itens = inMonth(key);
+  const parcelas = sum(itens);
+  const fixos = Math.round(fixosPrevistos(key).reduce((s, f) => s + f.valor, 0) * 100) / 100;
+  return { key, itens, parcelas, fixos, total: Math.round((parcelas + fixos) * 100) / 100 };
+}
+// último mês com parcela lançada (para poder navegar até ele)
+function ultimoMesFuturo() {
+  const hoje = hojeKey();
+  let ultimo = hoje;
+  for (const g of state.gastos) { const k = g.data.slice(0, 7); if (k > ultimo) ultimo = k; }
+  if (state.fixos.some(f => tipoCat(catById(f.cat)) === 'gasto')) { const k6 = shiftMonth(hoje, 6); if (k6 > ultimo) ultimo = k6; }
+  return ultimo;
+}
+
+function renderFuturo(el) {
+  const hoje = hojeKey();
+  const meses = [...Array(6)].map((_, i) => previsaoMes(shiftMonth(hoje, i + 1)));
+  const futurasParcelas = state.gastos.filter(g => g.data.slice(0, 7) > hoje && tipoOf(g) === 'gasto');
+  const temFixo = meses.some(m => m.fixos);
+  if (!futurasParcelas.length && !temFixo) { el.hidden = true; return; }
+  el.hidden = false;
+  const restante = sum(futurasParcelas);
+  const fim = futurasParcelas.reduce((m, g) => g.data > m ? g.data : m, '');
+  const series = [{ name: 'Parcelas', cls: 's2', values: meses.map(m => m.parcelas) }];
+  if (temFixo) series.push({ name: 'Fixos (previsto)', cls: 's3', values: meses.map(m => m.fixos) });
+  el.innerHTML = `<div class="card-head"><h2>A pagar nos próximos meses</h2></div>
+    ${restante ? `<p class="muted small" style="margin:0 0 8px">Faltam <b>${money(restante)}</b> em parcelas${fim ? ` · a última é em ${monthName(fim.slice(0, 7), true)}/${fim.slice(2, 4)}` : ''}.</p>` : ''}
+    <div class="chart">${temFixo
+      ? legendHtml(series) + groupedChart(series, meses.map(m => monthName(m.key, true)), meses.map(m => monthName(m.key)), { width: el.clientWidth ? el.clientWidth - 32 : 320 })
+      : columnChart(meses.map(m => m.total), meses.map(m => monthName(m.key, true)), meses.map(m => [monthName(m.key), m.total]), { width: el.clientWidth ? el.clientWidth - 32 : 320, valueLabels: true })}</div>
+    <ul class="futuro">${meses.filter(m => m.total).map(m => {
+      const partes = [m.itens.length ? `${m.itens.length} parcela${m.itens.length > 1 ? 's' : ''}` : '', m.fixos ? `${money(m.fixos)} em fixos` : ''].filter(Boolean).join(' · ');
+      return `<li><button type="button" data-mes="${m.key}"><span><b>${monthName(m.key)}</b><small>${partes}</small></span><span class="num">${money(m.total)} ›</span></button></li>`;
+    }).join('')}</ul>`;
+  $$('[data-mes]', el).forEach(b => b.onclick = () => { ui.month = b.dataset.mes; go('home'); render(); scrollTo({ top: 0, behavior: 'smooth' }); });
+  bindTips();
+}
+
 function byCategory(items) {
   const m = {};
   for (const g of items) m[g.cat] = (m[g.cat] || 0) + g.valor;
@@ -945,6 +1002,24 @@ function byCategory(items) {
 
 function renderHome() {
   const s = monthStats(ui.month);
+  const futuro = ui.month > hojeKey();
+  $('#heroLabel').textContent = futuro ? `A pagar em ${MONTHS[+ui.month.slice(5) - 1]}` : 'Gasto no mês';
+  $('#stats').hidden = futuro;
+  $('#balance').hidden = futuro;
+  renderFuturo($('#futuroCard'));
+  if (futuro) {
+    const p = previsaoMes(ui.month);
+    $('#heroTotal').textContent = money(p.total);
+    $('#heroSub').innerHTML = [p.parcelas ? `${money(p.parcelas)} em parcelas` : '', p.fixos ? `${money(p.fixos)} em fixos (${fixosPrevistos(ui.month).map(f => escapeHtml(f.desc)).join(', ')})` : ''].filter(Boolean).join(' · ') || 'Nada a pagar ainda neste mês.';
+    $('#heroBudget').innerHTML = '';
+    const cats = byCategory(s.items).slice(0, 5);
+    $('#homeCats').innerHTML = cats.length ? catBars(cats, s.total, false) : '<div class="empty">Sem parcelas neste mês.</div>';
+    bindCatBars($('#homeCats'));
+    const lista = [...allMonth(ui.month)].sort((a, b) => a.data.localeCompare(b.data));
+    $('#recentList').innerHTML = lista.length ? lista.map(txRow).join('') : '<li class="empty">Nenhuma parcela neste mês.</li>';
+    bindTx($('#recentList'));
+    return;
+  }
   $('#heroTotal').textContent = money(s.total);
   let sub = '';
   if (s.prevSame > 0) {
@@ -1046,7 +1121,7 @@ function txRow(g) {
   const c = catById(g.cat);
   const t = tipoOf(g);
   const kind = t === 'entrada' ? 'entrada' : t === 'invest' ? (g.resgate ? 'resgate' : 'investimento') : '';
-  const meta = [relDay(g.data), g.rend ? `${c.nome} · ${rendTexto(g.rend, false)}` : g.titulo ? [g.titulo === g.desc ? c.nome : g.titulo, g.taxa != null ? taxaTexto(tipoTitulo(g.titulo), g.taxa) : ''].filter(Boolean).join(' · ') : c.nome, kind, g.metodo && METHODS[g.metodo] ? METHODS[g.metodo].nome : '', g.fixo ? 'fixo' : ''].filter(Boolean).join(' · ');
+  const meta = [relDay(g.data), g.rend ? `${c.nome} · ${rendTexto(g.rend, false)}` : g.titulo ? [g.titulo === g.desc ? c.nome : g.titulo, g.taxa != null ? taxaTexto(tipoTitulo(g.titulo), g.taxa) : ''].filter(Boolean).join(' · ') : c.nome, kind, g.metodo && METHODS[g.metodo] ? METHODS[g.metodo].nome : '', g.fixo ? 'fixo' : '', g.data > isoDate(new Date()) ? 'a pagar' : ''].filter(Boolean).join(' · ');
   return `<li class="tx" data-id="${g.id}"><div class="em">${c.emoji}</div><div class="info"><div class="d">${escapeHtml(g.desc)}</div><div class="meta">${escapeHtml(meta)}</div></div>${amountHtml(g)}</li>`;
 }
 function bindTx(el) { $$('.tx', el).forEach(li => li.onclick = () => openExpense(li.dataset.id)); }
@@ -1087,6 +1162,7 @@ function renderList() {
 // ── Análise
 function renderAnalysis() {
   const s = monthStats(ui.month);
+  renderFuturo($('#futuroCard2'));
   const cats = byCategory(s.items);
   // categorias com orçamento mas sem gasto também aparecem
   for (const c of state.categorias) if (+c.orcamento > 0 && !cats.some(x => x.id === c.id)) cats.push({ cat: c, id: c.id, valor: 0 });

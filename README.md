@@ -12,6 +12,7 @@ Digite do jeito que você falaria e aperte Enter:
 | `uber 23 ontem pix` | R$ 23,00 · 🚗 Transporte · ontem · Pix |
 | `ifood 45,50 no crédito` | R$ 45,50 · 🍔 Restaurante & Delivery · Crédito |
 | `tênis nike 600 3x` | 3 parcelas de R$ 200 em Compras (uma por mês) |
+| `conta 3x de 70` · “três parcelas de setenta” | 3 parcelas de R$ 70 (total R$ 210) |
 | `gasolina 200 12/10` | R$ 200 · Transporte · 12 de outubro |
 | `barbearia 50 sábado` | R$ 50 · 💇 Cuidados pessoais · último sábado |
 | `r$ 1.250 aluguel` | R$ 1.250,00 · 🏠 Moradia |
@@ -55,6 +56,14 @@ O app também registra o que **entra** e o que você **investe**. O tipo é dete
 
 Antes de salvar aparece uma prévia; se a categoria estiver errada, toque nela e troque.
 **O app aprende:** depois que você corrige uma vez (“padoca” → Mercado), ele acerta sozinho nas próximas.
+
+### Parcelas e contas futuras
+
+Compra parcelada já cai em todos os meses: `tênis 300 3x` lança R$ 100 agora e R$ 100 em cada um dos 2 meses seguintes. Para uma compra antiga, informe a data da 1ª parcela: `conta 3x de 70 21/10`.
+
+- **Início → A pagar nos próximos meses:** gráfico dos próximos 6 meses com o que já está comprometido (parcelas + lançamentos fixos), quanto falta pagar e quando termina a última parcela. Toque num mês para abrir.
+- A seta **›** do topo vai até os meses futuros: lá aparece **“A pagar em dezembro”** com as parcelas e os fixos previstos.
+- O mesmo gráfico aparece em **Análise**.
 
 ## O que tem
 
