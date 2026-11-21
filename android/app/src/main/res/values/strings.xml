@@ -4,6 +4,5 @@
     <string name="widget_nome">Novo gasto</string>
     <string name="widget_desc">Digite ou fale o gasto direto da tela inicial</string>
     <string name="widget_campo">Digite o gasto…</string>
-    <string name="widget_resumo">Toque para lançar um gasto</string>
     <string name="falar">Falar o gasto</string>
 </resources>
