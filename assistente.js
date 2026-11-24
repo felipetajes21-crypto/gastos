@@ -327,8 +327,6 @@ const SUGESTOES = [
 // ── tela ──
 function falar_(html, botoes) { assist.mensagens.push({ de: 'ia', html, botoes: botoes || [] }); desenharChat(); }
 function perguntar(texto) {
-  // com a chave da IA configurada, quem responde é o Claude (ia.js)
-  if (typeof iaAtiva === 'function' && iaAtiva()) { iaPerguntar(texto); return; }
   assist.mensagens.push({ de: 'eu', html: esc(texto) });
   let r;
   try { r = responder(texto); } catch (e) { console.error(e); r = 'Ops, me confundi com essa. 😅 Tente perguntar de outro jeito.'; }
@@ -351,13 +349,18 @@ function renderAssistente() {
     assist.iniciado = true;
     const s = monthStats(hojeKey());
     const destaques = s.items.length ? insights(s, byCategory(s.items)).slice(0, 3).map(([e, t]) => `${e} ${t}`) : [];
-    const online = typeof iaAtiva === 'function' && iaAtiva();
-    falar_(`Oi! 👋 Sou seu assistente de finanças${online ? ', agora com <b>IA online</b>: pode perguntar qualquer coisa sobre dinheiro' : '. Pergunte do seu jeito sobre seus gastos'} que eu respondo com os seus números.${destaques.length ? `<br><br><b>O que eu notei:</b><br>${destaques.join('<br>')}` : ''}`, SUGESTOES.slice(0, 4));
+    falar_(`Oi! 👋 Sou seu assistente de finanças. Pergunte do seu jeito sobre seus gastos que eu respondo com os seus números.${destaques.length ? `<br><br><b>O que eu notei:</b><br>${destaques.join('<br>')}` : ''}`, SUGESTOES.slice(0, 4));
   } else desenharChat();
   $('#chatSugestoes').innerHTML = SUGESTOES.map(([l, q]) => `<button type="button" class="chip" data-q="${esc(q)}">${esc(l)}</button>`).join('');
   $$('#chatSugestoes [data-q]').forEach(b => b.onclick = () => perguntar(b.dataset.q));
 }
+function novaConversa() {
+  assist.mensagens = [];
+  assist.iniciado = false;
+  renderAssistente();
+}
 function iniciarAssistente() {
+  $('#iaNova').onclick = novaConversa;
   $('#chatForm').addEventListener('submit', e => {
     e.preventDefault();
     const i = $('#chatInput');
