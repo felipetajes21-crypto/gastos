@@ -581,3 +581,29 @@ a.btn { display: inline-flex; align-items: center; justify-content: center; text
 .lg-ln.comp { background: repeating-linear-gradient(90deg, var(--muted) 0 4px, transparent 4px 7px); }
 .lg-ln.ref { background: repeating-linear-gradient(90deg, var(--critical) 0 3px, transparent 3px 6px); }
 #dailyLegenda span { margin-right: 14px; }
+
+/* Meta de investimento */
+.meta-num { display: flex; align-items: baseline; gap: 6px; font-size: 15px; margin-bottom: 10px; }
+.meta-num b { font-size: 26px; font-weight: 800; letter-spacing: -0.02em; }
+.meta-pct { margin-left: auto; font-weight: 800; font-size: 15px; color: var(--accent); }
+.meta-pct.ok { color: var(--good); }
+.meta-barra { height: 12px; border-radius: 6px; background: var(--surface-2); overflow: hidden; }
+.meta-fill { height: 100%; border-radius: 6px; background: linear-gradient(90deg, var(--s1), var(--s3)); transition: width .6s cubic-bezier(.2,.8,.2,1); }
+.meta-fill.ok { background: var(--good); }
+.meta-txt { margin: 10px 0 0 !important; color: var(--ink-2); }
+
+/* Investimentos resumidos: toque abre os detalhes */
+.pos .pos-top { width: 100%; border: 0; background: none; color: inherit; font: inherit; text-align: left; padding: 0; cursor: pointer; }
+.pos-seta { color: var(--muted); margin-left: 8px; transition: transform .2s; }
+.pos.aberto .pos-seta { transform: rotate(180deg); }
+.pos:not(.aberto) .pos-det { display: none; }
+.pos-det { margin-top: 10px; }
+.pos-resumo { margin: 0 0 8px !important; }
+
+/* Taxas do Tesouro: fechado até tocar */
+.tes-det summary { list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+.tes-det summary::-webkit-details-marker { display: none; }
+.tes-det summary h2 { margin: 0 !important; }
+.tes-det summary::after { content: '▾'; color: var(--muted); transition: transform .2s; }
+.tes-det[open] summary::after { transform: rotate(180deg); }
+.tes-det[open] summary { margin-bottom: 12px; }

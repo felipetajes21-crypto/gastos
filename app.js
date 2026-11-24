@@ -1117,8 +1117,8 @@ function renderFuturo(el) {
   el.innerHTML = `<div class="card-head"><h2>🗓️ A pagar nos próximos meses</h2></div>
     ${restante ? `<p class="muted small" style="margin:0 0 8px">Faltam <b>${money(restante)}</b> em parcelas${fim ? ` · a última é em ${monthName(fim.slice(0, 7), true)}/${fim.slice(2, 4)}` : ''}.</p>` : ''}
     <div class="chart">${temFixo
-      ? legendHtml(series) + groupedChart(series, meses.map(m => monthName(m.key, true)), meses.map(m => monthName(m.key)), { width: el.clientWidth ? el.clientWidth - 32 : 320 })
-      : columnChart(meses.map(m => m.total), meses.map(m => monthName(m.key, true)), meses.map(m => [monthName(m.key), m.total]), { width: el.clientWidth ? el.clientWidth - 32 : 320, valueLabels: true, cls: 's7' })}</div>
+      ? legendHtml(series) + multiLineChart(series, meses.map(m => monthName(m.key, true)), meses.map(m => monthName(m.key)), { width: el.clientWidth ? el.clientWidth - 8 : 320, titulo: 'A pagar nos próximos meses' })
+      : lineChart(meses.map(m => m.total), meses.map(m => monthName(m.key, true)), meses.map(m => [monthName(m.key), m.total]), { width: el.clientWidth ? el.clientWidth - 8 : 320, valueLabels: true, cor: 's7' })}</div>
     <ul class="futuro">${meses.filter(m => m.total).map(m => {
       const partes = [m.itens.length ? `${m.itens.length} parcela${m.itens.length > 1 ? 's' : ''}` : '', m.fixos ? `${money(m.fixos)} em fixos` : ''].filter(Boolean).join(' · ');
       return `<li><button type="button" data-mes="${m.key}"><span><b>${monthName(m.key)}</b><small>${partes}</small></span><span class="num">${money(m.total)} ›</span></button></li>`;
@@ -1339,7 +1339,7 @@ function renderAnalysis() {
       { name: 'Gastou', cls: 's2', values: bal.map(b => b.gastou) },
       { name: 'Investiu', cls: 's3', values: bal.map(b => Math.max(0, b.investiu)) },
     ];
-    $('#flowChart').innerHTML = legendHtml(series) + groupedChart(series, keys.map(k => monthName(k, true)), keys.map(k => monthName(k)), { width: $('#flowChart').clientWidth || 320 });
+    $('#flowChart').innerHTML = legendHtml(series) + multiLineChart(series, keys.map(k => monthName(k, true)), keys.map(k => monthName(k)), { width: $('#flowChart').clientWidth || 320, highlight: 5, titulo: 'Entradas, gastos e investimentos por mês' });
     $('#flowTable').innerHTML = `<table class="simple"><tr class="th"><td>Mês</td><td class="r">Entrou</td><td class="r">Gastou</td><td class="r">Investiu</td><td class="r">Sobrou</td></tr>${keys.map((k, i) => [k, bal[i]]).filter(([, b]) => b.entrou || b.gastou || b.investiu).map(([k, b]) => `<tr><td>${monthName(k, true)}</td><td class="r">${b.entrou ? Math.round(b.entrou).toLocaleString('pt-BR') : '—'}</td><td class="r">${Math.round(b.gastou).toLocaleString('pt-BR')}</td><td class="r">${b.investiu ? Math.round(b.investiu).toLocaleString('pt-BR') : '—'}</td><td class="r ${b.entrou && b.sobrou < 0 ? 'out' : ''}">${b.entrou ? (b.sobrou < 0 ? '−' : '') + Math.round(Math.abs(b.sobrou)).toLocaleString('pt-BR') : '—'}</td></tr>`).join('')}</table><p class="muted small" style="margin:6px 0 0">Valores em R$. “—” = nada anotado.</p>`;
   }
   bindTips();
@@ -1526,6 +1526,31 @@ function groupedChart(series, labels, fullLabels, opt = {}) {
   }
   svg += `<line class="base" x1="${padL}" x2="${W - padR}" y1="${H - padB}" y2="${H - padB}"/></svg>`;
   return svg;
+}
+// Várias linhas curvas no mesmo gráfico (uma cor por série); o toque mostra todas as séries do mês.
+function multiLineChart(series, labels, fullLabels, opt = {}) {
+  const W = Math.max(260, opt.width || 600), H = 190, padL = 8, padR = 8, padT = 14, padB = 34;
+  const n = labels.length;
+  const max = Math.max(1, ...series.flatMap(s => s.values));
+  const step = (W - padL - padR) / n;
+  const x = i => padL + step * i + step / 2;
+  const y = v => padT + (H - padT - padB) * (1 - v / max) * 0.92 + (H - padT - padB) * 0.04;
+  const base = H - padB;
+  let svg = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${escapeHtml(opt.titulo || 'Gráfico de linhas')}">`;
+  for (let i = 0; i < n; i++) svg += `<line class="drop ${opt.highlight === i ? 'sel' : ''}" x1="${x(i).toFixed(1)}" x2="${x(i).toFixed(1)}" y1="${padT}" y2="${base}"/>`;
+  for (const s of series) {
+    const pts = s.values.map((v, i) => [x(i), y(v)]);
+    if (pts.length > 1) svg += `<path class="ln desenha" pathLength="1" d="M${pts[0][0].toFixed(1)},${pts[0][1].toFixed(1)} ${curvaSegmentos(pts).join(' ')}" style="stroke:var(--${s.cls})"/>`;
+    pts.forEach(([px, py], i) => { svg += `<circle class="dot ${opt.highlight === i ? 'sel' : ''}" cx="${px.toFixed(1)}" cy="${py.toFixed(1)}" r="${opt.highlight === i ? 5 : 3.5}" style="fill:var(--${s.cls})"/>`; });
+  }
+  for (let i = 0; i < n; i++) {
+    const cx = x(i), sel = opt.highlight === i;
+    if (sel) svg += `<rect class="pilula" x="${(cx - 23).toFixed(1)}" y="${H - 27}" width="46" height="22" rx="11" style="fill:var(--accent)"/><text class="pilula-t" x="${cx.toFixed(1)}" y="${H - 12}" text-anchor="middle">${escapeHtml(labels[i])}</text>`;
+    else svg += `<text x="${cx.toFixed(1)}" y="${H - 12}" text-anchor="middle">${escapeHtml(labels[i])}</text>`;
+    const rows = JSON.stringify(series.map(s => [s.name, s.values[i], s.cls]));
+    svg += `<rect class="hit" x="${(padL + step * i).toFixed(1)}" y="0" width="${step.toFixed(1)}" height="${H}" data-tip="${escapeHtml(fullLabels[i])}" data-rows="${escapeHtml(rows)}"/>`;
+  }
+  return svg + '</svg>';
 }
 function bindTips() {
   const tip = $('#tooltip');
@@ -1767,17 +1792,13 @@ function renderInvest() {
   $('#invTotal').textContent = money(Math.max(0, total));
   $('#invSub').innerHTML = !pos.length ? 'Nenhum investimento ainda.' : comSaldo.length
     ? `${money(aportado)} aplicados · rendimento <span class="${rend >= 0 ? 'delta-down' : 'delta-up'}">${rend >= 0 ? '+' : '−'}${money(Math.abs(rend))}${baseRend > 0 ? ` (${rend >= 0 ? '+' : '−'}${Math.abs(rend / baseRend * 100).toLocaleString('pt-BR', { maximumFractionDigits: 1 })}%)` : ''}</span>`
-    : `${money(aportado)} aplicados · toque num destino para informar o saldo atual e ver o rendimento`;
+    : `${money(aportado)} aplicados`;
 
   const mes = ofType(ui.month, 'invest');
   const keys = [...Array(6)].map((_, i) => shiftMonth(ui.month, i - 5));
   const aportes = keys.map(k => sum(ofType(k, 'invest').filter(g => !g.resgate)));
   const mediaAporte = aportes.reduce((a, b) => a + b, 0) / 6;
-  $('#invStats').innerHTML = [
-    ['Aportes no mês', moneyShort(sum(mes.filter(g => !g.resgate)))],
-    ['Resgates no mês', moneyShort(sum(mes.filter(g => g.resgate)))],
-    ['Média 6 meses', moneyShort(mediaAporte)],
-  ].map(([k, v]) => `<div class="stat"><div class="k">${k}</div><div class="v num">${v}</div></div>`).join('');
+  renderMetaInvest(aportes[5], mediaAporte);
 
   $('#invPos').innerHTML = pos.length ? pos.map(p => {
     const tem = Math.max(0, p.atual ?? p.aportado);
@@ -1796,16 +1817,23 @@ function renderInvest() {
       return `<li><span>${escapeHtml(h.nome.replace(/^Tesouro /, ''))}<small>${linha1}</small><small>${linha2}</small>${falta}</span><b class="num">${money(holdingValue(h))}</b></li>`;
     }).join('')}</ul>${p.estimado && r != null && r < 0 && Math.abs(r) <= p.aportado * 0.03 ? '<p class="muted small" style="margin:6px 0 0">Logo depois de comprar o valor fica um pouco abaixo: o Tesouro paga um pouco menos na venda do que cobra na compra. Com o tempo, os juros cobrem essa diferença.</p>' : ''}${p.titulos.some(h => h.estimado != null && h.taxa != null) ? '<p class="muted small" style="margin:6px 0 0">Valor se vendesse hoje (usa a taxa <b>para vender</b>, que é um pouco maior que a de compra). Quando a taxa de hoje está <b>abaixo</b> da que você pegou, o título valoriza; <b>acima</b>, desvaloriza — mas no vencimento você recebe a taxa combinada.</p>' : ''}` : '';
     return `<div class="pos ${tem ? '' : 'zero'}" data-id="${p.c.id}">
-      <div class="pos-top"><span class="em">${p.c.emoji}</span><span class="pos-name">${escapeHtml(p.c.nome)}<small>${det.join(' · ')}</small></span><span class="pos-val num">${tem ? money(tem) : 'zerado'}</span></div>${rendLine}${subs}
+      <button type="button" class="pos-top" aria-expanded="false"><span class="em">${p.c.emoji}</span><span class="pos-name">${escapeHtml(p.c.nome)}<small>${r != null ? `<span class="${r >= 0 ? 'delta-down' : 'delta-up'}">${r >= 0 ? '+' : '−'}${money(Math.abs(r))}</span> · ` : ''}${p.rend && p.rend.ind !== 'nenhum' ? escapeHtml(rendTexto(p.rend, false)) : p.titulos ? `${p.titulos.length} título${p.titulos.length > 1 ? 's' : ''}` : 'toque para ver'}</small></span><span class="pos-val num">${tem ? money(tem) : 'zerado'}</span><span class="pos-seta">▾</span></button>
+      <div class="pos-det"><p class="muted small pos-resumo">${det.join(' · ')}</p>${rendLine}${subs}
       <div class="pos-actions">
         <button type="button" class="btn small" data-act="add">➕ Colocar</button>
         <button type="button" class="btn small" data-act="take" ${tem ? '' : 'disabled'}>➖ Tirar</button>
         <button type="button" class="btn small ghost" data-act="saldo" title="Informar quanto tem hoje no banco">🔄 Saldo</button>
-      </div>
+      </div></div>
     </div>`;
   }).join('') : '<div class="empty">Você ainda não tem nada investido.<br>Toque em <b>➕ Investir</b> acima, ou digite na tela inicial:<br><b>guardei 100 na caixinha</b> · <b>investi 200 no tesouro</b></div>';
   $$('#invPos .pos').forEach(el => {
     const id = el.dataset.id;
+    if (ui.posAberta && ui.posAberta[id]) { el.classList.add('aberto'); $('.pos-top', el).setAttribute('aria-expanded', 'true'); }
+    $('.pos-top', el).onclick = () => {
+      const aberto = el.classList.toggle('aberto');
+      $('.pos-top', el).setAttribute('aria-expanded', String(aberto));
+      ui.posAberta = ui.posAberta || {}; ui.posAberta[id] = aberto;
+    };
     $('[data-act=add]', el).onclick = () => openMove(id, false);
     $('[data-act=take]', el).onclick = () => openMove(id, true);
     $('[data-act=saldo]', el).onclick = () => openSaldo(id);
@@ -1815,13 +1843,55 @@ function renderInvest() {
 
   renderTesouroHoje();
 
-  $('#invChart').innerHTML = aportes.some(v => v) ? columnChart(aportes, keys.map(k => monthName(k, true)), keys.map((k, i) => [`aportes em ${monthName(k)}`, aportes[i]]), { width: $('#invChart').clientWidth, highlight: 5, valueLabels: true }) : '<div class="empty">Sem aportes nos últimos 6 meses.</div>';
+  const meta = +state.metaInvest || 0;
+  $('#invChart').innerHTML = aportes.some(v => v) ? lineChart(aportes, keys.map(k => monthName(k, true)), keys.map((k, i) => [`investido em ${monthName(k)}${meta ? (aportes[i] >= meta ? ' · bateu a meta ✅' : ` · faltaram ${money(meta - aportes[i])} para a meta`) : ''}`, aportes[i]]), { width: $('#invChart').clientWidth, highlight: 5, valueLabels: true, cor: 's3', ref: meta ? { valor: meta, texto: `meta ${money(meta)}` } : null }) : '<div class="empty">Quando você investir, cada mês aparece aqui.</div>';
   bindTips();
 
-  const recent = state.gastos.filter(g => tipoOf(g) === 'invest').sort((a, b) => b.data.localeCompare(a.data) || b.criado - a.criado).slice(0, 10);
+  const recent = state.gastos.filter(g => tipoOf(g) === 'invest').sort((a, b) => b.data.localeCompare(a.data) || b.criado - a.criado).slice(0, 5);
   $('#invList').innerHTML = recent.length ? recent.map(txRow).join('') : '<li class="empty">Nenhuma movimentação.</li>';
   bindTx($('#invList'));
 }
+// Meta: quanto a pessoa quer investir por mês; a barra enche conforme ela coloca dinheiro.
+function renderMetaInvest(investidoMes, media) {
+  const el = $('#metaCard');
+  const meta = +state.metaInvest || 0;
+  const nomeMes = MONTHS[+ui.month.slice(5) - 1];
+  if (!meta) {
+    el.innerHTML = `<h2>🎯 Meta de investimento</h2>
+      <p class="muted small">Quanto você quer investir por mês? A barra vai enchendo conforme você coloca dinheiro.${media > 0 ? ` Nos últimos 6 meses você investiu em média <b>${money(media)}</b> por mês.` : ''}</p>
+      <button type="button" class="btn solid" id="metaDefinir">Definir meta</button>`;
+  } else {
+    const pct = Math.min(100, investidoMes / meta * 100);
+    const falta = Math.max(0, meta - investidoMes);
+    const atual = ui.month === hojeKey();
+    const diasRest = atual ? daysInMonth(ui.month) - new Date().getDate() + 1 : 0;
+    // quantos meses seguidos (antes deste) bateram a meta
+    let seguidos = 0;
+    for (let k = shiftMonth(ui.month, -1); seguidos < 24; k = shiftMonth(k, -1)) {
+      if (sum(ofType(k, 'invest').filter(g => !g.resgate)) >= meta) seguidos++; else break;
+    }
+    const bateu = investidoMes >= meta;
+    el.innerHTML = `<div class="card-head"><h2>🎯 Meta de ${nomeMes}</h2><button type="button" class="link" id="metaDefinir">mudar</button></div>
+      <div class="meta-num"><b class="num">${money(investidoMes)}</b> <span class="muted">de ${money(meta)}</span><span class="meta-pct ${bateu ? 'ok' : ''}">${Math.round(investidoMes / meta * 100)}%</span></div>
+      <div class="meta-barra"><div class="meta-fill ${bateu ? 'ok' : ''}" style="width:${pct}%"></div></div>
+      <p class="small meta-txt">${bateu ? `🎉 <b>Meta batida!</b>${investidoMes > meta ? ` Você passou ${money(investidoMes - meta)}.` : ''}` : atual ? `Faltam <b>${money(falta)}</b>${diasRest > 7 ? ` — uns ${money(falta / Math.ceil(diasRest / 7))} por semana até o fim do mês` : ''}.` : `Faltaram ${money(falta)} neste mês.`}${seguidos >= 2 ? ` · 🔥 ${seguidos} meses seguidos batendo a meta` : ''}</p>`;
+  }
+  $('#metaDefinir').onclick = openMetaInvest;
+}
+function openMetaInvest() {
+  const meta = +state.metaInvest || 0;
+  openSheet(`<h3>🎯 Meta de investimento</h3>
+    <p class="muted small">Quanto você quer investir (guardar) todo mês? Conta tudo o que você coloca em investimentos no mês (o que você tira não desconta).</p>
+    <div class="field"><label>Meta por mês (R$)</label><input name="valor" inputmode="decimal" value="${meta ? String(meta).replace('.', ',') : ''}" placeholder="ex.: 200" required></div>
+    <div class="sheet-actions">${meta ? '<button class="btn danger" value="delete" formnovalidate>Tirar meta</button>' : '<span></span>'}<div class="right"><button class="btn" value="cancel" formnovalidate>Cancelar</button><button class="btn solid" value="save">Salvar</button></div></div>`,
+    (action, fd) => {
+      if (action === 'delete') { delete state.metaInvest; save(); render(); return; }
+      const v = parseAmount(String(fd.get('valor')).trim());
+      if (v == null) { toast('Valor inválido'); return false; }
+      state.metaInvest = v; save(); render(); toast(`Meta de ${money(v)} por mês salva 🎯`);
+    });
+}
+
 // Colocar dinheiro num investimento ou tirar dele (resgate). Não deixa tirar mais do que tem.
 function renderTesouroHoje() {
   const el = $('#tesHoje');
@@ -2449,6 +2519,7 @@ function init() {
   $('#addCat').onclick = () => openCategory(null);
   $('#invAdd').onclick = () => openMove(null, false);
   $('#invTake').onclick = () => openMove(null, true);
+  $('#invVerTodas').onclick = () => { ui.cat = ''; ui.search = ''; ui.tipoFiltro = 'invest'; go('list'); };
   $$('#tipoSeg button').forEach(b => b.onclick = () => {
     ui.tipoForce = ui.tipoForce === b.dataset.tipo ? null : b.dataset.tipo;
     if (pending) pending.catManual = false;
