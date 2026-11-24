@@ -68,7 +68,7 @@ const MONTHS_SHORT = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 's
 const KEY = 'gastos.v1';
 // Versão do código: tem que ser a mesma do <meta name="versao-app"> do index.html.
 // Se o celular juntar uma tela antiga com o código novo (memória/cache), o app se atualiza sozinho.
-const VERSAO_APP = '30';
+const VERSAO_APP = '31';
 let state = load();
 aplicarTema();
 let ui = { month: '', search: '', cat: '', tipoForce: null, tipoFiltro: 'tudo' };
@@ -1337,13 +1337,21 @@ function renderAnalysis() {
   const hasFlow = bal.some(b => b.entrou || b.investiu);
   $('#flowCard').hidden = !hasFlow;
   if (hasFlow) {
-    const series = [
-      { name: 'Entrou', cls: 's1', values: bal.map(b => b.entrou) },
-      { name: 'Gastou', cls: 's2', values: bal.map(b => b.gastou) },
-      { name: 'Investiu', cls: 's3', values: bal.map(b => Math.max(0, b.investiu)) },
-    ];
-    $('#flowChart').innerHTML = legendHtml(series) + groupedChart(series, keys.map(k => monthName(k, true)), keys.map(k => monthName(k)), { width: $('#flowChart').clientWidth || 320 });
-    $('#flowTable').innerHTML = `<table class="simple"><tr class="th"><td>Mês</td><td class="r">Entrou</td><td class="r">Gastou</td><td class="r">Investiu</td><td class="r">Sobrou</td></tr>${keys.map((k, i) => [k, bal[i]]).filter(([, b]) => b.entrou || b.gastou || b.investiu).map(([k, b]) => `<tr><td>${monthName(k, true)}</td><td class="r">${b.entrou ? Math.round(b.entrou).toLocaleString('pt-BR') : '—'}</td><td class="r">${Math.round(b.gastou).toLocaleString('pt-BR')}</td><td class="r">${b.investiu ? Math.round(b.investiu).toLocaleString('pt-BR') : '—'}</td><td class="r ${b.entrou && b.sobrou < 0 ? 'out' : ''}">${b.entrou ? (b.sobrou < 0 ? '−' : '') + Math.round(Math.abs(b.sobrou)).toLocaleString('pt-BR') : '—'}</td></tr>`).join('')}</table><p class="muted small" style="margin:6px 0 0">Valores em R$. “—” = nada anotado.</p>`;
+    // uma linha por mês: barra do que saiu (gasto + investido), tracinho no que entrou e quanto sobrou/faltou
+    const meses = keys.map((k, i) => [k, bal[i]]).filter(([, b]) => b.entrou || b.gastou || b.investiu).reverse();
+    const escala = Math.max(1, ...meses.map(([, b]) => Math.max(b.entrou, b.gastou + Math.max(0, b.investiu))));
+    $('#flowChart').innerHTML = `<div class="legend"><span><i class="sw s2"></i>Gastou</span><span><i class="sw s3"></i>Investiu</span><span><i class="sw-entrou"></i>Entrou</span></div>
+      <div class="fluxo">${meses.map(([k, b]) => {
+        const inv = Math.max(0, b.investiu);
+        const pg = b.gastou / escala * 100, pi = inv / escala * 100, pe = b.entrou / escala * 100;
+        const resto = b.entrou ? b.sobrou : null;
+        return `<div class="fluxo-mes ${k === ui.month ? 'atual' : ''}">
+          <div class="fluxo-top"><b>${monthName(k)}</b>${resto == null ? '<span class="muted small">sem entrada anotada</span>' : `<span class="fluxo-res ${resto >= 0 ? 'bom' : 'ruim'}">${resto >= 0 ? 'sobrou' : 'faltou'} ${money(Math.abs(resto))}</span>`}</div>
+          <div class="fluxo-barra"><span class="fl-g" style="width:${pg}%"></span><span class="fl-i" style="width:${pi}%"></span>${b.entrou ? `<i class="fl-entrou" style="left:${pe}%"></i>` : ''}</div>
+          <div class="fluxo-num small muted">entrou <b>${money(b.entrou)}</b> · gastou <b>${money(b.gastou)}</b>${inv ? ` · investiu <b>${money(inv)}</b>` : ''}${b.entrou ? ` · ${Math.round((b.gastou + inv) / b.entrou * 100)}% do que entrou` : ''}</div>
+        </div>`;
+      }).join('')}</div>`;
+    $('#flowTable').innerHTML = '';
   }
   bindTips();
 
