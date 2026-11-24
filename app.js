@@ -66,6 +66,9 @@ const MONTHS_SHORT = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 's
 
 // ───────────────────────── Estado & armazenamento ─────────────────────────
 const KEY = 'gastos.v1';
+// Versão do código: tem que ser a mesma do <meta name="versao-app"> do index.html.
+// Se o celular juntar uma tela antiga com o código novo (memória/cache), o app se atualiza sozinho.
+const VERSAO_APP = '30';
 let state = load();
 aplicarTema();
 let ui = { month: '', search: '', cat: '', tipoForce: null, tipoFiltro: 'tudo' };
@@ -1339,7 +1342,7 @@ function renderAnalysis() {
       { name: 'Gastou', cls: 's2', values: bal.map(b => b.gastou) },
       { name: 'Investiu', cls: 's3', values: bal.map(b => Math.max(0, b.investiu)) },
     ];
-    $('#flowChart').innerHTML = legendHtml(series) + multiLineChart(series, keys.map(k => monthName(k, true)), keys.map(k => monthName(k)), { width: $('#flowChart').clientWidth || 320, highlight: 5, titulo: 'Entradas, gastos e investimentos por mês' });
+    $('#flowChart').innerHTML = legendHtml(series) + groupedChart(series, keys.map(k => monthName(k, true)), keys.map(k => monthName(k)), { width: $('#flowChart').clientWidth || 320 });
     $('#flowTable').innerHTML = `<table class="simple"><tr class="th"><td>Mês</td><td class="r">Entrou</td><td class="r">Gastou</td><td class="r">Investiu</td><td class="r">Sobrou</td></tr>${keys.map((k, i) => [k, bal[i]]).filter(([, b]) => b.entrou || b.gastou || b.investiu).map(([k, b]) => `<tr><td>${monthName(k, true)}</td><td class="r">${b.entrou ? Math.round(b.entrou).toLocaleString('pt-BR') : '—'}</td><td class="r">${Math.round(b.gastou).toLocaleString('pt-BR')}</td><td class="r">${b.investiu ? Math.round(b.investiu).toLocaleString('pt-BR') : '—'}</td><td class="r ${b.entrou && b.sobrou < 0 ? 'out' : ''}">${b.entrou ? (b.sobrou < 0 ? '−' : '') + Math.round(Math.abs(b.sobrou)).toLocaleString('pt-BR') : '—'}</td></tr>`).join('')}</table><p class="muted small" style="margin:6px 0 0">Valores em R$. “—” = nada anotado.</p>`;
   }
   bindTips();
@@ -1854,6 +1857,7 @@ function renderInvest() {
 // Meta: quanto a pessoa quer investir por mês; a barra enche conforme ela coloca dinheiro.
 function renderMetaInvest(investidoMes, media) {
   const el = $('#metaCard');
+  if (!el) return;
   const meta = +state.metaInvest || 0;
   const nomeMes = MONTHS[+ui.month.slice(5) - 1];
   if (!meta) {
@@ -2481,7 +2485,21 @@ function toast(msg, actionLabel, action) {
 }
 
 // ───────────────────────── Inicialização ─────────────────────────
+// Tela e código de versões diferentes: baixa tudo de novo e recarrega (no máximo 2 vezes seguidas)
+function versaoTrocada() {
+  const vTela = (document.querySelector('meta[name=versao-app]') || {}).content;
+  let tent = 0;
+  try { tent = +sessionStorage.getItem('gastos.recarga') || 0; } catch { /* sem armazenamento */ }
+  if (vTela === VERSAO_APP || tent >= 2) { try { sessionStorage.removeItem('gastos.recarga'); } catch { } return false; }
+  try { sessionStorage.setItem('gastos.recarga', String(tent + 1)); } catch { }
+  const limpar = typeof caches !== 'undefined' ? caches.keys().then(ks => Promise.all(ks.map(k => caches.delete(k)))) : Promise.resolve();
+  Promise.all(['./', 'index.html', 'app.js', 'styles.css', 'sw.js'].map(u => fetch(u, { cache: 'reload' }).catch(() => {})))
+    .then(() => limpar).catch(() => {}).finally(() => location.reload());
+  return true;
+}
+
 function init() {
+  if (versaoTrocada()) return;
   ui.month = monthKey(new Date());
   $('#quickForm').addEventListener('submit', submitQuick);
   $('#micBtn').onclick = toggleMic;
@@ -2519,7 +2537,7 @@ function init() {
   $('#addCat').onclick = () => openCategory(null);
   $('#invAdd').onclick = () => openMove(null, false);
   $('#invTake').onclick = () => openMove(null, true);
-  $('#invVerTodas').onclick = () => { ui.cat = ''; ui.search = ''; ui.tipoFiltro = 'invest'; go('list'); };
+  if ($('#invVerTodas')) $('#invVerTodas').onclick = () => { ui.cat = ''; ui.search = ''; ui.tipoFiltro = 'invest'; go('list'); };
   $$('#tipoSeg button').forEach(b => b.onclick = () => {
     ui.tipoForce = ui.tipoForce === b.dataset.tipo ? null : b.dataset.tipo;
     if (pending) pending.catManual = false;
