@@ -6,7 +6,7 @@
   <title>Gastos</title>
   <meta name="description" content="Controle de gastos rápido: digite o gasto e ele já cai na categoria certa.">
   <meta name="theme-color" content="#f6f6f3" media="(prefers-color-scheme: light)">
-  <meta name="theme-color" content="#121211" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -53,6 +53,8 @@
         <div class="hero-stats" id="stats"></div>
       </div>
 
+      <div class="card" id="balance"></div>
+
       <div class="card">
         <div class="card-head"><h2>🧾 Últimos lançamentos</h2><button class="link" data-goto="list">ver todos</button></div>
         <ul class="tx-list" id="recentList"></ul>
@@ -69,7 +71,6 @@
         <p class="muted small meses-nota" id="mesesNota" hidden><i class="sw-fut"></i>Tracejado = o que você já tem para pagar (parcelas e fixos). Toque numa barra para abrir o mês.</p>
       </div>
 
-      <div class="card" id="balance"></div>
     </section>
 
     <!-- EXTRATO -->
@@ -157,6 +158,16 @@
 
     <!-- AJUSTES -->
     <section class="view" id="view-settings" aria-label="Ajustes">
+      <div class="card">
+        <h2>🎨 Aparência</h2>
+        <div class="seg small-seg" id="temaSeg" role="group" aria-label="Tema">
+          <button type="button" data-tema="sistema">📱 Automático</button>
+          <button type="button" data-tema="claro">☀️ Claro</button>
+          <button type="button" data-tema="escuro">🌙 Escuro</button>
+        </div>
+        <p class="muted small">Automático segue o tema do celular.</p>
+      </div>
+
       <div class="card">
         <div class="card-head"><h2>Categorias e orçamentos</h2><button class="link" id="addCat">+ nova</button></div>
         <p class="muted small">Toque numa categoria para mudar nome, emoji, orçamento mensal e palavras-chave.</p>

@@ -21,10 +21,10 @@
   --radius: 22px;
   --card: rgba(255, 255, 255, .72);
   --card-line: rgba(255, 255, 255, .9);
-  --glow-1: rgba(42, 120, 214, .06);
-  --glow-2: rgba(98, 80, 214, .04);
-  --hero-1: rgba(255, 255, 255, .5);
-  --hero-2: rgba(255, 255, 255, 0);
+  --glow-1: rgba(42, 120, 214, .16);
+  --glow-2: rgba(98, 80, 214, .10);
+  --hero-1: rgba(42, 120, 214, .14);
+  --hero-2: rgba(98, 80, 214, .06);
   --font: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 }
 @media (prefers-color-scheme: dark) {
@@ -33,8 +33,8 @@
     --bg: #000000;
     --surface: #161615;
     --card: rgba(255, 255, 255, .055); --card-line: rgba(255, 255, 255, .09);
-    --glow-1: rgba(120, 140, 170, .07); --glow-2: rgba(140, 130, 170, .045);
-    --hero-1: rgba(255, 255, 255, .035); --hero-2: rgba(255, 255, 255, 0);
+    --glow-1: rgba(57, 135, 229, .20); --glow-2: rgba(144, 133, 233, .14);
+    --hero-1: rgba(57, 135, 229, .26); --hero-2: rgba(144, 133, 233, .12);
     --surface-2: #262624;
     --ink: #f0efec;
     --ink-2: #c3c2b7;
@@ -56,8 +56,8 @@
   color-scheme: dark;
   --bg: #000000; --surface: #161615; --surface-2: #262624;
   --card: rgba(255, 255, 255, .055); --card-line: rgba(255, 255, 255, .09);
-  --glow-1: rgba(120, 140, 170, .07); --glow-2: rgba(140, 130, 170, .045);
-  --hero-1: rgba(255, 255, 255, .035); --hero-2: rgba(255, 255, 255, 0); --ink: #f0efec; --ink-2: #c3c2b7;
+  --glow-1: rgba(57, 135, 229, .20); --glow-2: rgba(144, 133, 233, .14);
+  --hero-1: rgba(57, 135, 229, .26); --hero-2: rgba(144, 133, 233, .12); --ink: #f0efec; --ink-2: #c3c2b7;
   --muted: #898781; --line: rgba(255,255,255,.10); --grid: #2c2c2a; --axis: #383835;
   --accent: #3987e5; --accent-soft: #184f95; --series: #3987e5; --series-dim: #1c5cab;
   --good: #0ca30c; --critical: #e66767; --shadow: none;
@@ -522,3 +522,12 @@ a.btn { display: inline-flex; align-items: center; justify-content: center; text
 @keyframes crescer { from { transform: scaleY(0); } to { transform: scaleY(1); } }
 @keyframes surgir { from { opacity: 0; transform: scale(.92) rotate(-8deg); } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) { .chart svg .bar, .chart .pizza svg { animation: none; } }
+
+/* Seções na mesma tela, sem quadrados: só uma linha fina separando */
+.view > .card:not(.hero) {
+  background: none; border: 0; box-shadow: none; border-radius: 0;
+  backdrop-filter: none; -webkit-backdrop-filter: none;
+  margin: 0; padding: 20px 4px; border-top: 1px solid var(--line);
+}
+.view > .card:first-child, .view > .card.hero + .card, .view > [hidden] + .card:not(.hero) { border-top: 0; }
+.view > .card.hero { margin-bottom: 6px; }

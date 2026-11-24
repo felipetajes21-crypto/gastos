@@ -67,6 +67,7 @@ const MONTHS_SHORT = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 's
 // ───────────────────────── Estado & armazenamento ─────────────────────────
 const KEY = 'gastos.v1';
 let state = load();
+aplicarTema();
 let ui = { month: '', search: '', cat: '', tipoForce: null, tipoFiltro: 'tudo' };
 
 function freshState() {
@@ -86,6 +87,20 @@ function save() {
   try { localStorage.setItem(KEY, JSON.stringify(state)); }
   catch (e) { toast('Não consegui salvar — faça um backup!'); }
   atualizarWidget();
+}
+
+// ───────────────────────── Tema ─────────────────────────
+// 'sistema' (segue o celular), 'claro' ou 'escuro'
+function aplicarTema() {
+  if (typeof document === 'undefined') return;
+  const t = state.tema || 'sistema';
+  const root = document.documentElement;
+  if (t === 'claro') root.dataset.theme = 'light';
+  else if (t === 'escuro') root.dataset.theme = 'dark';
+  else delete root.dataset.theme;
+  const escuro = t === 'escuro' || (t === 'sistema' && typeof matchMedia !== 'undefined' && matchMedia('(prefers-color-scheme: dark)').matches);
+  document.querySelectorAll('meta[name=theme-color]').forEach(m => { m.content = escuro ? '#000000' : '#f6f6f3'; m.removeAttribute('media'); });
+  document.querySelectorAll('#temaSeg button').forEach(b => { const sel = b.dataset.tema === t; b.classList.toggle('sel', sel); b.setAttribute('aria-pressed', sel); });
 }
 
 // ───────────────────────── App Android (widget) ─────────────────────────
@@ -2317,6 +2332,9 @@ function init() {
   ui.month = monthKey(new Date());
   $('#quickForm').addEventListener('submit', submitQuick);
   $('#micBtn').onclick = toggleMic;
+  $$('#temaSeg button').forEach(b => b.onclick = () => { state.tema = b.dataset.tema; save(); aplicarTema(); render(); });
+  aplicarTema();
+  if (typeof matchMedia !== 'undefined') matchMedia('(prefers-color-scheme: dark)').addEventListener('change', aplicarTema);
   $('#trendPrev').onclick = () => { ui.mesesDesloc = (ui.mesesDesloc || 0) - 6; renderMesesAnalise(); };
   $('#trendNext').onclick = () => { ui.mesesDesloc = (ui.mesesDesloc || 0) + 6; renderMesesAnalise(); };
   $('#trendHoje').onclick = () => { ui.mesesDesloc = 0; renderMesesAnalise(); };
