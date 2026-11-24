@@ -624,3 +624,12 @@ a.btn { display: inline-flex; align-items: center; justify-content: center; text
 .fluxo-num { margin-top: 6px; line-height: 1.5; }
 .fluxo-num b { color: var(--ink-2); font-weight: 600; }
 .sw-entrou { display: inline-block; width: 3px; height: 12px; border-radius: 2px; background: var(--ink); margin-right: 6px; vertical-align: -1px; }
+
+/* Carrossel: arrastar para o lado para ver o outro gráfico */
+.carrossel { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain; }
+.carrossel::-webkit-scrollbar { display: none; }
+.carrossel .slide { flex: 0 0 100%; min-width: 0; scroll-snap-align: start; }
+.slide-t { font-size: 13px; font-weight: 700; color: var(--ink-2); text-transform: uppercase; letter-spacing: .04em; margin-bottom: 6px; }
+.dots { display: flex; justify-content: center; gap: 8px; margin-top: 10px; }
+.dots button { width: 8px; height: 8px; padding: 0; border: 0; border-radius: 4px; background: var(--line); transition: width .2s, background .2s; }
+.dots button.sel { width: 22px; background: var(--accent); }

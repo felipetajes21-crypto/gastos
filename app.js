@@ -68,7 +68,7 @@ const MONTHS_SHORT = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 's
 const KEY = 'gastos.v1';
 // Versão do código: tem que ser a mesma do <meta name="versao-app"> do index.html.
 // Se o celular juntar uma tela antiga com o código novo (memória/cache), o app se atualiza sozinho.
-const VERSAO_APP = '31';
+const VERSAO_APP = '32';
 let state = load();
 aplicarTema();
 let ui = { month: '', search: '', cat: '', tipoForce: null, tipoFiltro: 'tudo' };
@@ -1326,6 +1326,9 @@ function renderAnalysis() {
   const dTips = daily.map((v, i) => [`até ${i + 1} de ${monthName(ui.month, true)}${v ? ` · ${money(v)} no dia` : ''}${temPrev ? ` · mês passado: ${money(comparar[i])}` : ''}`, acum[i]]);
   $('#dailyChart').innerHTML = s.total ? lineChart(acum, dLabels, dTips, { width: $('#dailyChart').clientWidth, limitTo: s.isCurrent ? s.elapsed : s.dim, labelEvery: 5, cor: 's2', dots: false, comparar: temPrev ? comparar : null, ref: s.budget ? { valor: s.budget, texto: `orçamento ${money(s.budget)}` } : null }) : '<div class="empty">Sem dados.</div>';
   $('#dailyLegenda').hidden = !s.total;
+  // segundo gráfico (arrastando para o lado): quanto gastou em cada dia
+  const tipsDia = daily.map((v, i) => [`${i + 1} de ${monthName(ui.month, true)}`, v]);
+  $('#dailyBars').innerHTML = s.total ? columnChart(daily, dLabels, tipsDia, { width: $('#dailyBars').clientWidth || $('#dailyChart').clientWidth, avg: s.avg, limitTo: s.isCurrent ? s.elapsed : s.dim, labelEvery: 5, cls: 's2' }) : '<div class="empty">Sem dados.</div>';
   $('#dailyLegenda').innerHTML = `<span><i class="lg-ln" style="background:var(--s2)"></i>este mês</span>${temPrev ? '<span><i class="lg-ln comp"></i>mês passado</span>' : ''}${s.budget ? '<span><i class="lg-ln ref"></i>orçamento</span>' : ''}`;
 
   // Gastos por mês (com setas)
@@ -2511,6 +2514,15 @@ function init() {
   ui.month = monthKey(new Date());
   $('#quickForm').addEventListener('submit', submitQuick);
   $('#micBtn').onclick = toggleMic;
+  // carrossel dos gráficos do mês: bolinhas acompanham o arrasto e levam ao gráfico
+  const car = $('#diaCarrossel');
+  if (car) {
+    car.addEventListener('scroll', () => {
+      const i = Math.round(car.scrollLeft / Math.max(1, car.clientWidth));
+      $$('#diaDots button').forEach(b => b.classList.toggle('sel', +b.dataset.i === i));
+    }, { passive: true });
+    $$('#diaDots button').forEach(b => b.onclick = () => car.scrollTo({ left: +b.dataset.i * car.clientWidth, behavior: 'smooth' }));
+  }
   $$('#temaSeg button').forEach(b => b.onclick = () => { state.tema = b.dataset.tema; save(); aplicarTema(); render(); });
   aplicarTema();
   if (typeof matchMedia !== 'undefined') matchMedia('(prefers-color-scheme: dark)').addEventListener('change', aplicarTema);

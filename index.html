@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Gastos</title>
-  <meta name="versao-app" content="31">
+  <meta name="versao-app" content="32">
   <meta name="description" content="Controle de gastos rápido: digite o gasto e ele já cai na categoria certa.">
   <meta name="theme-color" content="#f6f6f3" media="(prefers-color-scheme: light)">
   <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
@@ -108,9 +108,19 @@
         <div id="catChart"></div>
       </div>
       <div class="card">
-        <h2>📅 Gasto ao longo do mês</h2>
-        <div class="legend" id="dailyLegenda" hidden></div>
-        <div id="dailyChart" class="chart"></div>
+        <div class="card-head"><h2>📅 Gastos do mês</h2><span class="muted small">arraste para o lado ›</span></div>
+        <div class="carrossel" id="diaCarrossel">
+          <div class="slide">
+            <div class="slide-t">Ao longo do mês</div>
+            <div class="legend" id="dailyLegenda" hidden></div>
+            <div id="dailyChart" class="chart"></div>
+          </div>
+          <div class="slide">
+            <div class="slide-t">Por dia</div>
+            <div id="dailyBars" class="chart"></div>
+          </div>
+        </div>
+        <div class="dots" id="diaDots"><button type="button" data-i="0" class="sel" aria-label="Ao longo do mês"></button><button type="button" data-i="1" aria-label="Por dia"></button></div>
       </div>
       <div class="card">
         <div class="card-head"><h2>📊 Gastos por mês</h2>
