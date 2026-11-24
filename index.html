@@ -43,24 +43,20 @@
       </div>
       <button type="button" class="mic-stop" id="micStop" hidden>■ Ouvindo… toque para parar</button>
       <div class="preview" id="preview" hidden></div>
-      <div class="hint" id="quickHint">Escreva ou toque no 🎤 e fale: <b>“gastei vinte e três no uber ontem”</b>, <b>uber 23 ontem pix</b>, <b>tênis 300 3x</b>, <b>conta 3x de 70</b>, <b>recebi salário 1500</b>, <b>guardei 100 na caixinha</b>, <b>resgatei 50 da poupança</b>. Vários de uma vez também: <b>uber 20, ifood 35 e mercado 150</b>. O tipo é detectado sozinho — ou toque acima para escolher.</div>
+      <div class="hint" id="quickHint">Digite como falaria: <b>mercado 87,90</b> · <b>uber 23 pix</b> · <b>tênis 300 3x</b> · <b>recebi mesada 300</b></div>
 
       <div class="card hero">
         <div class="hero-label" id="heroLabel">Gasto no mês</div>
-        <div class="hero-value" id="heroTotal">R$ 0,00</div>
+        <div class="hero-value num" id="heroTotal">R$ 0,00</div>
         <div class="hero-sub" id="heroSub"></div>
         <div class="budget" id="heroBudget"></div>
+        <div class="hero-stats" id="stats"></div>
       </div>
-
-      <div class="card" id="balance"></div>
 
       <div class="card">
-        <div class="card-head"><h2>📊 Gastos por mês</h2><button class="link" data-goto="analysis">ver análise</button></div>
-        <div id="mesesChart" class="chart"></div>
-        <p class="muted small meses-nota" id="mesesNota" hidden><i class="sw-fut"></i>Meses que ainda não chegaram: o que você já tem para pagar (parcelas e fixos). Toque numa barra para abrir o mês.</p>
+        <div class="card-head"><h2>🧾 Últimos lançamentos</h2><button class="link" data-goto="list">ver todos</button></div>
+        <ul class="tx-list" id="recentList"></ul>
       </div>
-
-      <div class="stats" id="stats"></div>
 
       <div class="card">
         <div class="card-head"><h2>🥧 Por categoria</h2><button class="link" data-goto="analysis">ver análise</button></div>
@@ -68,9 +64,12 @@
       </div>
 
       <div class="card">
-        <div class="card-head"><h2>Últimos lançamentos</h2><button class="link" data-goto="list">ver todos</button></div>
-        <ul class="tx-list" id="recentList"></ul>
+        <div class="card-head"><h2>📊 Gastos por mês</h2><button class="link" data-goto="analysis">ver análise</button></div>
+        <div id="mesesChart" class="chart"></div>
+        <p class="muted small meses-nota" id="mesesNota" hidden><i class="sw-fut"></i>Tracejado = o que você já tem para pagar (parcelas e fixos). Toque numa barra para abrir o mês.</p>
       </div>
+
+      <div class="card" id="balance"></div>
     </section>
 
     <!-- EXTRATO -->

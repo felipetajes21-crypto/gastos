@@ -588,12 +588,30 @@ const sumSigned = arr => Math.round(arr.reduce((a, g) => a + signed(g), 0) * 100
 const sum = arr => Math.round(arr.reduce((a, g) => a + g.valor, 0) * 100) / 100;
 
 // ───────────────────────── Entrada rápida ─────────────────────────
+// a linha de exemplos embaixo da caixa some depois dos primeiros lançamentos
+const mostrarDica = () => state.gastos.length < 5;
+
+// número que "conta" até o valor novo (respeita quem prefere menos movimento)
+function animarValor(el, valor, prefixo = '') {
+  const de = +el.dataset.v || 0;
+  el.dataset.v = valor;
+  const calmo = typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (calmo || de === valor || typeof requestAnimationFrame === 'undefined') { el.textContent = prefixo + money(valor); return; }
+  const t0 = performance.now(), dur = 550;
+  cancelAnimationFrame(+el.dataset.raf || 0);
+  const passo = t => {
+    const p = Math.min(1, (t - t0) / dur), e = 1 - Math.pow(1 - p, 3);
+    el.textContent = prefixo + money(de + (valor - de) * e);
+    if (p < 1) el.dataset.raf = requestAnimationFrame(passo);
+  };
+  el.dataset.raf = requestAnimationFrame(passo);
+}
 let pending = null; // { parsed, cat, catManual }
 
 function updatePreview() {
   const text = $('#quickInput').value;
   const box = $('#preview');
-  if (!text.trim()) { box.hidden = true; $('#quickHint').hidden = false; pending = null; multi = null; return; }
+  if (!text.trim()) { box.hidden = true; $('#quickHint').hidden = !mostrarDica(); pending = null; multi = null; return; }
   const items = parseMany(text);
   if (items.length > 1) { pending = null; renderMulti(items); return; }
   multi = null;
@@ -732,6 +750,7 @@ function submitQuick(e) {
   updatePreview();
   updateSeg(null);
   if (voz.falou) { falar(msg.replace(/^\S+\s/, '')); voz.falou = false; }
+  if (navigator.vibrate) navigator.vibrate(12);
   toast(msg, 'desfazer', () => {
     const ids = new Set(created.map(g => g.id));
     state.gastos = state.gastos.filter(g => !ids.has(g.id));
@@ -1018,11 +1037,11 @@ function renderMesesAnalise() {
 const PIZZA_CORES = ['var(--s1)', 'var(--s2)', 'var(--s3)', 'var(--s4)', 'var(--s5)', 'var(--s6)', 'var(--s7)'];
 const COR_OUTRAS = 'var(--s-outros)';
 function catPizza(items, total, opt = {}) {
-  const max = opt.max || 5;
   const todas = byCategory(items);
+  const max = todas.length === (opt.max || 5) + 1 ? todas.length : (opt.max || 5);
   const fatias = todas.slice(0, max);
   const resto = todas.slice(max);
-  const pedacos = fatias.map((f, i) => ({ ...f, cor: PIZZA_CORES[i] }));
+  const pedacos = fatias.map((f, i) => ({ ...f, cor: PIZZA_CORES[i] || COR_OUTRAS }));
   if (resto.length) pedacos.push({ id: '', outras: true, cor: COR_OUTRAS, cat: { emoji: '➕', nome: `Outras ${resto.length} categoria${resto.length > 1 ? 's' : ''}` }, valor: Math.round(resto.reduce((s, c) => s + c.valor, 0) * 100) / 100 });
   const R = 62, C = 2 * Math.PI * R, gap = pedacos.length > 1 ? 2 : 0;
   let acc = 0;
@@ -1046,10 +1065,10 @@ function catPizza(items, total, opt = {}) {
     // Análise: todas as categorias (com orçamento), na cor da fatia
     const cats = todas.slice();
     for (const c of state.categorias) if (+c.orcamento > 0 && tipoCat(c) === 'gasto' && !cats.some(x => x.id === c.id)) cats.push({ cat: c, id: c.id, valor: 0 });
-    const cores = Object.fromEntries(cats.map((c, i) => [c.id, i < max ? PIZZA_CORES[i] : COR_OUTRAS]));
+    const cores = Object.fromEntries(cats.map((c, i) => [c.id, i < max ? PIZZA_CORES[i] || COR_OUTRAS : COR_OUTRAS]));
     lista = `<div class="pizza-lista">${catBars(cats, total, true, cores)}</div>`;
   } else {
-    lista = '<div class="cat-bars pizza-lista">' + fatias.map((f, i) => linha(f, PIZZA_CORES[i])).join('') +
+    lista = '<div class="cat-bars pizza-lista">' + fatias.map((f, i) => linha(f, PIZZA_CORES[i] || COR_OUTRAS)).join('') +
       (resto.length ? `<button type="button" class="pz-mais" data-outras="1" aria-expanded="false"><span class="name"><i class="pz-dot" style="background:${COR_OUTRAS}"></i>➕ Outras ${resto.length} categoria${resto.length > 1 ? 's' : ''} <span class="pz-seta">▾</span></span><span class="val">${money(pedacos[pedacos.length - 1].valor)}<small>${total ? Math.round(pedacos[pedacos.length - 1].valor / total * 100) : 0}%</small></span></button>
         <div class="pz-outras" hidden>${resto.map(f => linha(f, COR_OUTRAS)).join('')}</div>` : '') + '</div>';
   }
@@ -1108,7 +1127,7 @@ function renderHome() {
   renderMeses($('#mesesChart'));
   if (futuro) {
     const p = previsaoMes(ui.month);
-    $('#heroTotal').textContent = money(p.total);
+    animarValor($('#heroTotal'), p.total);
     $('#heroSub').innerHTML = [p.parcelas ? `${money(p.parcelas)} em parcelas` : '', p.fixos ? `${money(p.fixos)} em fixos (${fixosPrevistos(ui.month).map(f => escapeHtml(f.desc)).join(', ')})` : ''].filter(Boolean).join(' · ') || 'Nada a pagar ainda neste mês.';
     $('#heroBudget').innerHTML = '';
     $('#homeCats').innerHTML = s.items.length ? catPizza(s.items, s.total) : '<div class="empty">Sem parcelas neste mês.</div>';
@@ -1120,7 +1139,8 @@ function renderHome() {
     bindTx($('#recentList'));
     return;
   }
-  $('#heroTotal').textContent = money(s.total);
+  animarValor($('#heroTotal'), s.total);
+  $('#quickHint').hidden = !mostrarDica() || !!$('#quickInput').value.trim();
   let sub = '';
   if (s.prevSame > 0) {
     const pct = Math.round((s.total - s.prevSame) / s.prevSame * 100);
@@ -1138,15 +1158,17 @@ function renderHome() {
   } else hb.innerHTML = '';
 
   const stats = [];
-  stats.push(['Média/dia', moneyShort(s.avg)]);
-  if (s.isCurrent) stats.push(['Previsão do mês', moneyShort(s.projection)]);
-  else stats.push(['Mês anterior', moneyShort(s.prevTotal)]);
+  stats.push(['Média/dia', moneyShort(s.avg), '']);
+  if (s.isCurrent) stats.push(['Previsão', moneyShort(s.projection), s.budget && s.projection > s.budget ? 'ruim' : '']);
+  else stats.push(['Mês anterior', moneyShort(s.prevTotal), '']);
+  const bal = balanceOf(ui.month);
   if (s.isCurrent && s.budget > 0) {
     const left = Math.max(0, s.budget - s.total);
     const daysLeft = s.dim - s.elapsed + 1;
-    stats.push(['Pode gastar/dia', moneyShort(left / daysLeft)]);
-  } else stats.push(['Lançamentos', String(s.items.length)]);
-  $('#stats').innerHTML = stats.map(([k, v]) => `<div class="stat"><div class="k">${k}</div><div class="v num">${v}</div></div>`).join('');
+    stats.push(['Pode gastar/dia', moneyShort(left / daysLeft), left > 0 ? 'bom' : 'ruim']);
+  } else if (bal.entrou > 0) stats.push([bal.sobrou >= 0 ? 'Sobrou' : 'Faltou', moneyShort(Math.abs(bal.sobrou)), bal.sobrou >= 0 ? 'bom' : 'ruim']);
+  else stats.push(['Lançamentos', String(s.items.length), '']);
+  $('#stats').innerHTML = stats.map(([k, v, cls]) => `<div class="stat"><div class="k">${k}</div><div class="v num ${cls}">${v}</div></div>`).join('');
 
   $('#homeCats').innerHTML = s.items.length ? catPizza(s.items, s.total) : '<div class="empty">Seus gastos por categoria aparecem aqui.</div>';
   bindCatBars($('#homeCats'));
@@ -1155,7 +1177,7 @@ function renderHome() {
 
   renderBalance(ui.month, $('#balance'));
 
-  const recent = [...allMonth(ui.month)].sort((a, b) => b.data.localeCompare(a.data) || b.criado - a.criado).slice(0, 6);
+  const recent = [...allMonth(ui.month)].sort((a, b) => b.data.localeCompare(a.data) || b.criado - a.criado).slice(0, 5);
   $('#recentList').innerHTML = recent.length ? recent.map(txRow).join('') : '<li class="empty">Digite seu primeiro gasto lá em cima ☝️</li>';
   bindTx($('#recentList'));
 }
