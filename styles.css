@@ -19,11 +19,11 @@
   --axis: #c3c2b7;
   --accent: #2a78d6;
   --accent-soft: #cde2fb;
-  --series: #5f8fd3;
-  --series-dim: #b7cdee;
+  --series: #2a78d6;
+  --series-dim: #9ec5f4;
   --good: #006300;
   --critical: #d03b3b;
-  --s1: #5f8fd3; --s2: #e0825f; --s3: #4fae8c; --s4: #8a7fd8; --s5: #d9a441; --s6: #c77bb0; --s7: #93a43c; --s-outros: #c4c3bd;
+  --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a; --s4: #eda100; --s5: #e87ba4; --s6: #008300; --s7: #6250d6; --s-outros: #b5b4ae;
   --warning: #fab219;
   --shadow: 0 1px 2px rgba(0,0,0,.04), 0 8px 24px rgba(20,30,60,.06);
   --radius: 22px;
@@ -52,12 +52,12 @@
     --axis: #383835;
     --accent: #3987e5;
     --accent-soft: #184f95;
-    --series: #5b8cd4;
-    --series-dim: #2c4568;
+    --series: #3987e5;
+    --series-dim: #1c5cab;
     --good: #0ca30c;
     --critical: #e66767;
     --shadow: none;
-    --s1: #5b8cd4; --s2: #d4784f; --s3: #43a580; --s4: #8276d3; --s5: #b98d33; --s6: #bd71a8; --s7: #87993a; --s-outros: #4f4e4a;
+    --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500; --s5: #d55181; --s6: #0ca30c; --s7: #9085e9; --s-outros: #5e5d58;
   }
 }
 :root[data-theme="dark"] {
@@ -67,9 +67,9 @@
   --glow-1: rgba(57, 135, 229, .20); --glow-2: rgba(144, 133, 233, .14);
   --hero-1: rgba(57, 135, 229, .26); --hero-2: rgba(144, 133, 233, .12); --ink: #f0efec; --ink-2: #c3c2b7;
   --muted: #898781; --line: rgba(255,255,255,.10); --grid: #2c2c2a; --axis: #383835;
-  --accent: #3987e5; --accent-soft: #184f95; --series: #5b8cd4; --series-dim: #2c4568;
+  --accent: #3987e5; --accent-soft: #184f95; --series: #3987e5; --series-dim: #1c5cab;
   --good: #0ca30c; --critical: #e66767; --shadow: none;
-  --s1: #5b8cd4; --s2: #d4784f; --s3: #43a580; --s4: #8276d3; --s5: #b98d33; --s6: #bd71a8; --s7: #87993a; --s-outros: #4f4e4a;
+  --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500; --s5: #d55181; --s6: #0ca30c; --s7: #9085e9; --s-outros: #5e5d58;
 }
 
 * { box-sizing: border-box; }
@@ -560,3 +560,24 @@ a.btn { display: inline-flex; align-items: center; justify-content: center; text
 @keyframes surgir-area { from { opacity: 0; } to { opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .chart .ln.desenha { animation: none; stroke-dasharray: none; stroke-dashoffset: 0; } .chart .area { animation: none; } }
 .sw-fut { border-color: var(--s1); background: none; border-radius: 50%; }
+
+/* Linha curva: anel no ponto escolhido, pílula no mês, valores em cima */
+.chart .ln { stroke-width: 3; }
+.chart .drop { stroke: var(--ink); stroke-opacity: .10; stroke-width: 1; }
+.chart .drop.sel { stroke-opacity: .25; }
+.chart .halo { opacity: .22; }
+.chart .dot { stroke: var(--bg); stroke-width: 2.5; }
+.chart .dot.sel { stroke: #fff; stroke-width: 3; }
+.chart text.topo { font-size: 12px; fill: var(--muted); font-weight: 600; }
+.chart text.topo.sel { font-size: 14px; fill: var(--ink); font-weight: 800; }
+.chart text.topo.fut { font-style: italic; }
+.chart .pilula-t { fill: #fff; font-weight: 700; font-size: 12px; }
+
+/* Gasto ao longo do mês: comparação e orçamento */
+.chart .ln.comp { stroke: var(--muted); stroke-width: 2; stroke-dasharray: 4 5; opacity: .7; animation: none; }
+.chart .ref { stroke: var(--critical); stroke-width: 1.2; stroke-dasharray: 3 4; opacity: .8; }
+.chart text.ref-t { fill: var(--critical); }
+.lg-ln { display: inline-block; width: 16px; height: 3px; border-radius: 2px; vertical-align: middle; margin-right: 6px; }
+.lg-ln.comp { background: repeating-linear-gradient(90deg, var(--muted) 0 4px, transparent 4px 7px); }
+.lg-ln.ref { background: repeating-linear-gradient(90deg, var(--critical) 0 3px, transparent 3px 6px); }
+#dailyLegenda span { margin-right: 14px; }
