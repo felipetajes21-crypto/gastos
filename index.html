@@ -126,21 +126,6 @@
       </div>
     </section>
 
-    <!-- ASSISTENTE -->
-    <section class="view" id="view-assistente" aria-label="Assistente">
-      <div class="chat-head">
-        <div class="chat-head-l"><b>🤖 Assistente de finanças</b><span class="muted small">grátis, funciona sem internet e usa só os dados do seu celular</span></div>
-        <div class="chat-head-r"><button type="button" class="link" id="iaNova">nova conversa</button></div>
-      </div>
-      <div class="chat-msgs" id="chatMsgs" aria-live="polite"></div>
-      <div class="chat-sugestoes" id="chatSugestoes"></div>
-      <form class="quick chat-form" id="chatForm" autocomplete="off">
-        <label for="chatInput" class="sr-only">Pergunta</label>
-        <input id="chatInput" enterkeyhint="send" placeholder="Pergunte algo… ex.: onde posso gastar menos?">
-        <button type="submit" class="primary" aria-label="Enviar">➤</button>
-      </form>
-    </section>
-
     <!-- INVESTIMENTOS -->
     <section class="view" id="view-invest" aria-label="Investimentos">
       <div class="card hero">
@@ -236,7 +221,6 @@
   <nav class="tabbar" aria-label="Navegação">
     <button class="tab active" data-view="home"><span>🏠</span>Início</button>
     <button class="tab" data-view="list"><span>📋</span>Extrato</button>
-    <button class="tab" data-view="assistente"><span>🤖</span>Assistente</button>
     <button class="tab" data-view="analysis"><span>📊</span>Análise</button>
     <button class="tab" data-view="invest"><span>📈</span>Investir</button>
     <button class="tab" data-view="settings"><span>⚙️</span>Ajustes</button>
@@ -251,6 +235,5 @@
   <div class="tooltip" id="tooltip" hidden></div>
 
   <script src="app.js"></script>
-  <script src="assistente.js"></script>
 </body>
 </html>

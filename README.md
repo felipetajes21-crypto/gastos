@@ -66,17 +66,6 @@ Compra parcelada já cai em todos os meses: `tênis 300 3x` lança R$ 100 agora 
 - **Análise → A pagar nos próximos meses:** detalhe mês a mês, quanto falta pagar e quando termina a última parcela.
 - A seta **›** do topo vai até os meses futuros: lá aparece **“A pagar em dezembro”** com as parcelas e os fixos previstos.
 
-### Assistente 🤖
-
-Aba **Assistente**: pergunte do seu jeito e ele responde com os seus números (sem internet, nada sai do celular):
-
-- “como estou esse mês?” · “onde posso gastar menos?” (com quanto dá para economizar por mês e por ano)
-- “quanto gastei com ifood mês passado?” · “maiores gastos do mês”
-- “consigo comprar um tênis de 300?” (vê o que sobra no mês e o efeito de parcelar)
-- “monte um orçamento pra mim” (sugere limites por categoria e aplica com um toque)
-- “quero juntar 1000 até março” · “quanto tenho pra pagar mês que vem?” · “quais assinaturas eu pago?”
-- Digite um gasto (“uber 23 pix”) e ele oferece anotar.
-
 
 ## O que tem
 
@@ -132,7 +121,6 @@ Tudo fica salvo **só no aparelho** (localStorage), sem servidor e sem conta. Po
 index.html            estrutura das telas
 styles.css            visual (tema claro/escuro automático)
 app.js                lógica: leitura do texto, categorização, gráficos, importação
-assistente.js         aba Assistente (perguntas sobre os gastos)
 sw.js                 funcionamento offline
 manifest.webmanifest  instalação como app
 icons/                ícones
