@@ -1026,9 +1026,9 @@ function renderMeses(el, centro = ui.month, nota = $('#mesesNota')) {
   const futFrom = keys.findIndex(k => k > hoje);
   const temPrevisto = keys.some((k, i) => k > hoje && vals[i]);
   if (!vals.some(v => v)) { el.innerHTML = '<div class="empty">Sem gastos nesses meses.</div>'; nota.hidden = true; return keys; }
-  el.innerHTML = columnChart(vals, keys.map(k => monthName(k, true)),
+  el.innerHTML = lineChart(vals, keys.map(k => monthName(k, true)),
     keys.map((k, i) => [k > hoje ? `${monthName(k)} · a pagar (previsto)` : monthName(k), vals[i]]),
-    { width: el.clientWidth || 320, valueLabels: true, highlight: keys.indexOf(ui.month) < 0 ? -1 : keys.indexOf(ui.month), futureFrom: futFrom < 0 ? null : futFrom, keys });
+    { width: el.clientWidth || 320, valueLabels: true, highlight: keys.indexOf(ui.month) < 0 ? -1 : keys.indexOf(ui.month), futureFrom: futFrom < 0 ? null : futFrom, keys, cor: 's1' });
   nota.hidden = !temPrevisto;
   $$('.hit[data-key]', el).forEach(r => r.addEventListener('click', () => { if (r.dataset.key !== ui.month) { ui.month = r.dataset.key; ui.mesesDesloc = 0; render(); } }));
   bindTips();
@@ -1313,7 +1313,7 @@ function renderAnalysis() {
   for (const g of s.items) daily[+g.data.slice(8) - 1] += g.valor;
   const dLabels = daily.map((_, i) => String(i + 1));
   const dTips = daily.map((v, i) => [`${i + 1} de ${monthName(ui.month, true)}`, v]);
-  $('#dailyChart').innerHTML = s.total ? columnChart(daily, dLabels, dTips, { width: $('#dailyChart').clientWidth, avg: s.avg, limitTo: s.isCurrent ? s.elapsed : s.dim, labelEvery: 5, cls: 's2' }) : '<div class="empty">Sem dados.</div>';
+  $('#dailyChart').innerHTML = s.total ? lineChart(daily, dLabels, dTips, { width: $('#dailyChart').clientWidth, avg: s.avg, limitTo: s.isCurrent ? s.elapsed : s.dim, labelEvery: 5, cor: 's2', dots: false }) : '<div class="empty">Sem dados.</div>';
 
   // Gastos por mês (com setas)
   renderMesesAnalise();
@@ -1409,6 +1409,46 @@ function columnChart(values, labels, tips, opt = {}) {
     svg += `<rect class="hit" x="${padL + step * i}" y="${padT}" width="${step}" height="${H - padT}" data-tip="${escapeHtml(tips[i][0])}" data-val="${tips[i][1]}"${opt.keys ? ` data-key="${opt.keys[i]}"` : ''} tabindex="-1"/>`;
     if (!opt.labelEvery || i === 0 || (i + 1) % opt.labelEvery === 0) svg += `<text x="${cx}" y="${H - 6}" text-anchor="middle">${escapeHtml(labels[i])}</text>`;
     if (opt.valueLabels && v > 0) svg += `<text class="lbl" x="${cx}" y="${y(v) - 6}" text-anchor="middle">${Math.round(v).toLocaleString('pt-BR')}</text>`;
+  });
+  if (opt.avg) svg += `<line class="avg" x1="${padL}" x2="${W - padR}" y1="${y(opt.avg)}" y2="${y(opt.avg)}"/><text x="${W - padR}" y="${Math.max(10, y(opt.avg) - 4)}" text-anchor="end">média/dia ${escapeHtml(money(opt.avg))}</text>`;
+  svg += `<line class="base" x1="${padL}" x2="${W - padR}" y1="${H - padB}" y2="${H - padB}"/></svg>`;
+  return svg;
+}
+// Gráfico de linha: uma série, pontos clicáveis, área suave embaixo, parte futura tracejada.
+let gradN = 0;
+function lineChart(values, labels, tips, opt = {}) {
+  const W = Math.max(260, opt.width || 600), H = 180, padL = 6, padR = 6, padT = opt.valueLabels ? 26 : 12, padB = 22;
+  const n = values.length;
+  const max = Math.max(...values, opt.avg || 0, 1) * 1.08;
+  const step = (W - padL - padR) / n;
+  const x = i => padL + step * i + step / 2;
+  const y = v => padT + (H - padT - padB) * (1 - v / max);
+  const cor = `var(--${opt.cor || 's1'})`;
+  const fimReal = Math.min(n, opt.limitTo != null ? opt.limitTo : n, opt.futureFrom != null ? opt.futureFrom : n); // pontos "de verdade"
+  const id = 'g' + (++gradN);
+  let svg = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Gráfico de linha"><defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:${cor};stop-opacity:.18"/><stop offset="1" style="stop-color:${cor};stop-opacity:0"/></linearGradient></defs>`;
+  for (const f of [0.5, 1]) svg += `<line class="grid" x1="${padL}" x2="${W - padR}" y1="${y(max / 1.08 * f)}" y2="${y(max / 1.08 * f)}"/>`;
+  const pts = values.map((v, i) => [x(i), y(v)]);
+  const real = pts.slice(0, fimReal);
+  const linha = p => p.map(([a, b], i) => `${i ? 'L' : 'M'}${a.toFixed(1)},${b.toFixed(1)}`).join(' ');
+  if (real.length > 1) {
+    svg += `<path class="area" d="${linha(real)} L${real[real.length - 1][0].toFixed(1)},${H - padB} L${real[0][0].toFixed(1)},${H - padB} Z" style="fill:url(#${id})"/>`;
+    svg += `<path class="ln desenha" pathLength="1" d="${linha(real)}" style="stroke:${cor}"/>`;
+  }
+  // meses que ainda não chegaram: linha tracejada a partir do último ponto real
+  if (opt.futureFrom != null && opt.futureFrom < n) {
+    const fut = pts.slice(Math.max(0, opt.futureFrom - 1));
+    if (fut.length > 1) svg += `<path class="ln fut" d="${linha(fut)}" style="stroke:${cor}"/>`;
+  }
+  values.forEach((v, i) => {
+    const futuro = opt.futureFrom != null && i >= opt.futureFrom;
+    const escondido = opt.limitTo != null && i >= opt.limitTo;
+    const sel = opt.highlight === i;
+    const mostrarPonto = !escondido && (opt.dots !== false || sel || i === fimReal - 1);
+    if (mostrarPonto) svg += `<circle class="dot ${futuro ? 'fut' : ''} ${sel ? 'sel' : ''}" cx="${pts[i][0].toFixed(1)}" cy="${pts[i][1].toFixed(1)}" r="${sel ? 5.5 : 4}" style="${futuro ? `stroke:${cor}` : `fill:${cor}`}"/>`;
+    svg += `<rect class="hit" x="${padL + step * i}" y="${padT}" width="${step}" height="${H - padT}" data-tip="${escapeHtml(tips[i][0])}" data-val="${tips[i][1]}"${opt.keys ? ` data-key="${opt.keys[i]}"` : ''} tabindex="-1"/>`;
+    if (!opt.labelEvery || i === 0 || (i + 1) % opt.labelEvery === 0) svg += `<text x="${pts[i][0]}" y="${H - 6}" text-anchor="middle" class="${sel ? 'sel' : ''}">${escapeHtml(labels[i])}</text>`;
+    if (opt.valueLabels && v > 0 && !escondido) svg += `<text class="lbl ${sel ? 'sel' : ''}" x="${pts[i][0]}" y="${pts[i][1] - 10}" text-anchor="middle">${Math.round(v).toLocaleString('pt-BR')}</text>`;
   });
   if (opt.avg) svg += `<line class="avg" x1="${padL}" x2="${W - padR}" y1="${y(opt.avg)}" y2="${y(opt.avg)}"/><text x="${W - padR}" y="${Math.max(10, y(opt.avg) - 4)}" text-anchor="end">média/dia ${escapeHtml(money(opt.avg))}</text>`;
   svg += `<line class="base" x1="${padL}" x2="${W - padR}" y1="${H - padB}" y2="${H - padB}"/></svg>`;

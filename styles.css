@@ -1,3 +1,11 @@
+@font-face {
+  font-family: 'Manrope';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 200 800;
+  src: url(fonts/manrope-latin.woff2) format('woff2-variations'), url(fonts/manrope-latin.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
 :root {
   color-scheme: light;
   --bg: #f6f6f3;
@@ -11,11 +19,11 @@
   --axis: #c3c2b7;
   --accent: #2a78d6;
   --accent-soft: #cde2fb;
-  --series: #2a78d6;
-  --series-dim: #9ec5f4;
+  --series: #5f8fd3;
+  --series-dim: #b7cdee;
   --good: #006300;
   --critical: #d03b3b;
-  --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a; --s4: #eda100; --s5: #e87ba4; --s6: #008300; --s7: #6250d6; --s-outros: #b5b4ae;
+  --s1: #5f8fd3; --s2: #e0825f; --s3: #4fae8c; --s4: #8a7fd8; --s5: #d9a441; --s6: #c77bb0; --s7: #93a43c; --s-outros: #c4c3bd;
   --warning: #fab219;
   --shadow: 0 1px 2px rgba(0,0,0,.04), 0 8px 24px rgba(20,30,60,.06);
   --radius: 22px;
@@ -25,7 +33,7 @@
   --glow-2: rgba(98, 80, 214, .10);
   --hero-1: rgba(42, 120, 214, .14);
   --hero-2: rgba(98, 80, 214, .06);
-  --font: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font: "Manrope", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
@@ -44,12 +52,12 @@
     --axis: #383835;
     --accent: #3987e5;
     --accent-soft: #184f95;
-    --series: #3987e5;
-    --series-dim: #1c5cab;
+    --series: #5b8cd4;
+    --series-dim: #2c4568;
     --good: #0ca30c;
     --critical: #e66767;
     --shadow: none;
-    --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500; --s5: #d55181; --s6: #0ca30c; --s7: #9085e9; --s-outros: #5e5d58;
+    --s1: #5b8cd4; --s2: #d4784f; --s3: #43a580; --s4: #8276d3; --s5: #b98d33; --s6: #bd71a8; --s7: #87993a; --s-outros: #4f4e4a;
   }
 }
 :root[data-theme="dark"] {
@@ -59,9 +67,9 @@
   --glow-1: rgba(57, 135, 229, .20); --glow-2: rgba(144, 133, 233, .14);
   --hero-1: rgba(57, 135, 229, .26); --hero-2: rgba(144, 133, 233, .12); --ink: #f0efec; --ink-2: #c3c2b7;
   --muted: #898781; --line: rgba(255,255,255,.10); --grid: #2c2c2a; --axis: #383835;
-  --accent: #3987e5; --accent-soft: #184f95; --series: #3987e5; --series-dim: #1c5cab;
+  --accent: #3987e5; --accent-soft: #184f95; --series: #5b8cd4; --series-dim: #2c4568;
   --good: #0ca30c; --critical: #e66767; --shadow: none;
-  --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500; --s5: #d55181; --s6: #0ca30c; --s7: #9085e9; --s-outros: #5e5d58;
+  --s1: #5b8cd4; --s2: #d4784f; --s3: #43a580; --s4: #8276d3; --s5: #b98d33; --s6: #bd71a8; --s7: #87993a; --s-outros: #4f4e4a;
 }
 
 * { box-sizing: border-box; }
@@ -531,3 +539,24 @@ a.btn { display: inline-flex; align-items: center; justify-content: center; text
 }
 .view > .card:first-child, .view > .card.hero + .card, .view > [hidden] + .card:not(.hero) { border-top: 0; }
 .view > .card.hero { margin-bottom: 6px; }
+
+/* Títulos das seções em destaque (agora que tudo está na mesma tela) */
+.card h2 { font-size: 19px; font-weight: 750; letter-spacing: -0.015em; margin: 0 0 14px; color: var(--ink); }
+.view > .card:not(.hero) { padding: 26px 4px 22px; }
+.card-head h2 { margin-bottom: 14px; }
+.card-head .link { font-weight: 600; }
+.hero-value { font-weight: 800; }
+
+/* Gráfico de linha */
+.chart .ln { fill: none; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+.chart .ln.fut { stroke-dasharray: 5 6; opacity: .75; }
+.chart .ln.desenha { stroke-dasharray: 1; stroke-dashoffset: 1; animation: desenhar .9s cubic-bezier(.3,.7,.2,1) forwards; }
+.chart .area { animation: surgir-area .9s ease-out both; }
+.chart .dot { stroke: var(--bg); stroke-width: 2; }
+.chart .dot.fut { fill: var(--bg); stroke-width: 2; }
+.chart .dot.sel { stroke-width: 3; }
+.chart text.sel { fill: var(--ink); font-weight: 700; }
+@keyframes desenhar { to { stroke-dashoffset: 0; } }
+@keyframes surgir-area { from { opacity: 0; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .chart .ln.desenha { animation: none; stroke-dasharray: none; stroke-dashoffset: 0; } .chart .area { animation: none; } }
+.sw-fut { border-color: var(--s1); background: none; border-radius: 50%; }
