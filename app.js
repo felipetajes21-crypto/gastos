@@ -2370,7 +2370,17 @@ function init() {
     if (new URLSearchParams(location.search).has('voz')) setTimeout(toggleMic, 300);
   }
   if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
-  if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('sw.js').catch(() => {});
+  if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+    // quando chega uma versão nova do app, recarrega uma vez para já mostrar a novidade
+    const jaTinha = !!navigator.serviceWorker.controller;
+    let recarregou = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (!jaTinha || recarregou || document.activeElement && /INPUT|TEXTAREA/.test(document.activeElement.tagName) && document.activeElement.value) return;
+      recarregou = true;
+      location.reload();
+    });
+    navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).then(r => r.update()).catch(() => {});
+  }
 }
 
 if (typeof window !== 'undefined' && document.readyState !== 'loading') init();
