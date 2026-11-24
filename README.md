@@ -67,6 +67,13 @@ Compra parcelada já cai em todos os meses: `tênis 300 3x` lança R$ 100 agora 
 - A seta **›** do topo vai até os meses futuros: lá aparece **“A pagar em dezembro”** com as parcelas e os fixos previstos.
 
 
+### Caixinhas e cartão de crédito
+
+- **Caixinhas separadas:** em **Investir → + caixinha** crie quantas quiser (Viagem, Celular…). Rendem igual à caixinha principal, podem ter um **objetivo** com barra de progresso, e dá para **mover** dinheiro entre elas (não conta como investir nem tirar). Para guardar direto: `guardei 50 na caixinha viagem`.
+- **Cartão de crédito:** em **Ajustes → Cartão** informe o dia em que a fatura fecha e vence. Compras com “crédito”/“cartão” somam na **fatura aberta** (aparece no Início, com a fatura fechada e o vencimento).
+- **Caixinha do cartão:** guarde ali o dinheiro da fatura (ou ligue o **guardar automático** de cada compra no crédito). Ela rende, mas **não conta como investimento** — a compra já contou como gasto, então nada é contado duas vezes.
+- **Paguei a fatura:** marca a fatura como paga e tira o valor da caixinha do cartão, sem contar como gasto de novo.
+
 ## O que tem
 
 - **Início:** total do mês, comparação com o mesmo período do mês passado, previsão de quanto o mês vai fechar, quanto ainda pode gastar por dia, gastos por categoria e os últimos lançamentos.

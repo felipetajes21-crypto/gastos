@@ -68,7 +68,7 @@ const MONTHS_SHORT = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 's
 const KEY = 'gastos.v1';
 // Versão do código: tem que ser a mesma do <meta name="versao-app"> do index.html.
 // Se o celular juntar uma tela antiga com o código novo (memória/cache), o app se atualiza sozinho.
-const VERSAO_APP = '33';
+const VERSAO_APP = '34';
 let state = load();
 aplicarTema();
 let ui = { month: '', search: '', cat: '', tipoForce: null, tipoFiltro: 'tudo' };
@@ -787,6 +787,10 @@ function commitEntry(text, p, cat) {
   const resgate = tipo === 'invest' && !!p.resgate;
   const tTes = tipo === 'invest' && isTesouroCat(cat) ? matchTitulo(text) : null;
   const created = addExpense({ desc: tTes ? tTes.nome : desc, valor: p.valor, data: p.data, cat, metodo: p.metodo, parcelas: tipo === 'gasto' ? p.parcelas : 1, resgate });
+  if (tipo === 'gasto' && p.metodo === 'credito' && state.cartao && state.cartao.auto && state.cartao.reserva && catsOf('invest').some(c => c.id === state.cartao.reserva)) {
+    created.push(lancarInterno({ desc: `Guardado para a fatura: ${desc}`, valor: p.valor, data: isoDate(new Date()), cat: state.cartao.reserva, auto: true }));
+    save();
+  }
   if (tipo === 'invest' && !resgate && !isTesouroCat(cat) && p.rend) {
     const r = { ...p.rend, ...(/\b(lci|lca)\b/i.test(desc) ? { isento: true } : {}) };
     state.rend = state.rend || {};
@@ -1143,6 +1147,7 @@ function renderHome() {
   $('#stats').hidden = futuro;
   $('#balance').hidden = futuro;
   renderMeses($('#mesesChart'));
+  renderCartao();
   if (futuro) {
     const p = previsaoMes(ui.month);
     animarValor($('#heroTotal'), p.total);
@@ -1203,12 +1208,12 @@ function renderHome() {
 function balanceOf(key) {
   const entrou = sum(ofType(key, 'entrada'));
   const gastou = sum(inMonth(key));
-  const investiu = sumSigned(ofType(key, 'invest'));
+  const investiu = sumSigned(ofType(key, 'invest').filter(contaComoInvest));
   return { entrou, gastou, investiu, sobrou: Math.round((entrou - gastou - investiu) * 100) / 100 };
 }
 
 // Balanço do mês: quanto entrou, para onde foi (gasto / investido) e o que sobrou.
-function investedTotal() { return Math.max(0, investPositions().reduce((a, p) => a + (p.atual ?? p.aportado), 0)); }
+function investedTotal() { return Math.max(0, investPositions().filter(p => !p.c.reserva).reduce((a, p) => a + (p.atual ?? p.aportado), 0)); }
 function renderBalance(key, el) {
   const b = balanceOf(key);
   const inv = investedTotal();
@@ -1827,19 +1832,23 @@ function investPositions() {
 }
 function renderInvest() {
   const pos = investPositions();
-  const total = pos.reduce((a, p) => a + (p.atual ?? p.aportado), 0);
-  const aportado = pos.reduce((a, p) => a + p.aportado, 0);
-  const comSaldo = pos.filter(p => p.atual != null);
+  const posInv = pos.filter(p => !p.c.reserva);
+  const total = posInv.reduce((a, p) => a + (p.atual ?? p.aportado), 0);
+  const aportado = posInv.reduce((a, p) => a + p.aportado, 0);
+  const comSaldo = posInv.filter(p => p.atual != null);
+  const reservaPos = pos.find(p => p.c.reserva);
+  const guardadoFatura = reservaPos ? Math.max(0, reservaPos.atual ?? reservaPos.aportado) : 0;
   const rend = comSaldo.reduce((a, p) => a + p.atual - p.aportado, 0);
   const baseRend = comSaldo.reduce((a, p) => a + p.aportado, 0);
   $('#invTotal').textContent = money(Math.max(0, total));
   $('#invSub').innerHTML = !pos.length ? 'Nenhum investimento ainda.' : comSaldo.length
     ? `${money(aportado)} aplicados · rendimento <span class="${rend >= 0 ? 'delta-down' : 'delta-up'}">${rend >= 0 ? '+' : '−'}${money(Math.abs(rend))}${baseRend > 0 ? ` (${rend >= 0 ? '+' : '−'}${Math.abs(rend / baseRend * 100).toLocaleString('pt-BR', { maximumFractionDigits: 1 })}%)` : ''}</span>`
     : `${money(aportado)} aplicados`;
+  if (guardadoFatura > 0) $('#invSub').innerHTML += `<br><span class="muted">+ ${money(guardadoFatura)} guardados para a fatura do cartão</span>`;
 
   const mes = ofType(ui.month, 'invest');
   const keys = [...Array(6)].map((_, i) => shiftMonth(ui.month, i - 5));
-  const aportes = keys.map(k => sum(ofType(k, 'invest').filter(g => !g.resgate)));
+  const aportes = keys.map(aportesDoMes);
   const mediaAporte = aportes.reduce((a, b) => a + b, 0) / 6;
   renderMetaInvest(aportes[5], mediaAporte);
 
@@ -1860,12 +1869,14 @@ function renderInvest() {
       return `<li><span>${escapeHtml(h.nome.replace(/^Tesouro /, ''))}<small>${linha1}</small><small>${linha2}</small>${falta}</span><b class="num">${money(holdingValue(h))}</b></li>`;
     }).join('')}</ul>${p.estimado && r != null && r < 0 && Math.abs(r) <= p.aportado * 0.03 ? '<p class="muted small" style="margin:6px 0 0">Logo depois de comprar o valor fica um pouco abaixo: o Tesouro paga um pouco menos na venda do que cobra na compra. Com o tempo, os juros cobrem essa diferença.</p>' : ''}${p.titulos.some(h => h.estimado != null && h.taxa != null) ? '<p class="muted small" style="margin:6px 0 0">Valor se vendesse hoje (usa a taxa <b>para vender</b>, que é um pouco maior que a de compra). Quando a taxa de hoje está <b>abaixo</b> da que você pegou, o título valoriza; <b>acima</b>, desvaloriza — mas no vencimento você recebe a taxa combinada.</p>' : ''}` : '';
     return `<div class="pos ${tem ? '' : 'zero'}" data-id="${p.c.id}">
-      <button type="button" class="pos-top" aria-expanded="false"><span class="em">${p.c.emoji}</span><span class="pos-name">${escapeHtml(p.c.nome)}<small>${r != null ? `<span class="${r >= 0 ? 'delta-down' : 'delta-up'}">${r >= 0 ? '+' : '−'}${money(Math.abs(r))}</span> · ` : ''}${p.rend && p.rend.ind !== 'nenhum' ? escapeHtml(rendTexto(p.rend, false)) : p.titulos ? `${p.titulos.length} título${p.titulos.length > 1 ? 's' : ''}` : 'toque para ver'}</small></span><span class="pos-val num">${tem ? money(tem) : 'zerado'}</span><span class="pos-seta">▾</span></button>
+      <button type="button" class="pos-top" aria-expanded="false"><span class="em">${p.c.emoji}</span><span class="pos-name">${escapeHtml(p.c.nome)}${p.c.reserva ? '<small class="tag-reserva">para pagar a fatura · não conta como investimento</small>' : ''}${+p.c.objetivo > 0 ? `<span class="obj"><span class="obj-barra"><span style="width:${Math.min(100, tem / p.c.objetivo * 100)}%"></span></span><small>${money(tem)} de ${money(p.c.objetivo)} · ${Math.round(tem / p.c.objetivo * 100)}%</small></span>` : ''}<small>${r != null ? `<span class="${r >= 0 ? 'delta-down' : 'delta-up'}">${r >= 0 ? '+' : '−'}${money(Math.abs(r))}</span> · ` : ''}${p.rend && p.rend.ind !== 'nenhum' ? escapeHtml(rendTexto(p.rend, false)) : p.titulos ? `${p.titulos.length} título${p.titulos.length > 1 ? 's' : ''}` : 'toque para ver'}</small></span><span class="pos-val num">${tem ? money(tem) : 'zerado'}</span><span class="pos-seta">▾</span></button>
       <div class="pos-det"><p class="muted small pos-resumo">${det.join(' · ')}</p>${rendLine}${subs}
       <div class="pos-actions">
         <button type="button" class="btn small" data-act="add">➕ Colocar</button>
         <button type="button" class="btn small" data-act="take" ${tem ? '' : 'disabled'}>➖ Tirar</button>
         <button type="button" class="btn small ghost" data-act="saldo" title="Informar quanto tem hoje no banco">🔄 Saldo</button>
+        ${tem && !isTesouroCat(p.c.id) ? '<button type="button" class="btn small ghost" data-act="mover">↔️ Mover</button>' : ''}
+        ${p.c.caixinha ? '<button type="button" class="btn small ghost" data-act="editar">✏️ Editar</button>' : ''}
       </div></div>
     </div>`;
   }).join('') : '<div class="empty">Você ainda não tem nada investido.<br>Toque em <b>➕ Investir</b> acima, ou digite na tela inicial:<br><b>guardei 100 na caixinha</b> · <b>investi 200 no tesouro</b></div>';
@@ -1880,6 +1891,8 @@ function renderInvest() {
     $('[data-act=add]', el).onclick = () => openMove(id, false);
     $('[data-act=take]', el).onclick = () => openMove(id, true);
     $('[data-act=saldo]', el).onclick = () => openSaldo(id);
+    const mv = $('[data-act=mover]', el); if (mv) mv.onclick = () => openMover(id);
+    const ed = $('[data-act=editar]', el); if (ed) ed.onclick = () => openCaixinha(id);
     const rl = $('[data-act=rend]', el); if (rl) rl.onclick = () => openRend(id);
     $$('[data-lot]', el).forEach(b => b.onclick = () => openExpense(b.dataset.lot));
   });
@@ -1894,6 +1907,185 @@ function renderInvest() {
   $('#invList').innerHTML = recent.length ? recent.map(txRow).join('') : '<li class="empty">Nenhuma movimentação.</li>';
   bindTx($('#invList'));
 }
+// ───────────────────────── Caixinhas e cartão de crédito ─────────────────────────
+// Reserva do cartão (dinheiro guardado para pagar a fatura) e transferências entre caixinhas
+// não contam como "investiu" no balanço: a compra no crédito já contou como gasto.
+const contaComoInvest = g => !g.transf && !catById(g.cat).reserva;
+const aportesDoMes = k => sum(ofType(k, 'invest').filter(g => !g.resgate && contaComoInvest(g)));
+
+// lançamento feito pelo próprio app (não ensina a categorização com ele)
+function lancarInterno({ desc, valor, data, cat, resgate = false, ...extra }) {
+  const g = { id: uid(), desc, valor: Math.round(valor * 100) / 100, data, cat, metodo: '', criado: Date.now(), ...extra };
+  if (resgate) g.resgate = true;
+  state.gastos.push(g);
+  return g;
+}
+function saldoDe(catId) {
+  const p = investPositions().find(x => x.c.id === catId);
+  return p ? Math.max(0, Math.round((p.atual ?? p.aportado) * 100) / 100) : 0;
+}
+
+// Nova caixinha (ou editar): rende igual à caixinha principal, só separa o dinheiro; objetivo opcional.
+function openCaixinha(id) {
+  const c = id ? catById(id) : { nome: '', emoji: '🎯', objetivo: '' };
+  const nomeCurto = id ? c.nome.replace(/^Caixinha\s+/i, '') : '';
+  const temLanc = id && state.gastos.some(g => g.cat === id);
+  openSheet(`<h3>${id ? '✏️ Editar caixinha' : '➕ Nova caixinha'}</h3>
+    <p class="muted small">Rende igual à sua caixinha principal (${escapeHtml(rendTexto(catRend('caixinha'), false))}), só separa o dinheiro para cada coisa.</p>
+    <div class="field-row"><div class="field" style="flex:0 0 70px"><label>Emoji</label><input name="emoji" value="${escapeHtml(c.emoji)}" maxlength="4" style="text-align:center;font-size:20px"></div>
+    <div class="field"><label>Para quê?</label><input name="nome" value="${escapeHtml(nomeCurto)}" placeholder="ex.: Viagem, Celular, Presente" required></div></div>
+    <div class="field"><label>Objetivo (R$, opcional)</label><input name="objetivo" inputmode="decimal" value="${+c.objetivo ? String(c.objetivo).replace('.', ',') : ''}" placeholder="ex.: 1000"></div>
+    <div class="sheet-actions">${id && !temLanc ? '<button class="btn danger" value="delete" formnovalidate>Excluir</button>' : '<span></span>'}<div class="right"><button class="btn" value="cancel" formnovalidate>Cancelar</button><button class="btn solid" value="save">Salvar</button></div></div>`,
+    (action, fd) => {
+      if (action === 'delete') { state.categorias = state.categorias.filter(x => x.id !== id); save(); render(); toast('Caixinha excluída'); return; }
+      const nome = String(fd.get('nome')).trim();
+      if (!nome) { toast('Dê um nome para a caixinha'); return false; }
+      const objTxt = String(fd.get('objetivo') || '').trim();
+      const objetivo = objTxt ? parseAmount(objTxt) : null;
+      if (objTxt && objetivo == null) { toast('Objetivo inválido'); return false; }
+      const n = norm(nome);
+      const dados = { nome: `Caixinha ${nome}`, emoji: String(fd.get('emoji')).trim() || '🎯', objetivo: objetivo || null, palavras: [`caixinha ${n}`, `caixinha da ${n}`, `caixinha do ${n}`, `caixinha de ${n}`, n] };
+      if (id) Object.assign(state.categorias.find(x => x.id === id), dados);
+      else {
+        const novo = { id: 'cx-' + uid(), tipo: 'invest', caixinha: true, ...dados };
+        state.categorias.push(novo);
+        state.rend = state.rend || {};
+        state.rend[novo.id] = { ...catRend('caixinha') };
+      }
+      save(); render();
+      toast(id ? 'Caixinha atualizada' : `Caixinha ${nome} criada — para guardar nela: “guardei 50 na caixinha ${nome.toLowerCase()}”`);
+    });
+}
+
+// Mover dinheiro de uma caixinha/investimento para outra (não conta como investir nem tirar)
+function openMover(deId) {
+  const de = catById(deId), tem = saldoDe(deId);
+  const destinos = sortedCats('invest').filter(c => c.id !== deId && !isTesouroCat(c.id));
+  openSheet(`<h3>↔️ Mover dinheiro</h3>
+    <p class="muted small">De <b>${de.emoji} ${escapeHtml(de.nome)}</b> (tem ${money(tem)}). Não conta como investir nem como tirar: o dinheiro só muda de lugar.</p>
+    <div class="field"><label>Para</label><select name="para">${destinos.map(c => `<option value="${c.id}">${c.emoji} ${escapeHtml(c.nome)}</option>`).join('')}</select></div>
+    <div class="field"><label>Quanto (R$)</label><input name="valor" inputmode="decimal" placeholder="até ${escapeHtml(money(tem))}" required></div>
+    <div class="sheet-actions"><span></span><div class="right"><button class="btn" value="cancel" formnovalidate>Cancelar</button><button class="btn solid" value="save">Mover</button></div></div>`,
+    (action, fd) => {
+      const v = parseAmount(String(fd.get('valor')).trim());
+      if (v == null) { toast('Valor inválido'); return false; }
+      if (v > tem + 0.005) { toast(`Só tem ${money(tem)} aí`); return false; }
+      const para = catById(fd.get('para')), t = uid(), hoje = isoDate(new Date());
+      const a = lancarInterno({ desc: `Movido para ${para.nome}`, valor: v, data: hoje, cat: deId, resgate: true, transf: t });
+      const b = lancarInterno({ desc: `Movido de ${de.nome}`, valor: v, data: hoje, cat: para.id, transf: t });
+      save(); render();
+      toast(`↔️ ${money(v)} movidos para ${para.nome}`, 'desfazer', () => { state.gastos = state.gastos.filter(g => g !== a && g !== b); save(); render(); });
+    });
+}
+
+// ── Cartão de crédito: fatura aberta/fechada, caixinha do cartão e "paguei a fatura" ──
+const dataCurta = iso => parseISO(iso).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+// fatura que fecha no mês "fechaKey": compras do dia seguinte ao fechamento anterior até o fechamento
+function cicloFatura(fechaKey) {
+  const F = +state.cartao.fecha || 1, V = +state.cartao.vence || 10;
+  const fim = `${fechaKey}-${pad(Math.min(F, daysInMonth(fechaKey)))}`;
+  const ant = shiftMonth(fechaKey, -1);
+  const fAnt = parseISO(`${ant}-${pad(Math.min(F, daysInMonth(ant)))}`);
+  const ini = isoDate(new Date(fAnt.getFullYear(), fAnt.getMonth(), fAnt.getDate() + 1));
+  const vMes = V > F ? fechaKey : shiftMonth(fechaKey, 1);
+  const vence = `${vMes}-${pad(Math.min(V, daysInMonth(vMes)))}`;
+  const itens = state.gastos.filter(g => g.metodo === 'credito' && tipoOf(g) === 'gasto' && g.data >= ini && g.data <= fim);
+  return { key: fechaKey, ini, fim, vence, itens, valor: sum(itens), paga: (state.cartao.pagas || {})[fim] };
+}
+function faturas() {
+  const mk = hojeKey(), F = +state.cartao.fecha || 1;
+  const abertaKey = new Date().getDate() <= Math.min(F, daysInMonth(mk)) ? mk : shiftMonth(mk, 1);
+  return { aberta: cicloFatura(abertaKey), fechada: cicloFatura(shiftMonth(abertaKey, -1)) };
+}
+function renderCartao() {
+  const el = $('#cartaoCard');
+  if (!el) return;
+  if (!state.cartao) { el.hidden = true; return; }
+  el.hidden = false;
+  const { aberta, fechada } = faturas();
+  const pendente = fechada.valor > 0 && !fechada.paga ? fechada : null;
+  const aPagar = (pendente ? pendente.valor : 0) + (aberta.paga ? 0 : aberta.valor);
+  const dias = Math.max(0, Math.round((parseISO(aberta.fim) - parseISO(isoDate(new Date()))) / 864e5));
+  const reserva = state.cartao.reserva && catsOf('invest').some(c => c.id === state.cartao.reserva) ? state.cartao.reserva : null;
+  const guardado = reserva ? saldoDe(reserva) : 0;
+  const falta = Math.max(0, Math.round((aPagar - guardado) * 100) / 100);
+  el.innerHTML = `<div class="card-head"><h2>💳 ${escapeHtml(state.cartao.nome || 'Cartão de crédito')}</h2><button type="button" class="link" id="cartaoPagar">paguei a fatura</button></div>
+    <div class="fat-linhas">
+      ${pendente ? `<div class="fat-l fechada"><span>Fatura fechada<small>vence ${dataCurta(pendente.vence)} · ${pendente.itens.length} compra${pendente.itens.length === 1 ? '' : 's'}</small></span><b class="num">${money(pendente.valor)}</b></div>` : fechada.paga ? `<div class="fat-l ok"><span>✅ Fatura de ${MONTHS[+fechada.key.slice(5) - 1]} paga<small>${money(fechada.paga.valor)} em ${dataCurta(fechada.paga.data)}</small></span></div>` : ''}
+      <div class="fat-l"><span>Fatura aberta<small>fecha ${dataCurta(aberta.fim)}${dias ? ` · em ${dias} dia${dias > 1 ? 's' : ''}` : ' · hoje'} · vence ${dataCurta(aberta.vence)}</small></span><b class="num">${money(aberta.valor)}</b></div>
+    </div>
+    ${reserva ? `<p class="muted small" style="margin:0 0 4px">Guardado na caixinha do cartão</p><div class="meta-num"><b class="num">${money(guardado)}</b> <span class="muted">de ${money(aPagar)}</span></div>
+      <div class="meta-barra"><div class="meta-fill ${falta === 0 && aPagar > 0 ? 'ok' : ''}" style="width:${aPagar ? Math.min(100, guardado / aPagar * 100) : 0}%"></div></div>
+      <p class="small meta-txt">${aPagar === 0 ? 'Nada a pagar por enquanto.' : falta === 0 ? '✅ Tudo guardado para pagar a fatura.' : `Falta guardar <b>${money(falta)}</b>. <button type="button" class="link" id="cartaoGuardar">guardar agora</button>`}</p>`
+      : `<p class="muted small" style="margin:8px 0 0">Dica: em <b>Ajustes → Cartão</b>, ligue a <b>caixinha do cartão</b> para ir guardando o dinheiro da fatura.</p>`}`;
+  $('#cartaoPagar').onclick = () => openPagarFatura(pendente || aberta);
+  const gb = $('#cartaoGuardar');
+  if (gb) gb.onclick = () => {
+    const g = lancarInterno({ desc: 'Guardado para a fatura', valor: falta, data: isoDate(new Date()), cat: reserva });
+    save(); render();
+    toast(`💳 ${money(falta)} guardados na caixinha do cartão`, 'desfazer', () => { state.gastos = state.gastos.filter(x => x !== g); save(); render(); });
+  };
+}
+function openPagarFatura(f) {
+  const reserva = state.cartao.reserva && catsOf('invest').some(c => c.id === state.cartao.reserva) ? state.cartao.reserva : null;
+  const guardado = reserva ? saldoDe(reserva) : 0;
+  openSheet(`<h3>💳 Paguei a fatura</h3>
+    <p class="muted small">Fatura que fecha em ${dataCurta(f.fim)} (compras de ${dataCurta(f.ini)} a ${dataCurta(f.fim)}): <b>${money(f.valor)}</b>.<br>As compras já contaram como gasto quando você anotou — pagar a fatura <b>não conta de novo</b>.</p>
+    <div class="field"><label>Quanto pagou (R$)</label><input name="valor" inputmode="decimal" value="${String(f.valor.toFixed(2)).replace('.', ',')}" required></div>
+    ${guardado > 0 ? `<label class="check"><input type="checkbox" name="tirar" checked> Tirar da caixinha do cartão (tem ${money(guardado)})</label>` : ''}
+    <div class="sheet-actions"><span></span><div class="right"><button class="btn" value="cancel" formnovalidate>Cancelar</button><button class="btn solid" value="save">Confirmar</button></div></div>`,
+    (action, fd) => {
+      const v = parseAmount(String(fd.get('valor')).trim());
+      if (v == null) { toast('Valor inválido'); return false; }
+      const hoje = isoDate(new Date());
+      state.cartao.pagas = state.cartao.pagas || {};
+      state.cartao.pagas[f.fim] = { valor: v, data: hoje };
+      let g = null;
+      if (fd.get('tirar') && guardado > 0) g = lancarInterno({ desc: `Pagamento da fatura de ${MONTHS[+f.key.slice(5) - 1]}`, valor: Math.min(v, guardado), data: hoje, cat: reserva, resgate: true });
+      save(); render();
+      toast(`✅ Fatura paga${g ? ` · ${money(g.valor)} saíram da caixinha do cartão` : ''}`, 'desfazer', () => { delete state.cartao.pagas[f.fim]; if (g) state.gastos = state.gastos.filter(x => x !== g); save(); render(); });
+    });
+}
+// Ajustes → Cartão de crédito
+function renderCartaoAjustes() {
+  const el = $('#cartaoAjustes');
+  if (!el) return;
+  const c = state.cartao;
+  el.innerHTML = c
+    ? `<p class="small">${escapeHtml(c.nome || 'Cartão')} · fecha dia <b>${c.fecha}</b> · vence dia <b>${c.vence}</b>${c.reserva ? ' · com caixinha do cartão' : ''}${c.auto ? ' · guarda cada compra automaticamente' : ''}</p><button type="button" class="btn" id="cartaoEditar">Editar cartão</button>`
+    : `<p class="muted small">Coloque o dia em que a fatura fecha e vence. As compras no crédito vão somando na fatura, e você pode ir guardando o dinheiro numa <b>caixinha do cartão</b> (rende, mas não conta como investimento). Na hora de pagar, é só tocar em <b>Paguei a fatura</b>.</p><button type="button" class="btn solid" id="cartaoEditar">Configurar cartão</button>`;
+  $('#cartaoEditar').onclick = openCartao;
+}
+function openCartao() {
+  const c = state.cartao || { nome: 'Nubank', fecha: '', vence: '', reserva: null, auto: false };
+  openSheet(`<h3>💳 Cartão de crédito</h3>
+    <div class="field"><label>Nome</label><input name="nome" value="${escapeHtml(c.nome || '')}" placeholder="ex.: Nubank"></div>
+    <div class="field-row"><div class="field"><label>Fatura fecha dia</label><input name="fecha" type="number" min="1" max="31" value="${c.fecha}" required></div>
+    <div class="field"><label>Vence dia</label><input name="vence" type="number" min="1" max="31" value="${c.vence}" required></div></div>
+    <label class="check"><input type="checkbox" name="reserva" ${!state.cartao || c.reserva ? 'checked' : ''}> Ter uma caixinha do cartão para guardar o dinheiro da fatura</label>
+    <label class="check"><input type="checkbox" name="auto" ${c.auto ? 'checked' : ''}> Guardar automaticamente cada compra no crédito nessa caixinha</label>
+    <p class="muted small">Compras no crédito: digite com “crédito” ou “cartão” (ex.: <b>ifood 45 crédito</b>).</p>
+    <div class="sheet-actions">${state.cartao ? '<button class="btn danger" value="delete" formnovalidate>Remover cartão</button>' : '<span></span>'}<div class="right"><button class="btn" value="cancel" formnovalidate>Cancelar</button><button class="btn solid" value="save">Salvar</button></div></div>`,
+    (action, fd) => {
+      if (action === 'delete') { delete state.cartao; save(); render(); toast('Cartão removido'); return; }
+      const fecha = Math.round(+fd.get('fecha')), vence = Math.round(+fd.get('vence'));
+      if (!(fecha >= 1 && fecha <= 31 && vence >= 1 && vence <= 31)) { toast('Dias inválidos'); return false; }
+      const novo = { ...c, nome: String(fd.get('nome')).trim() || 'Cartão de crédito', fecha, vence, auto: !!fd.get('auto') && !!fd.get('reserva'), pagas: c.pagas || {} };
+      if (fd.get('reserva')) {
+        let cat = state.categorias.find(x => x.reserva);
+        if (!cat) {
+          cat = { id: 'cartao-reserva', tipo: 'invest', reserva: true, nome: 'Caixinha do cartão', emoji: '💳', palavras: ['caixinha do cartao', 'caixinha cartao', 'caixinha da fatura', 'reserva do cartao', 'reserva da fatura', 'dinheiro da fatura'] };
+          state.categorias.push(cat);
+          state.rend = state.rend || {};
+          state.rend[cat.id] = { ...catRend('caixinha') };
+        }
+        novo.reserva = cat.id;
+      } else novo.reserva = null;
+      state.cartao = novo;
+      save(); render(); toast('Cartão salvo 💳');
+    });
+}
+
 // Meta: quanto a pessoa quer investir por mês; a barra enche conforme ela coloca dinheiro.
 function renderMetaInvest(investidoMes, media) {
   const el = $('#metaCard');
@@ -1912,7 +2104,7 @@ function renderMetaInvest(investidoMes, media) {
     // quantos meses seguidos (antes deste) bateram a meta
     let seguidos = 0;
     for (let k = shiftMonth(ui.month, -1); seguidos < 24; k = shiftMonth(k, -1)) {
-      if (sum(ofType(k, 'invest').filter(g => !g.resgate)) >= meta) seguidos++; else break;
+      if (aportesDoMes(k) >= meta) seguidos++; else break;
     }
     const bateu = investidoMes >= meta;
     el.innerHTML = `<div class="card-head"><h2>🎯 Meta de ${nomeMes}</h2><button type="button" class="link" id="metaDefinir">mudar</button></div>
@@ -2153,6 +2345,7 @@ function openSaldo(catId) {
 
 // ── Ajustes
 function renderSettings() {
+  renderCartaoAjustes();
   const counts = {};
   for (const g of state.gastos) counts[g.cat] = (counts[g.cat] || 0) + 1;
   $('#catList').innerHTML = Object.entries(TIPOS).map(([t, T]) => `<li class="group-head">${T.emoji} ${T.plural}</li>` + sortedCats(t).map(c => `<li data-id="${c.id}"><span class="em">${c.emoji}</span><span class="n">${escapeHtml(c.nome)}<small>${counts[c.id] || 0} lançamentos · ${(c.palavras || []).slice(0, 6).map(escapeHtml).join(', ')}${(c.palavras || []).length > 6 ? '…' : ''}</small></span><span class="b">${+c.orcamento ? money(c.orcamento) + '/mês' : ''}</span></li>`).join('')).join('');
@@ -2165,7 +2358,7 @@ function renderSettings() {
 
 // ───────────────────────── Folhas de edição ─────────────────────────
 const isOutros = id => Object.values(TIPOS).some(t => t.outros === id);
-const sortedCats = t => catsOf(t).sort((a, b) => isOutros(a.id) - isOutros(b.id));
+const sortedCats = t => catsOf(t).sort((a, b) => (isOutros(a.id) - isOutros(b.id)) || (!!a.reserva - !!b.reserva));
 function catOptgroups(sel) {
   return Object.entries(TIPOS).map(([t, T]) => `<optgroup label="${T.emoji} ${T.plural}">${sortedCats(t).map(c => `<option value="${c.id}" ${c.id === sel ? 'selected' : ''}>${c.emoji} ${escapeHtml(c.nome)}</option>`).join('')}</optgroup>`).join('');
 }
@@ -2586,6 +2779,7 @@ function init() {
   $('#addCat').onclick = () => openCategory(null);
   $('#invAdd').onclick = () => openMove(null, false);
   $('#invTake').onclick = () => openMove(null, true);
+  if ($('#novaCaixinha')) $('#novaCaixinha').onclick = () => openCaixinha(null);
   if ($('#invVerTodas')) $('#invVerTodas').onclick = () => { ui.cat = ''; ui.search = ''; ui.tipoFiltro = 'invest'; go('list'); };
   $$('#tipoSeg button').forEach(b => b.onclick = () => {
     ui.tipoForce = ui.tipoForce === b.dataset.tipo ? null : b.dataset.tipo;

@@ -642,3 +642,20 @@ a.btn { display: inline-flex; align-items: center; justify-content: center; text
 .fluxo-resumo b { color: var(--ink); text-transform: capitalize; }
 .fluxo-resumo .bom { color: var(--good); font-weight: 700; } .fluxo-resumo .ruim { color: var(--critical); font-weight: 700; }
 .tooltip .key.bom { background: var(--good); } .tooltip .key.ruim { background: var(--critical); }
+
+/* Caixinhas com objetivo e reserva do cartão */
+.obj { display: block; margin-top: 4px; }
+.obj-barra { display: block; height: 6px; border-radius: 3px; background: var(--surface-2); overflow: hidden; margin: 4px 0 2px; max-width: 220px; }
+.obj-barra span { display: block; height: 100%; border-radius: 3px; background: linear-gradient(90deg, var(--s1), var(--s3)); }
+.tag-reserva { display: block; color: var(--accent) !important; }
+
+/* Fatura do cartão */
+.fat-linhas { display: flex; flex-direction: column; gap: 10px; margin-bottom: 14px; }
+.fat-l { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.fat-l small { display: block; color: var(--muted); font-size: 12px; }
+.fat-l b { font-size: 18px; font-weight: 800; }
+.fat-l.fechada b { color: var(--critical); }
+.fat-l.ok span { color: var(--good); font-weight: 600; }
+
+.pos-actions { flex-wrap: wrap; }
+.pos-actions .btn { flex: 1 1 28%; white-space: nowrap; }
