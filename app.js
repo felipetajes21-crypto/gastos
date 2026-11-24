@@ -68,7 +68,7 @@ const MONTHS_SHORT = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 's
 const KEY = 'gastos.v1';
 // Versão do código: tem que ser a mesma do <meta name="versao-app"> do index.html.
 // Se o celular juntar uma tela antiga com o código novo (memória/cache), o app se atualiza sozinho.
-const VERSAO_APP = '36';
+const VERSAO_APP = '37';
 let state = load();
 aplicarTema();
 let ui = { month: '', search: '', cat: '', tipoForce: null, tipoFiltro: 'tudo' };
@@ -1272,11 +1272,14 @@ function txRow(g) {
 }
 function bindTx(el) { $$('.tx', el).forEach(li => li.onclick = () => openExpense(li.dataset.id)); }
 
+// formas de pagamento no filtro do Extrato (valor "m:pix", "m:credito"… e "m:" = não informado)
+const ICONE_METODO = { pix: '💠', credito: '💳', debito: '🏧', dinheiro: '💵', vale: '🍽️', boleto: '🧾', '': '❔' };
+const metodoOpts = () => `<optgroup label="💳 Forma de pagamento">${[...Object.keys(METHODS), ''].map(k => `<option value="m:${k}">${ICONE_METODO[k] || '❔'} ${k ? METHODS[k].nome : 'Não informado'}</option>`).join('')}</optgroup>`;
 function renderList() {
   const sel = $('#catFilter');
   const tf = ui.tipoFiltro;
   $$('#listSeg button').forEach(b => b.classList.toggle('sel', b.dataset.tipo === tf));
-  sel.innerHTML = '<option value="">Todas categorias</option>' + (tf === 'tudo' ? catOptgroups() : catsOf(tf).map(c => `<option value="${c.id}">${c.emoji} ${escapeHtml(c.nome)}</option>`).join(''));
+  sel.innerHTML = '<option value="">Todas categorias</option>' + (tf === 'tudo' ? catOptgroups() : `<optgroup label="${TIPOS[tf].emoji} ${TIPOS[tf].plural}">${catsOf(tf).map(c => `<option value="${c.id}">${c.emoji} ${escapeHtml(c.nome)}</option>`).join('')}</optgroup>`) + metodoOpts();
   sel.value = ui.cat;
   if (sel.value !== ui.cat) ui.cat = '';
   $('#searchInput').value = ui.search;
@@ -1284,7 +1287,8 @@ function renderList() {
   // Com busca, procura em todos os meses
   let items = q ? state.gastos : allMonth(ui.month);
   if (tf !== 'tudo') items = items.filter(g => tipoOf(g) === tf);
-  if (ui.cat) items = items.filter(g => g.cat === ui.cat);
+  if (ui.cat && ui.cat.startsWith('m:')) { const m = ui.cat.slice(2); items = items.filter(g => (g.metodo || '') === m); }
+  else if (ui.cat) items = items.filter(g => g.cat === ui.cat);
   if (q) items = items.filter(g => norm(g.desc).includes(q) || norm(catById(g.cat).nome).includes(q) || norm(g.nota).includes(q) || String(g.valor).includes(q.replace(',', '.')));
   items = [...items].sort((a, b) => b.data.localeCompare(a.data) || b.criado - a.criado);
   const byT = t => items.filter(g => tipoOf(g) === t);
@@ -1363,12 +1367,13 @@ function renderAnalysis() {
   const mm = {};
   for (const g of s.items) { const k = g.metodo || ''; mm[k] = (mm[k] || 0) + g.valor; }
   const rows = Object.entries(mm).sort((a, b) => b[1] - a[1]);
-  const ICONE_METODO = { pix: '💠', credito: '💳', debito: '🏧', dinheiro: '💵', vale: '🍽️', boleto: '🧾', '': '❔' };
   const maxM = rows.length ? rows[0][1] : 1;
-  $('#methodTable').innerHTML = rows.length ? `<div class="cat-bars">${rows.map(([k, v]) => `<div class="cat-bar estatico">
+  $('#methodTable').innerHTML = rows.length ? `<div class="cat-bars">${rows.map(([k, v]) => `<div class="cat-bar" role="button" tabindex="0" data-metodo="${k}">
       <span class="name">${ICONE_METODO[k] || '❔'} ${k && METHODS[k] ? METHODS[k].nome : 'Não informado'}</span>
       <span class="val">${money(v)}<small>${Math.round(v / s.total * 100)}%</small></span>
       <span class="track"><span class="fill" style="display:block;width:${v / maxM * 100}%;background:var(--s3)"></span></span></div>`).join('')}</div>` : '<div class="empty">Sem dados.</div>';
+
+  $$('#methodTable [data-metodo]').forEach(b => b.onclick = () => { ui.cat = 'm:' + b.dataset.metodo; ui.search = ''; ui.tipoFiltro = 'tudo'; go('list'); });
 
   const top = [...s.items].sort((a, b) => b.valor - a.valor).slice(0, 5);
   $('#topList').innerHTML = top.length ? top.map(txRow).join('') : '<li class="empty">Sem dados.</li>';
