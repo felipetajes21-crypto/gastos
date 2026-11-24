@@ -176,6 +176,18 @@
         <a class="btn" href="https://github.com/felipetajes21-crypto/gastos/releases/download/app/gastos.apk">Baixar o app (APK)</a>
       </div>
 
+      <div class="card" id="avisosCard" hidden>
+        <h2>🔔 Avisos de compra</h2>
+        <p class="muted small">Quando o banco mandar uma notificação de compra ou Pix, o app te avisa: <b>“Você gastou R$ 45,90 em Ifood”</b>. Tocando no aviso, a compra já vem preenchida, é só confirmar. O app só procura compras nas notificações e <b>nada sai do seu celular</b>.</p>
+        <p class="small avisos-status" id="avisosStatus"></p>
+        <div class="row"><button class="btn solid" id="avisosAtivar">Ativar avisos</button><button class="btn" id="avisosTestar">Testar aviso</button></div>
+        <details class="muted small avisos-ajuda"><summary>Aparece “Configuração restrita” e não deixa ativar?</summary>
+          <p>O Android bloqueia essa permissão em apps instalados fora da Play Store até você liberar:</p>
+          <ol><li>Toque em <b>Abrir informações do app</b> aqui embaixo.</li><li>Toque nos <b>⋮</b> (canto de cima) → <b>Permitir configurações restritas</b> e confirme.</li><li>Volte aqui e toque em <b>Ativar avisos</b> de novo.</li></ol>
+          <button class="btn small" id="avisosInfoApp">Abrir informações do app</button>
+        </details>
+      </div>
+
       <div class="card">
         <h2>Voz</h2>
         <p class="muted small">Toque no 🎤 ao lado da caixa e fale: <b>“gastei vinte e três reais no uber ontem”</b>, <b>“café dois e cinquenta no pix”</b>, <b>“tênis de trezentos em três vezes”</b>, <b>“recebi mil e quinhentos de salário”</b>. Dá para falar vários seguidos: <b>“12 reais vôlei, 40 reais mercado, 30 reais lanche”</b> — pode fazer pausas, o microfone espera você terminar (para sozinho uns segundos depois). Confira a prévia e toque em ＋.</p>

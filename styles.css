@@ -478,3 +478,9 @@ a.btn { display: inline-flex; align-items: center; justify-content: center; text
 .pz-outras { padding-left: 12px; border-left: 2px solid var(--line); margin-left: 4px; }
 .cat-bar.estatico { cursor: default; }
 .pizza-lista .cat-bars { display: grid; gap: 12px; }
+
+/* Avisos de compra */
+.avisos-status { margin: 4px 0 10px; font-weight: 600; }
+.avisos-ajuda { margin-top: 10px; }
+.avisos-ajuda summary { cursor: pointer; color: var(--accent); }
+.avisos-ajuda ol { margin: 6px 0 10px; padding-left: 20px; }

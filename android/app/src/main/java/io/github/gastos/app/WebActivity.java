@@ -33,6 +33,7 @@ public abstract class WebActivity extends Activity {
     static final String SITE = "https://felipetajes21-crypto.github.io/gastos/";
     private static final int REQ_VOZ = 1;
     private static final int REQ_ARQUIVO = 2;
+    private static final int REQ_NOTIF = 3;
 
     protected WebView web;
     private ValueCallback<Uri[]> arquivoCallback;
@@ -104,7 +105,7 @@ public abstract class WebActivity extends Activity {
         super.onResume();
         web.onResume();
         // o widget pode ter salvo algo enquanto esta tela estava em segundo plano
-        web.evaluateJavascript("window.recarregarDados && window.recarregarDados()", null);
+        web.evaluateJavascript("window.recarregarDados && window.recarregarDados(); window.renderAvisos && window.renderAvisos()", null);
     }
 
     @Override
@@ -182,8 +183,65 @@ public abstract class WebActivity extends Activity {
         }
     }
 
+    /** Liga os avisos de compra: permissão de notificar (Android 13+) e depois o "Acesso às notificações". */
+    void ativarAvisos() {
+        if (!BancoListener.podeNotificar(this) && Build.VERSION.SDK_INT >= 33) {
+            requestPermissions(new String[]{android.Manifest.permission.POST_NOTIFICATIONS}, REQ_NOTIF);
+            return;
+        }
+        abrirAcessoNotificacoes();
+    }
+
+    private void abrirAcessoNotificacoes() {
+        Intent i;
+        if (Build.VERSION.SDK_INT >= 30) {
+            i = new Intent(android.provider.Settings.ACTION_NOTIFICATION_LISTENER_DETAIL_SETTINGS);
+            i.putExtra(android.provider.Settings.EXTRA_NOTIFICATION_LISTENER_COMPONENT_NAME,
+                new android.content.ComponentName(this, BancoListener.class).flattenToString());
+        } else {
+            i = new Intent(android.provider.Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS);
+        }
+        try { startActivity(i); }
+        catch (Exception e) { startActivity(new Intent(android.provider.Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS)); }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int req, String[] perms, int[] res) {
+        super.onRequestPermissionsResult(req, perms, res);
+        if (req == REQ_NOTIF) {
+            if (BancoListener.podeNotificar(this)) abrirAcessoNotificacoes();
+            else Toast.makeText(this, "Sem permissão de notificação o app não consegue te avisar das compras.", Toast.LENGTH_LONG).show();
+            web.evaluateJavascript("window.renderAvisos && window.renderAvisos()", null);
+        }
+    }
+
     /** O que o site pode chamar (window.Android.xxx). */
     class Ponte {
+        @JavascriptInterface
+        public String avisosEstado() {
+            return BancoListener.ativo(WebActivity.this) ? (BancoListener.podeNotificar(WebActivity.this) ? "ativo" : "sem-notificacao") : "desligado";
+        }
+
+        @JavascriptInterface
+        public void ativarAvisos() { runOnUiThread(WebActivity.this::ativarAvisos); }
+
+        @JavascriptInterface
+        public void testarAviso() {
+            runOnUiThread(() -> {
+                if (!BancoListener.podeNotificar(WebActivity.this)) { ativarAvisos(); return; }
+                CompraParser.Compra c = CompraParser.ler("teste", "Compra aprovada", "Compra de R$ 12,00 aprovada no crédito em VOLEI DA PRAIA");
+                if (c != null) BancoListener.avisar(WebActivity.this, c);
+            });
+        }
+
+        @JavascriptInterface
+        public void abrirInfoApp() {
+            runOnUiThread(() -> {
+                Intent i = new Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:" + getPackageName()));
+                try { startActivity(i); } catch (Exception ignored) { }
+            });
+        }
+
         @JavascriptInterface
         public void ouvir() { runOnUiThread(WebActivity.this::ouvir); }
 

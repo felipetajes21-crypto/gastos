@@ -109,6 +109,19 @@ function atualizarWidget() {
   } catch (e) { /* widget é extra */ }
 }
 
+// Avisos de compra (só no app Android): mostra se está ligado e os botões
+function renderAvisos() {
+  const card = document.querySelector('#avisosCard');
+  if (!card || !NATIVO || typeof NATIVO.avisosEstado !== 'function') return;
+  card.hidden = false;
+  let st = 'desligado';
+  try { st = NATIVO.avisosEstado(); } catch (e) { /* app antigo */ }
+  const txt = { ativo: '✅ Ligado: você vai ser avisado das compras do banco.', 'sem-notificacao': '⚠️ O app lê as notificações, mas não tem permissão para te avisar. Toque em Ativar avisos.', desligado: '⭕ Desligado.' };
+  $('#avisosStatus').textContent = txt[st] || txt.desligado;
+  $('#avisosAtivar').textContent = st === 'ativo' ? 'Configurar' : 'Ativar avisos';
+}
+if (typeof window !== 'undefined') window.renderAvisos = renderAvisos;
+
 // Outra tela (widget / outra aba) mudou os dados: recarrega para não sobrescrever
 function recarregarDados() {
   try {
@@ -2288,8 +2301,12 @@ function init() {
   if (RAPIDO) document.body.classList.add('rapido');
   if (NATIVO) document.body.classList.add('no-app');
   $('#rapidoAbrir').onclick = () => NATIVO && NATIVO.abrirApp && NATIVO.abrirApp();
+  $('#avisosAtivar').onclick = () => NATIVO && NATIVO.ativarAvisos && NATIVO.ativarAvisos();
+  $('#avisosTestar').onclick = () => { if (NATIVO && NATIVO.testarAviso) { NATIVO.testarAviso(); toast('Aviso de teste enviado — olhe a barra de notificações'); } };
+  $('#avisosInfoApp').onclick = () => NATIVO && NATIVO.abrirInfoApp && NATIVO.abrirInfoApp();
+  renderAvisos();
   window.addEventListener('storage', e => { if (e.key === KEY) recarregarDados(); });
-  document.addEventListener('visibilitychange', () => { if (!document.hidden) recarregarDados(); });
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) { recarregarDados(); renderAvisos(); } });
   // link para baixar o app Android (só aparece no Android, fora do app)
   if (!NATIVO && /Android/i.test(navigator.userAgent)) $('#appCard').hidden = false;
   $('#micStop').onclick = pararMic;
