@@ -484,3 +484,20 @@ a.btn { display: inline-flex; align-items: center; justify-content: center; text
 .avisos-ajuda { margin-top: 10px; }
 .avisos-ajuda summary { cursor: pointer; color: var(--accent); }
 .avisos-ajuda ol { margin: 6px 0 10px; padding-left: 20px; }
+
+/* Assistente */
+.chat-head { display: flex; flex-direction: column; gap: 2px; margin: 4px 4px 12px; font-size: 17px; }
+.chat-msgs { display: flex; flex-direction: column; gap: 10px; min-height: 40vh; padding-bottom: 8px; }
+.msg { display: flex; flex-direction: column; max-width: 92%; }
+.msg.eu { align-self: flex-end; align-items: flex-end; }
+.msg.ia { align-self: flex-start; }
+.msg .bolha { padding: 10px 14px; border-radius: 18px; font-size: 15px; line-height: 1.45; }
+.msg.ia .bolha { background: var(--surface); border: 1px solid var(--line); border-bottom-left-radius: 6px; box-shadow: var(--shadow); }
+.msg.eu .bolha { background: var(--accent); color: #fff; border-bottom-right-radius: 6px; }
+.msg .bolha .muted { color: var(--muted); font-size: 13px; }
+.msg-botoes { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.chat-sugestoes { display: flex; gap: 6px; overflow-x: auto; padding: 4px 0 8px; scrollbar-width: none; }
+.chat-sugestoes::-webkit-scrollbar { display: none; }
+.chat-sugestoes .chip { flex: none; }
+.chat-form { position: sticky; bottom: calc(68px + env(safe-area-inset-bottom)); background: var(--bg); padding: 6px 0; margin: 0; }
+.tab { min-width: 0; }

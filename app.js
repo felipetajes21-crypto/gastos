@@ -935,6 +935,7 @@ function render() {
   if (v === 'view-analysis') renderAnalysis();
   if (v === 'view-settings') renderSettings();
   if (v === 'view-invest') renderInvest();
+  if (v === 'view-assistente' && typeof renderAssistente === 'function') renderAssistente();
 }
 
 function monthStats(key) {
