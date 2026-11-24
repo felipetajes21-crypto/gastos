@@ -667,3 +667,11 @@ a.btn { display: inline-flex; align-items: center; justify-content: center; text
 .imp-l b { white-space: nowrap; }
 .imp-l.tot { border-top: 1px solid var(--line); margin-top: 4px; padding-top: 7px; font-weight: 700; }
 .impostos p { margin: 6px 0 0 !important; font-size: 11px; }
+
+/* Cartão: guardar aos poucos */
+.fat-botoes { margin-top: 10px; }
+.fat-botoes .btn { flex: 1; margin: 0; }
+.chips-valor { display: flex; flex-wrap: wrap; gap: 6px; margin: -4px 0 12px; }
+/* caixinha recém-criada pisca rapidinho para você achar */
+.pos.pisca { animation: pisca 1.4s ease-out 1; border-radius: 12px; }
+@keyframes pisca { 0%, 40% { background: var(--accent-soft); } 100% { background: transparent; } }

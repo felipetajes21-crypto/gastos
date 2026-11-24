@@ -68,7 +68,7 @@ const MONTHS_SHORT = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 's
 const KEY = 'gastos.v1';
 // Versão do código: tem que ser a mesma do <meta name="versao-app"> do index.html.
 // Se o celular juntar uma tela antiga com o código novo (memória/cache), o app se atualiza sozinho.
-const VERSAO_APP = '35';
+const VERSAO_APP = '36';
 let state = load();
 aplicarTema();
 let ui = { month: '', search: '', cat: '', tipoForce: null, tipoFiltro: 'tudo' };
@@ -1840,7 +1840,7 @@ function investPositions() {
   for (const c of sortedCats('invest')) {
     const items = all.filter(g => g.cat === c.id);
     const saldo = state.saldos && state.saldos[c.id];
-    if (!items.length && !saldo) continue;
+    if (!items.length && !saldo && !c.caixinha && !c.reserva) continue;
     const aportado = sumSigned(items);
     let atual = saldo ? Math.round((saldo.valor + sumSigned(items.filter(g => g.criado > saldo.ts))) * 100) / 100 : null;
     let titulos = null, estimado = false, liquido = null, rend = null, impostos = null;
@@ -1913,7 +1913,7 @@ function renderInvest() {
       return `<li><span>${escapeHtml(h.nome.replace(/^Tesouro /, ''))}<small>${linha1}</small><small>${linha2}</small>${falta}</span><b class="num">${money(holdingValue(h))}</b></li>`;
     }).join('')}</ul>${p.estimado && r != null && r < 0 && Math.abs(r) <= p.aportado * 0.03 ? '<p class="muted small" style="margin:6px 0 0">Logo depois de comprar o valor fica um pouco abaixo: o Tesouro paga um pouco menos na venda do que cobra na compra. Com o tempo, os juros cobrem essa diferença.</p>' : ''}${p.titulos.some(h => h.estimado != null && h.taxa != null) ? '<p class="muted small" style="margin:6px 0 0">Valor se vendesse hoje (usa a taxa <b>para vender</b>, que é um pouco maior que a de compra). Quando a taxa de hoje está <b>abaixo</b> da que você pegou, o título valoriza; <b>acima</b>, desvaloriza — mas no vencimento você recebe a taxa combinada.</p>' : ''}` : '';
     return `<div class="pos ${tem ? '' : 'zero'}" data-id="${p.c.id}">
-      <button type="button" class="pos-top" aria-expanded="false"><span class="em">${p.c.emoji}</span><span class="pos-name">${escapeHtml(p.c.nome)}${p.c.reserva ? '<small class="tag-reserva">para pagar a fatura · não conta como investimento</small>' : ''}${+p.c.objetivo > 0 ? `<span class="obj"><span class="obj-barra"><span style="width:${Math.min(100, tem / p.c.objetivo * 100)}%"></span></span><small>${money(tem)} de ${money(p.c.objetivo)} · ${Math.round(tem / p.c.objetivo * 100)}%</small></span>` : ''}<small>${r != null ? `<span class="${r >= 0 ? 'delta-down' : 'delta-up'}">${r >= 0 ? '+' : '−'}${money(Math.abs(r))}</span> · ` : ''}${p.rend && p.rend.ind !== 'nenhum' ? escapeHtml(rendTexto(p.rend, false)) : p.titulos ? `${p.titulos.length} título${p.titulos.length > 1 ? 's' : ''}` : 'toque para ver'}</small></span><span class="pos-val num">${tem ? money(tem) : 'zerado'}</span><span class="pos-seta">▾</span></button>
+      <button type="button" class="pos-top" aria-expanded="false"><span class="em">${p.c.emoji}</span><span class="pos-name">${escapeHtml(p.c.nome)}${p.c.reserva ? '<small class="tag-reserva">para pagar a fatura · não conta como investimento</small>' : ''}${+p.c.objetivo > 0 ? `<span class="obj"><span class="obj-barra"><span style="width:${Math.min(100, tem / p.c.objetivo * 100)}%"></span></span><small>${money(tem)} de ${money(p.c.objetivo)} · ${Math.round(tem / p.c.objetivo * 100)}%</small></span>` : ''}<small>${r != null ? `<span class="${r >= 0 ? 'delta-down' : 'delta-up'}">${r >= 0 ? '+' : '−'}${money(Math.abs(r))}</span> · ` : ''}${p.rend && p.rend.ind !== 'nenhum' ? escapeHtml(rendTexto(p.rend, false)) : p.titulos ? `${p.titulos.length} título${p.titulos.length > 1 ? 's' : ''}` : 'toque para ver'}</small></span><span class="pos-val num">${tem ? money(tem) : (p.c.caixinha || p.c.reserva) && !p.n ? money(0) : 'zerado'}</span><span class="pos-seta">▾</span></button>
       <div class="pos-det"><p class="muted small pos-resumo">${det.join(' · ')}</p>${rendLine}${subs}
       <div class="pos-actions">
         <button type="button" class="btn small" data-act="add">➕ Colocar</button>
@@ -1995,6 +1995,8 @@ function openCaixinha(id) {
         state.categorias.push(novo);
         state.rend = state.rend || {};
         state.rend[novo.id] = { ...catRend('caixinha') };
+        ui.posAberta = ui.posAberta || {}; ui.posAberta[novo.id] = true;
+        id = null; setTimeout(() => { const el = document.querySelector(`#invPos .pos[data-id="${novo.id}"]`); if (el) { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); el.classList.add('pisca'); } }, 80);
       }
       save(); render();
       toast(id ? 'Caixinha atualizada' : `Caixinha ${nome} criada — para guardar nela: “guardei 50 na caixinha ${nome.toLowerCase()}”`);
@@ -2060,15 +2062,32 @@ function renderCartao() {
     </div>
     ${reserva ? `<p class="muted small" style="margin:0 0 4px">Guardado na caixinha do cartão</p><div class="meta-num"><b class="num">${money(guardado)}</b> <span class="muted">de ${money(aPagar)}</span></div>
       <div class="meta-barra"><div class="meta-fill ${falta === 0 && aPagar > 0 ? 'ok' : ''}" style="width:${aPagar ? Math.min(100, guardado / aPagar * 100) : 0}%"></div></div>
-      <p class="small meta-txt">${aPagar === 0 ? 'Nada a pagar por enquanto.' : falta === 0 ? '✅ Tudo guardado para pagar a fatura.' : `Falta guardar <b>${money(falta)}</b>. <button type="button" class="link" id="cartaoGuardar">guardar agora</button>`}</p>`
+      <p class="small meta-txt">${aPagar === 0 ? 'Nada a pagar por enquanto.' : falta === 0 ? '✅ Tudo guardado para pagar a fatura.' : `Falta guardar <b>${money(falta)}</b>.`}</p>
+      <div class="row fat-botoes"><button type="button" class="btn small solid" id="cartaoGuardar">➕ Guardar na caixinha</button>${guardado > 0 ? '<button type="button" class="btn small" id="cartaoTirar">➖ Tirar</button>' : ''}</div>`
       : `<p class="muted small" style="margin:8px 0 0">Dica: em <b>Ajustes → Cartão</b>, ligue a <b>caixinha do cartão</b> para ir guardando o dinheiro da fatura.</p>`}`;
   $('#cartaoPagar').onclick = () => openPagarFatura(pendente || aberta);
   const gb = $('#cartaoGuardar');
-  if (gb) gb.onclick = () => {
-    const g = lancarInterno({ desc: 'Guardado para a fatura', valor: falta, data: isoDate(new Date()), cat: reserva });
-    save(); render();
-    toast(`💳 ${money(falta)} guardados na caixinha do cartão`, 'desfazer', () => { state.gastos = state.gastos.filter(x => x !== g); save(); render(); });
-  };
+  if (gb) gb.onclick = () => openGuardarFatura(reserva, falta, false);
+  const tb = $('#cartaoTirar');
+  if (tb) tb.onclick = () => openGuardarFatura(reserva, guardado, true);
+}
+// Guardar (ou tirar) na caixinha do cartão o valor que quiser — dá para ir guardando aos poucos
+function openGuardarFatura(reserva, sugerido, tirar) {
+  const tem = saldoDe(reserva);
+  openSheet(`<h3>${tirar ? '➖ Tirar da caixinha do cartão' : '➕ Guardar na caixinha do cartão'}</h3>
+    <p class="muted small">${tirar ? `Tem ${money(tem)} guardado.` : `Guarde o quanto quiser agora e vá completando aos poucos.${sugerido > 0 ? ` Falta ${money(sugerido)} para cobrir a fatura.` : ''}`} Não conta como investimento: é o dinheiro da fatura.</p>
+    <div class="field"><label>Quanto (R$)</label><input name="valor" inputmode="decimal" placeholder="${tirar ? `até ${escapeHtml(money(tem))}` : 'ex.: 50'}" required autofocus></div>
+    ${!tirar && sugerido > 0 ? `<div class="chips-valor">${[...new Set([20, 50, 100].filter(v => v < sugerido).concat([Math.round(sugerido * 100) / 100]))].map(v => `<button type="button" class="chip" data-v="${v}">${v === Math.round(sugerido * 100) / 100 ? 'tudo · ' : ''}${money(v)}</button>`).join('')}</div>` : ''}
+    <div class="sheet-actions"><span></span><div class="right"><button class="btn" value="cancel" formnovalidate>Cancelar</button><button class="btn solid" value="save">${tirar ? 'Tirar' : 'Guardar'}</button></div></div>`,
+    (action, fd) => {
+      const v = parseAmount(String(fd.get('valor')).trim());
+      if (v == null) { toast('Valor inválido'); return false; }
+      if (tirar && v > tem + 0.005) { toast(`Só tem ${money(tem)} guardado`); return false; }
+      const g = lancarInterno({ desc: tirar ? 'Tirado da caixinha do cartão' : 'Guardado para a fatura', valor: v, data: isoDate(new Date()), cat: reserva, resgate: tirar });
+      save(); render();
+      toast(`💳 ${money(v)} ${tirar ? 'tirados da' : 'guardados na'} caixinha do cartão`, 'desfazer', () => { state.gastos = state.gastos.filter(x => x !== g); save(); render(); });
+    });
+  $$('#sheetForm .chips-valor [data-v]').forEach(b => b.onclick = () => { $('#sheetForm input[name=valor]').value = String(b.dataset.v).replace('.', ','); });
 }
 function openPagarFatura(f) {
   const reserva = state.cartao.reserva && catsOf('invest').some(c => c.id === state.cartao.reserva) ? state.cartao.reserva : null;
