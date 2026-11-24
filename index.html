@@ -128,7 +128,23 @@
 
     <!-- ASSISTENTE -->
     <section class="view" id="view-assistente" aria-label="Assistente">
-      <div class="chat-head"><b>🤖 Assistente de finanças</b><span class="muted small">usa só os dados do seu celular</span></div>
+      <div class="chat-head">
+        <div class="chat-head-l"><b>🤖 Assistente de finanças</b><span class="ia-status" id="iaStatus"></span></div>
+        <div class="chat-head-r"><button type="button" class="link" id="iaNova">nova conversa</button><button type="button" class="link" id="iaConfigBtn">⚙️ IA</button></div>
+      </div>
+      <div class="card ia-painel" id="iaPainel" hidden>
+        <h2>🌐 IA online (Claude)</h2>
+        <p class="muted small">Com a IA online o assistente entende qualquer pergunta sobre dinheiro e dá conselhos com base nos seus gastos. Ela usa o <b>Claude</b>, da Anthropic, com a <b>sua chave</b>:</p>
+        <ol class="muted small">
+          <li>Crie uma conta em <b>console.anthropic.com</b> e adicione créditos (a partir de US$ 5).</li>
+          <li>Em <b>API Keys</b>, crie uma chave e copie (começa com <b>sk-ant-</b>).</li>
+          <li>Cole aqui embaixo e toque em <b>Salvar</b>.</li>
+        </ol>
+        <p class="muted small">💰 Cada pergunta custa uns <b>US$ 0,01 a 0,05</b> (alguns centavos de real), descontados dos seus créditos na Anthropic.<br>🔒 A chave fica <b>só neste aparelho</b> (não vai no backup). Ao perguntar, um resumo dos seus gastos é enviado para a Anthropic para a IA responder. Sem internet, o assistente volta sozinho para o modo básico.</p>
+        <div class="field"><label for="iaChave">Chave da API</label><input id="iaChave" type="password" autocomplete="off" spellcheck="false" placeholder="sk-ant-…"></div>
+        <div class="row"><button class="btn solid" id="iaSalvar">Salvar</button><button class="btn" id="iaLigar" hidden></button><button class="btn danger" id="iaRemover" hidden>Apagar chave</button></div>
+        <p class="muted small" id="iaGasto"></p>
+      </div>
       <div class="chat-msgs" id="chatMsgs" aria-live="polite"></div>
       <div class="chat-sugestoes" id="chatSugestoes"></div>
       <form class="quick chat-form" id="chatForm" autocomplete="off">
@@ -249,5 +265,6 @@
 
   <script src="app.js"></script>
   <script src="assistente.js"></script>
+  <script src="ia.js"></script>
 </body>
 </html>

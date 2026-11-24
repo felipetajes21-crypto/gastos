@@ -77,6 +77,8 @@ Aba **Assistente**: pergunte do seu jeito e ele responde com os seus números (s
 - “quero juntar 1000 até março” · “quanto tenho pra pagar mês que vem?” · “quais assinaturas eu pago?”
 - Digite um gasto (“uber 23 pix”) e ele oferece anotar.
 
+**IA online (opcional):** em **Assistente → ⚙️ IA**, cole uma chave da API da Anthropic (console.anthropic.com → API Keys, com créditos). Aí quem responde é o Claude: entende qualquer pergunta sobre dinheiro e usa um resumo dos seus gastos. Cada pergunta custa uns US$ 0,01–0,05 nos seus créditos; o app mostra o custo acumulado. A chave fica só no aparelho (não vai no backup); sem internet, o assistente volta para o modo básico.
+
 ## O que tem
 
 - **Início:** total do mês, comparação com o mesmo período do mês passado, previsão de quanto o mês vai fechar, quanto ainda pode gastar por dia, gastos por categoria e os últimos lançamentos.
@@ -132,6 +134,8 @@ index.html            estrutura das telas
 styles.css            visual (tema claro/escuro automático)
 app.js                lógica: leitura do texto, categorização, gráficos, importação
 assistente.js         aba Assistente (perguntas sobre os gastos)
+ia.js                 IA online opcional (Claude, com a chave da pessoa)
+vendor/               SDK da Anthropic empacotado para o navegador
 sw.js                 funcionamento offline
 manifest.webmanifest  instalação como app
 icons/                ícones

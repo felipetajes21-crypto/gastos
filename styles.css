@@ -486,7 +486,18 @@ a.btn { display: inline-flex; align-items: center; justify-content: center; text
 .avisos-ajuda ol { margin: 6px 0 10px; padding-left: 20px; }
 
 /* Assistente */
-.chat-head { display: flex; flex-direction: column; gap: 2px; margin: 4px 4px 12px; font-size: 17px; }
+.chat-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; margin: 4px 4px 12px; font-size: 17px; }
+.chat-head-l { display: flex; flex-direction: column; gap: 4px; }
+.chat-head-r { display: flex; gap: 12px; font-size: 14px; padding-top: 2px; }
+.ia-status { align-self: flex-start; font-size: 12px; padding: 2px 8px; border-radius: 999px; background: var(--surface-2); color: var(--muted); }
+.ia-status.on { background: var(--accent-soft); color: var(--ink); }
+.ia-painel ol { margin: 4px 0 8px; padding-left: 20px; }
+.ia-painel .field { margin-top: 8px; }
+.msg .bolha p { margin: 0 0 8px; } .msg .bolha p:last-child { margin-bottom: 0; }
+.msg .bolha ul { margin: 4px 0 8px; padding-left: 20px; } .msg .bolha li { margin: 2px 0; }
+.digitando { color: var(--muted); animation: piscar 1.2s ease-in-out infinite; }
+@keyframes piscar { 50% { opacity: .4; } }
+@media (prefers-reduced-motion: reduce) { .digitando { animation: none; } }
 .chat-msgs { display: flex; flex-direction: column; gap: 10px; min-height: 40vh; padding-bottom: 8px; }
 .msg { display: flex; flex-direction: column; max-width: 92%; }
 .msg.eu { align-self: flex-end; align-items: flex-end; }
