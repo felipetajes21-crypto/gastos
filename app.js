@@ -68,7 +68,7 @@ const MONTHS_SHORT = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 's
 const KEY = 'gastos.v1';
 // Versão do código: tem que ser a mesma do <meta name="versao-app"> do index.html.
 // Se o celular juntar uma tela antiga com o código novo (memória/cache), o app se atualiza sozinho.
-const VERSAO_APP = '34';
+const VERSAO_APP = '35';
 let state = load();
 aplicarTema();
 let ui = { month: '', search: '', cat: '', tipoForce: null, tipoFiltro: 'tudo' };
@@ -1790,6 +1790,46 @@ const grow = (iso, rate) => rate == null ? 1 : Math.pow(1 + rate / 100, daysSinc
 // IR regressivo sobre o lucro (CDB, caixinha…): até 180 dias 22,5%; até 360, 20%; até 720, 17,5%; depois 15%
 const aliquotaIR = d => d <= 180 ? 0.225 : d <= 360 ? 0.20 : d <= 720 ? 0.175 : 0.15;
 const isentoIR = (r, c) => !!(r && (r.isento || r.ind === 'poupanca')) || /\b(lci|lca|poupanca)\b/.test(norm(c.nome));
+// IOF sobre o rendimento de quem tira antes de 30 dias (tabela regressiva da Receita: dia 1 = 96% … dia 30 = 0%)
+const TABELA_IOF = [96, 93, 90, 86, 83, 80, 76, 73, 70, 66, 63, 60, 56, 53, 50, 46, 43, 40, 36, 33, 30, 26, 23, 20, 16, 13, 10, 6, 3, 0];
+const aliquotaIOF = d => d >= 30 ? 0 : TABELA_IOF[Math.max(0, d - 1)] / 100;
+const diasEntre = (a, b) => Math.max(0, Math.round((parseISO(b) - parseISO(a)) / 864e5));
+const fatorEntre = (a, b, rate) => rate == null ? 1 : Math.pow(1 + rate / 100, diasEntre(a, b) / 365);
+// Cada depósito é um "lote" com o seu próprio relógio (IOF e IR contam a partir dele).
+// Um resgate tira primeiro dos depósitos mais antigos; os que sobram continuam com o tempo que já tinham.
+function lotesRenda(flows, rateOf, isento) {
+  const ord = [...flows].sort((a, b) => a.data.localeCompare(b.data) || (a.criado || 0) - (b.criado || 0));
+  const lotes = [];
+  for (const g of ord) {
+    if (!g.resgate) { lotes.push({ data: g.data, principal: g.valor, rate: rateOf(g) }); continue; }
+    let resta = g.valor;
+    for (const l of lotes) {
+      if (resta <= 0.001) break;
+      if (l.principal <= 0.001) continue;
+      const f = fatorEntre(l.data, g.data, l.rate);
+      const tira = Math.min(resta, l.principal * f);
+      l.principal -= tira / f;
+      resta -= tira;
+    }
+  }
+  const hoje = isoDate(new Date());
+  let bruto = 0, principal = 0, iof = 0, ir = 0, emIOF = 0;
+  const vivos = [];
+  for (const l of lotes) {
+    if (l.principal <= 0.005) continue;
+    const v = l.principal * fatorEntre(l.data, hoje, l.rate);
+    const ganho = Math.max(0, v - l.principal), d = daysSince(l.data);
+    const i = isento ? 0 : ganho * aliquotaIOF(d);
+    const r = isento ? 0 : (ganho - i) * aliquotaIR(d);
+    bruto += v; principal += l.principal; iof += i; ir += r;
+    if (i > 0) emIOF += v;
+    vivos.push({ ...l, valor: v, dias: d, aliqIR: isento ? 0 : aliquotaIR(d) });
+  }
+  const r2 = x => Math.round(x * 100) / 100;
+  return { bruto: r2(bruto), principal: r2(principal), iof: r2(iof), ir: r2(ir), liquido: r2(bruto - iof - ir), emIOF: r2(emIOF), lotes: vivos };
+}
+// Texto da faixa do IR de acordo com quantos dias o dinheiro está aplicado
+const faixaIR = d => d <= 180 ? '22,5% (até 6 meses)' : d <= 360 ? '20% (6 meses a 1 ano)' : d <= 720 ? '17,5% (1 a 2 anos)' : '15% (mais de 2 anos)';
 
 // ── Investimentos
 // Patrimônio por destino: aportado (aportes − resgates) e, se você informou, o saldo atual
@@ -1803,13 +1843,17 @@ function investPositions() {
     if (!items.length && !saldo) continue;
     const aportado = sumSigned(items);
     let atual = saldo ? Math.round((saldo.valor + sumSigned(items.filter(g => g.criado > saldo.ts))) * 100) / 100 : null;
-    let titulos = null, estimado = false, liquido = null, rend = null;
+    let titulos = null, estimado = false, liquido = null, rend = null, impostos = null;
     if (!isTesouroCat(c.id)) {
       // Estima o valor de hoje: cada aporte/resgate rende desde a sua data (taxa de hoje).
       rend = catRend(c.id);
       const flows = saldo ? items.filter(g => g.criado > saldo.ts) : items;
       const rateOf = g => annualRate(g.rend || rend);
-      if ((saldo && annualRate(rend) != null) || flows.some(g => rateOf(g) != null)) {
+      if (!saldo && flows.some(g => rateOf(g) != null)) {
+        impostos = lotesRenda(flows, rateOf, isentoIR(rend, c));
+        atual = impostos.bruto; estimado = true;
+        if (impostos.iof + impostos.ir > 0.004) liquido = impostos.liquido;
+      } else if ((saldo && annualRate(rend) != null) || flows.some(g => rateOf(g) != null)) {
         let v = saldo ? saldo.valor * grow(saldo.data, annualRate(rend)) : 0, gross = 0, ir = 0;
         for (const g of flows) {
           const f = grow(g.data, rateOf(g));
@@ -1826,7 +1870,7 @@ function investPositions() {
         atual = Math.round(titulos.reduce((a, h) => a + h.estimado, 0) * 100) / 100; estimado = true;
       }
     }
-    out.push({ c, aportado, atual, saldo, n: items.length, titulos, estimado, liquido, rend });
+    out.push({ c, aportado, atual, saldo, n: items.length, titulos, estimado, liquido, rend, impostos });
   }
   return out;
 }
@@ -1858,7 +1902,7 @@ function renderInvest() {
     const det = [`${money(Math.max(0, p.aportado))} colocados`];
     if (r != null) det.push(`<span class="${r >= 0 ? 'delta-down' : 'delta-up'}">${r >= 0 ? 'rendeu +' : (p.estimado ? 'por enquanto −' : 'perdeu −')}${money(Math.abs(r))}</span>`);
     if (p.estimado) det.push(p.titulos ? 'valor se vendesse hoje' : 'estimado');
-    const rendLine = p.rend ? `<button type="button" class="rend-line" data-act="rend"><span>${p.rend.ind === 'nenhum' ? '📊 Renda variável — toque para dizer quanto rende, ou use 🔄 Saldo' : `📈 Rende <b>${escapeHtml(rendTexto(p.rend))}</b>${isentoIR(p.rend, p.c) ? ' · isento de IR' : ''}`}</span><span>✏️</span></button>${p.liquido != null && p.atual > p.aportado ? `<p class="muted small liq">≈ ${money(p.liquido)} se tirar hoje, já descontado o imposto de renda</p>` : ''}` : '';
+    const rendLine = p.rend ? `<button type="button" class="rend-line" data-act="rend"><span>${p.rend.ind === 'nenhum' ? '📊 Renda variável — toque para dizer quanto rende, ou use 🔄 Saldo' : `📈 Rende <b>${escapeHtml(rendTexto(p.rend))}</b>${isentoIR(p.rend, p.c) ? ' · isento de IR' : ''}`}</span><span>✏️</span></button>${impostosHtml(p)}` : '';
     const subs = p.titulos && p.titulos.length ? `<ul class="tes-holds">${p.titulos.map(h => {
       const val = h.estimado != null ? h.estimado - h.aportado : null;
       const hoje = h.t && h.t.taxaVenda != null ? h.t.taxaVenda : null;
@@ -2084,6 +2128,26 @@ function openCartao() {
       state.cartao = novo;
       save(); render(); toast('Cartão salvo 💳');
     });
+}
+
+// Detalhe do que é descontado se tirar hoje: IR (faixa de cada depósito) e IOF (depósitos com menos de 30 dias)
+function impostosHtml(p) {
+  const im = p.impostos;
+  if (!im) return p.liquido != null && p.atual > p.aportado ? `<p class="muted small liq">≈ ${money(p.liquido)} se tirar hoje, já descontado o imposto de renda</p>` : '';
+  const ganho = Math.round((im.bruto - im.principal) * 100) / 100;
+  if (ganho <= 0.004) return '';
+  if (im.iof + im.ir <= 0.004) return `<p class="muted small liq">Rendeu <b>${money(ganho)}</b> · isento de imposto</p>`;
+  // faixas de IR em que está o dinheiro (do depósito mais antigo ao mais novo)
+  const faixas = [...new Set(im.lotes.map(l => faixaIR(l.dias)))];
+  const maisNovo = im.lotes.reduce((m, l) => Math.min(m, l.dias), Infinity);
+  const proxIOF = maisNovo < 30 ? 30 - maisNovo : 0;
+  return `<div class="impostos small">
+    <div class="imp-l"><span>Rendimento que está aplicado<small>sem contar o que já saiu em resgates</small></span><b class="num">+${money(ganho)}</b></div>
+    <div class="imp-l"><span>Imposto de renda<small>${faixas.join(' · ')}</small></span><b class="num">−${money(im.ir)}</b></div>
+    ${im.iof > 0.004 ? `<div class="imp-l"><span>IOF<small>${money(im.emIOF)} com menos de 30 dias · zera em ${proxIOF} dia${proxIOF > 1 ? 's' : ''}</small></span><b class="num">−${money(im.iof)}</b></div>` : ''}
+    <div class="imp-l tot"><span>Se tirar tudo hoje</span><b class="num">${money(im.liquido)}</b></div>
+    <p class="muted">Cada depósito conta o próprio prazo: o IOF zera depois de 30 dias e o IR cai com o tempo. Quando você tira, sai primeiro do dinheiro mais antigo.</p>
+  </div>`;
 }
 
 // Meta: quanto a pessoa quer investir por mês; a barra enche conforme ela coloca dinheiro.

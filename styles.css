@@ -659,3 +659,11 @@ a.btn { display: inline-flex; align-items: center; justify-content: center; text
 
 .pos-actions { flex-wrap: wrap; }
 .pos-actions .btn { flex: 1 1 28%; white-space: nowrap; }
+
+/* IR e IOF de cada investimento */
+.impostos { margin-top: 8px; padding: 10px 12px; border-radius: 12px; background: var(--surface-2); }
+.imp-l { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; padding: 3px 0; }
+.imp-l small { display: block; color: var(--muted); font-size: 11px; }
+.imp-l b { white-space: nowrap; }
+.imp-l.tot { border-top: 1px solid var(--line); margin-top: 4px; padding-top: 7px; font-weight: 700; }
+.impostos p { margin: 6px 0 0 !important; font-size: 11px; }
