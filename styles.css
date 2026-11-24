@@ -633,3 +633,12 @@ a.btn { display: inline-flex; align-items: center; justify-content: center; text
 .dots { display: flex; justify-content: center; gap: 8px; margin-top: 10px; }
 .dots button { width: 8px; height: 8px; padding: 0; border: 0; border-radius: 4px; background: var(--line); transition: width .2s, background .2s; }
 .dots button.sel { width: 22px; background: var(--accent); }
+
+/* Entradas × saídas em barras (melhorado) */
+.chart .bar.apagado { opacity: .38; }
+.chart text.saldo-mes { font-size: 12px; font-weight: 700; }
+.chart text.saldo-mes.bom { fill: var(--good); } .chart text.saldo-mes.ruim { fill: var(--critical); }
+.fluxo-resumo { font-size: 14px; color: var(--ink-2); margin: 0 0 10px !important; }
+.fluxo-resumo b { color: var(--ink); text-transform: capitalize; }
+.fluxo-resumo .bom { color: var(--good); font-weight: 700; } .fluxo-resumo .ruim { color: var(--critical); font-weight: 700; }
+.tooltip .key.bom { background: var(--good); } .tooltip .key.ruim { background: var(--critical); }

@@ -68,7 +68,7 @@ const MONTHS_SHORT = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 's
 const KEY = 'gastos.v1';
 // Versão do código: tem que ser a mesma do <meta name="versao-app"> do index.html.
 // Se o celular juntar uma tela antiga com o código novo (memória/cache), o app se atualiza sozinho.
-const VERSAO_APP = '32';
+const VERSAO_APP = '33';
 let state = load();
 aplicarTema();
 let ui = { month: '', search: '', cat: '', tipoForce: null, tipoFiltro: 'tudo' };
@@ -1340,20 +1340,16 @@ function renderAnalysis() {
   const hasFlow = bal.some(b => b.entrou || b.investiu);
   $('#flowCard').hidden = !hasFlow;
   if (hasFlow) {
-    // uma linha por mês: barra do que saiu (gasto + investido), tracinho no que entrou e quanto sobrou/faltou
-    const meses = keys.map((k, i) => [k, bal[i]]).filter(([, b]) => b.entrou || b.gastou || b.investiu).reverse();
-    const escala = Math.max(1, ...meses.map(([, b]) => Math.max(b.entrou, b.gastou + Math.max(0, b.investiu))));
-    $('#flowChart').innerHTML = `<div class="legend"><span><i class="sw s2"></i>Gastou</span><span><i class="sw s3"></i>Investiu</span><span><i class="sw-entrou"></i>Entrou</span></div>
-      <div class="fluxo">${meses.map(([k, b]) => {
-        const inv = Math.max(0, b.investiu);
-        const pg = b.gastou / escala * 100, pi = inv / escala * 100, pe = b.entrou / escala * 100;
-        const resto = b.entrou ? b.sobrou : null;
-        return `<div class="fluxo-mes ${k === ui.month ? 'atual' : ''}">
-          <div class="fluxo-top"><b>${monthName(k)}</b>${resto == null ? '<span class="muted small">sem entrada anotada</span>' : `<span class="fluxo-res ${resto >= 0 ? 'bom' : 'ruim'}">${resto >= 0 ? 'sobrou' : 'faltou'} ${money(Math.abs(resto))}</span>`}</div>
-          <div class="fluxo-barra"><span class="fl-g" style="width:${pg}%"></span><span class="fl-i" style="width:${pi}%"></span>${b.entrou ? `<i class="fl-entrou" style="left:${pe}%"></i>` : ''}</div>
-          <div class="fluxo-num small muted">entrou <b>${money(b.entrou)}</b> · gastou <b>${money(b.gastou)}</b>${inv ? ` · investiu <b>${money(inv)}</b>` : ''}${b.entrou ? ` · ${Math.round((b.gastou + inv) / b.entrou * 100)}% do que entrou` : ''}</div>
-        </div>`;
-      }).join('')}</div>`;
+    // barras lado a lado: entrou / gastou / investiu em cada mês; embaixo, quanto sobrou ou faltou
+    const series = [
+      { name: 'Entrou', cls: 's1', values: bal.map(b => b.entrou) },
+      { name: 'Gastou', cls: 's2', values: bal.map(b => b.gastou) },
+      { name: 'Investiu', cls: 's3', values: bal.map(b => Math.max(0, b.investiu)) },
+    ];
+    const bAtual = bal[5];
+    const resumo = bAtual.entrou || bAtual.gastou || bAtual.investiu
+      ? `<p class="fluxo-resumo"><b>${MONTHS[+ui.month.slice(5) - 1]}:</b> entrou ${money(bAtual.entrou)} · saiu ${money(bAtual.gastou + Math.max(0, bAtual.investiu))}${bAtual.entrou ? ` · <span class="${bAtual.sobrou >= 0 ? 'bom' : 'ruim'}">${bAtual.sobrou >= 0 ? 'sobrou' : 'faltou'} ${money(Math.abs(bAtual.sobrou))}</span>` : ''}</p>` : '';
+    $('#flowChart').innerHTML = resumo + legendHtml(series) + barrasFluxo(series, keys, bal, { width: $('#flowChart').clientWidth || 320 });
     $('#flowTable').innerHTML = '';
   }
   bindTips();
@@ -1565,6 +1561,39 @@ function multiLineChart(series, labels, fullLabels, opt = {}) {
     svg += `<rect class="hit" x="${(padL + step * i).toFixed(1)}" y="0" width="${step.toFixed(1)}" height="${H}" data-tip="${escapeHtml(fullLabels[i])}" data-rows="${escapeHtml(rows)}"/>`;
   }
   return svg + '</svg>';
+}
+// Barras agrupadas por mês, no estilo novo: cantos redondos, sem grade, mês atual em destaque (os outros
+// mais apagados), nome do mês atual numa pílula e, embaixo de cada mês, quanto sobrou (+) ou faltou (−).
+function barrasFluxo(series, keys, bal, opt = {}) {
+  const W = Math.max(260, opt.width || 600), H = 220, padL = 4, padR = 4, padT = 10, padB = 52;
+  const n = keys.length, k = series.length;
+  const max = Math.max(1, ...series.flatMap(s => s.values));
+  const step = (W - padL - padR) / n, gap = 3;
+  const bw = Math.max(5, Math.min(16, (step - 14) / k - gap));
+  const base = H - padB;
+  const y = v => padT + (base - padT) * (1 - v / max);
+  const atual = keys.indexOf(ui.month);
+  let svg = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Entradas, gastos e investimentos por mês">`;
+  for (let i = 0; i < n; i++) {
+    const cx = padL + step * i + step / 2;
+    const x0 = cx - (k * bw + (k - 1) * gap) / 2;
+    const apagado = atual >= 0 && i !== atual;
+    series.forEach((s, j) => {
+      const v = s.values[i];
+      if (v <= 0) return;
+      const x = x0 + j * (bw + gap), yt = y(v), r = Math.min(bw / 2, base - yt);
+      svg += `<path class="bar cor ${s.cls} ${apagado ? 'apagado' : ''}" d="M${x},${base} V${yt + r} Q${x},${yt} ${x + r},${yt} H${x + bw - r} Q${x + bw},${yt} ${x + bw},${yt + r} V${base} Z"/>`;
+    });
+    // nome do mês (o atual numa pílula) e sobrou/faltou embaixo
+    if (i === atual) svg += `<rect class="pilula" x="${(cx - 23).toFixed(1)}" y="${base + 6}" width="46" height="22" rx="11" style="fill:var(--accent)"/><text class="pilula-t" x="${cx.toFixed(1)}" y="${base + 21}" text-anchor="middle">${escapeHtml(monthName(keys[i], true))}</text>`;
+    else svg += `<text x="${cx.toFixed(1)}" y="${base + 21}" text-anchor="middle">${escapeHtml(monthName(keys[i], true))}</text>`;
+    const b = bal[i];
+    if (b.entrou) svg += `<text class="saldo-mes ${b.sobrou >= 0 ? 'bom' : 'ruim'}" x="${cx.toFixed(1)}" y="${base + 44}" text-anchor="middle">${b.sobrou >= 0 ? '+' : '−'}${Math.round(Math.abs(b.sobrou)).toLocaleString('pt-BR')}</text>`;
+    const rows = JSON.stringify([...series.map(s => [s.name, s.values[i], s.cls]), ...(b.entrou ? [[b.sobrou >= 0 ? 'Sobrou' : 'Faltou', Math.abs(b.sobrou), b.sobrou >= 0 ? 'bom' : 'ruim']] : [])]);
+    svg += `<rect class="hit" x="${(padL + step * i).toFixed(1)}" y="0" width="${step.toFixed(1)}" height="${H}" data-tip="${escapeHtml(monthName(keys[i]))}" data-rows="${escapeHtml(rows)}"/>`;
+  }
+  svg += `<line class="base" x1="${padL}" x2="${W - padR}" y1="${base}" y2="${base}"/></svg>`;
+  return svg;
 }
 function bindTips() {
   const tip = $('#tooltip');
