@@ -68,7 +68,7 @@ const MONTHS_SHORT = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 's
 const KEY = 'gastos.v1';
 // Versão do código: tem que ser a mesma do <meta name="versao-app"> do index.html.
 // Se o celular juntar uma tela antiga com o código novo (memória/cache), o app se atualiza sozinho.
-const VERSAO_APP = '37';
+const VERSAO_APP = '38';
 let state = load();
 aplicarTema();
 let ui = { month: '', search: '', cat: '', tipoForce: null, tipoFiltro: 'tudo' };
@@ -1684,7 +1684,32 @@ function matchTitulo(text) {
 // Preço de um título = pagamentos futuros descontados pela taxa: (1 + taxa)^(−dias úteis/252).
 // Com a taxa e a data da compra, reconstruímos o preço pago (e a quantidade de títulos);
 // o valor de hoje é quantidade × preço oficial de venda de hoje (marcação a mercado).
-const duEntre = (a, b) => Math.max(0, (b - a) / 864e5) * 252 / 365;   // dias úteis (aprox.)
+// Dias úteis (calendário dos bancos/B3): sem sábados, domingos e feriados nacionais.
+function pascoa(y) {
+  const a = y % 19, b = Math.floor(y / 100), c = y % 100, d = Math.floor(b / 4), e = b % 4, f = Math.floor((b + 8) / 25), g = Math.floor((b - f + 1) / 3);
+  const h = (19 * a + b - d - g + 15) % 30, i = Math.floor(c / 4), k = c % 4, l = (32 + 2 * e + 2 * i - h - k) % 7, m = Math.floor((a + 11 * h + 22 * l) / 451);
+  const mes = Math.floor((h + l - 7 * m + 114) / 31), dia = ((h + l - 7 * m + 114) % 31) + 1;
+  return new Date(y, mes - 1, dia);
+}
+const _feriados = {};
+function feriados(y) {
+  if (_feriados[y]) return _feriados[y];
+  const fixos = ['01-01', '04-21', '05-01', '09-07', '10-12', '11-02', '11-15', '12-25'].concat(y >= 2024 ? ['11-20'] : []);
+  const p = pascoa(y), out = fixos.map(md => parseISO(`${y}-${md}`));
+  for (const n of [-48, -47, -2, 60]) out.push(new Date(y, p.getMonth(), p.getDate() + n));   // Carnaval (seg e ter), Sexta-feira Santa, Corpus Christi
+  return (_feriados[y] = out.filter(d => d.getDay() % 6));   // só os que caem em dia de semana
+}
+// Quantos dias úteis de a (inclusive) até b (exclusive): dinheiro que entrou na segunda e é olhado na quarta rendeu 2 dias.
+function diasUteis(a, b) {
+  const d0 = new Date(a.getFullYear(), a.getMonth(), a.getDate()), d1 = new Date(b.getFullYear(), b.getMonth(), b.getDate());
+  if (d1 <= d0) return 0;
+  const total = Math.round((d1 - d0) / 864e5), semanas = Math.floor(total / 7);
+  let n = semanas * 5;
+  for (let i = semanas * 7; i < total; i++) { const wd = (d0.getDay() + i) % 7; if (wd % 6) n++; }
+  for (let y = d0.getFullYear(); y <= d1.getFullYear(); y++) for (const f of feriados(y)) if (f >= d0 && f < d1) n--;
+  return n;
+}
+const duEntre = (a, b) => diasUteis(a, b);
 function tesFlows(t) {
   const v = parseISO(t.vencimento), out = [], tp = t.tipo;
   if (tp === 'prefixado-semestral' || tp === 'ipca-semestral' || tp === 'igpm') {
@@ -1791,7 +1816,8 @@ function rendTexto(r, comTaxa = true) {
   return base + (comTaxa && t != null && r.ind !== 'pre' ? ` (≈ ${pctFmt(Math.round(t * 100) / 100)}% ao ano)` : '');
 }
 const daysSince = iso => Math.max(0, Math.round((Date.now() - parseISO(iso).getTime()) / 864e5));
-const grow = (iso, rate) => rate == null ? 1 : Math.pow(1 + rate / 100, daysSince(iso) / 365);
+// Rende por dia útil (taxa ao ano em base 252), igual ao CDI/Selic dos bancos
+const grow = (iso, rate) => rate == null ? 1 : Math.pow(1 + rate / 100, diasUteis(parseISO(iso), new Date()) / 252);
 // IR regressivo sobre o lucro (CDB, caixinha…): até 180 dias 22,5%; até 360, 20%; até 720, 17,5%; depois 15%
 const aliquotaIR = d => d <= 180 ? 0.225 : d <= 360 ? 0.20 : d <= 720 ? 0.175 : 0.15;
 const isentoIR = (r, c) => !!(r && (r.isento || r.ind === 'poupanca')) || /\b(lci|lca|poupanca)\b/.test(norm(c.nome));
@@ -1799,7 +1825,7 @@ const isentoIR = (r, c) => !!(r && (r.isento || r.ind === 'poupanca')) || /\b(lc
 const TABELA_IOF = [96, 93, 90, 86, 83, 80, 76, 73, 70, 66, 63, 60, 56, 53, 50, 46, 43, 40, 36, 33, 30, 26, 23, 20, 16, 13, 10, 6, 3, 0];
 const aliquotaIOF = d => d >= 30 ? 0 : TABELA_IOF[Math.max(0, d - 1)] / 100;
 const diasEntre = (a, b) => Math.max(0, Math.round((parseISO(b) - parseISO(a)) / 864e5));
-const fatorEntre = (a, b, rate) => rate == null ? 1 : Math.pow(1 + rate / 100, diasEntre(a, b) / 365);
+const fatorEntre = (a, b, rate) => rate == null ? 1 : Math.pow(1 + rate / 100, diasUteis(parseISO(a), parseISO(b)) / 252);
 // Cada depósito é um "lote" com o seu próprio relógio (IOF e IR contam a partir dele).
 // Um resgate tira primeiro dos depósitos mais antigos; os que sobram continuam com o tempo que já tinham.
 function lotesRenda(flows, rateOf, isento) {
